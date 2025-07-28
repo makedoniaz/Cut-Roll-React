@@ -1,0 +1,78 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from '../components/layout/Layout';
+import Home from '../pages/Home';
+import Movies from '../pages/Movies';
+import MovieDetail from '../pages/MovieDetail';
+import Profile from '../pages/Profile';
+import Search from '../pages/Search';
+import Login from '../pages/Login';
+import Register from '../pages/Register';
+import NotFound from '../pages/NotFound';
+import ProtectedRoute from '../components/auth/ProtectedRoute';
+import AuthInitializer from '../components/auth/AuthInitializer';
+import AuthCallback from '../components/auth/AuthCallback';
+
+import { useAuth } from '../hooks/useStores';
+
+// Redirect component for authenticated users
+const AuthRedirect = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
+const AppRouter = () => {
+  return (
+    <BrowserRouter>
+      <AuthInitializer>
+        <Routes>
+          {/* Main Layout Routes */}
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="movies" element={<Movies />} />
+            <Route path="movie/:id" element={<MovieDetail />} />
+            <Route path="search" element={<Search />} />
+            <Route path="auth/callback" element={<AuthCallback />} />
+            
+            {/* Protected Profile Route */}
+            <Route 
+              path="profile/:username" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+          </Route>
+
+          {/* Auth Routes (without main layout) */}
+          <Route 
+            path="/login" 
+            element={
+              <AuthRedirect>
+                <Login />
+              </AuthRedirect>
+            } 
+          />
+          <Route 
+            path="/register" 
+            element={
+              <AuthRedirect>
+                <Register />
+              </AuthRedirect>
+            } 
+          />
+          
+          {/* 404 Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthInitializer>
+    </BrowserRouter>
+  );
+};
+
+export default AppRouter;
