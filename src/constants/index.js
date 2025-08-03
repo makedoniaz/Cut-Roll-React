@@ -83,6 +83,7 @@ export const THEME = {
     SECONDARY: '#ff8000',
     DARK: '#14181c',
     DARK_LIGHTER: '#2c3440',
+    MAIN_GRAY: "#1E2939",
     ACCENT: '#40bcf4'
   }
 };

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import Pagination from '../ui/Pagination';
+import Pagination from '../ui/common/Pagination';
 import Grid from './Grid';
 
 const PaginatedGridContainer = ({

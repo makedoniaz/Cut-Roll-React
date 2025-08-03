@@ -1,8 +1,8 @@
-import { THEME } from "../../constants/index.js";
+import { THEME } from "../../../constants/index.js";
 
 const MovieCard = ({ movie }) => (
   <div 
-    className="w-full h-full rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2"
+    className="w-full h-full rounded-xl shadow-lg cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2"
     style={{ 
       backgroundColor: "#1E2939",
       borderColor: THEME.COLORS.DARK,
