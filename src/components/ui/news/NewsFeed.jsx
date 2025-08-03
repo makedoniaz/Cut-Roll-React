@@ -1,5 +1,5 @@
 import NewsCard from "./NewsCard"
-import ListHeading from '../common/ListHeading';
+import SectionHeading from '../common/SectionHeading';
 
 const NewsFeed = () => {
   // Sample data - replace with your actual data source
@@ -69,7 +69,7 @@ const NewsFeed = () => {
     <div className="min-h-screen text-white">
       {/* Header */}
       <div className="mx-auto py-8">
-        <ListHeading heading="RECENT STORIES"/>
+        <SectionHeading heading="RECENT STORIES"/>
         {/* News Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {newsItems.map((item) => (

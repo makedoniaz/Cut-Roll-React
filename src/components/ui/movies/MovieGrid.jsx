@@ -1,12 +1,12 @@
 import MovieCard from "./MovieCard"
-import ListHeading from '../common/ListHeading';
+import SectionHeading from '../common/SectionHeading';
 import PaginatedGridContainer from '../../layout/PaginatedGridContainer';
 
-const MovieList = ({itemsPerRow, rows, movies, heading}) => {
+const MovieGrid = ({itemsPerRow, rows, movies, heading}) => {
     return ( 
         <div className="py-8">
             <div className="max-w-7xl mx-auto">
-                <ListHeading heading={heading}/>
+                <SectionHeading heading={heading}/>
                 <div>
                     <PaginatedGridContainer
                     items={movies}
@@ -22,4 +22,4 @@ const MovieList = ({itemsPerRow, rows, movies, heading}) => {
     );
 }
  
-export default MovieList;
+export default MovieGrid;
