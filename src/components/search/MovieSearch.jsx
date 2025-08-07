@@ -65,8 +65,8 @@ const MovieSearch = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="bg-gray-900">
+      <div className="max-w-6xl">
         <FlexibleSearch
           placeholder="Search for movies..."
           filters={movieFilters}

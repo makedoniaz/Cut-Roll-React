@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import Home from '../pages/Home';
 import Movies from '../pages/Movies';
-import MovieDetail from '../pages/MovieDetail';
 import Profile from '../pages/Profile';
 import Search from '../pages/Search';
 import Login from '../pages/Login';
@@ -11,6 +10,7 @@ import NotFound from '../pages/NotFound';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import AuthInitializer from '../components/auth/AuthInitializer';
 import AuthCallback from '../components/auth/AuthCallback';
+import MovieDetails from '../pages/MovieDetails';
 
 import { useAuth } from '../hooks/useStores';
 
@@ -34,9 +34,10 @@ const AppRouter = () => {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="movies" element={<Movies />} />
-            <Route path="movie/:id" element={<MovieDetail />} />
             <Route path="search" element={<Search />} />
             <Route path="auth/callback" element={<AuthCallback />} />
+
+            <Route path="test" element={<MovieDetails />} />
             
             {/* Protected Profile Route */}
             <Route 

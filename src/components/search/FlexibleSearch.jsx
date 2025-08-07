@@ -84,7 +84,7 @@ const FlexibleSearch = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mb-8">
+    <div className="w-full max-w-4xl">
       {/* Search Input */}
       <div className="relative mb-4 flex">
         <input

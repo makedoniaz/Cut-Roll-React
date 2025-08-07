@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Search as SearchIcon } from 'lucide-react';
 import MovieSearch from '../components/search/MovieSearch';
 
 const Search = () => {
