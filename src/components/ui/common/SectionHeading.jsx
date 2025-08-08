@@ -1,4 +1,4 @@
-const SectionHeader = ({ heading }) => {
+const SectionHeading = ({ heading }) => {
     return ( 
         <div>
             <div className="flex justify-between items-center">
@@ -9,4 +9,4 @@ const SectionHeader = ({ heading }) => {
     );
 }
  
-export default SectionHeader;
+export default SectionHeading;

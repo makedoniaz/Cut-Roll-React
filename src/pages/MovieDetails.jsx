@@ -5,6 +5,7 @@ import RatingDistribution from '../components/ui/movies/RatingDistribution';
 import StreamingService from '../components/ui/movies/StreamingService';
 import TabNav from '../components/ui/common/TabNav';
 import MovieDetailsPoster from '../components/ui/movies/MovieDetailsPoster';
+import MovieReviews from "../components/ui/reviews/MovieReviews"
 
 import { useState } from 'react'
 
@@ -84,7 +85,7 @@ const MovieDetails = () => {
             
             
             {/* Tabs Section - Now in Center Column */}
-            <div className="space-y-6 mt-8">
+            <div className="space-y-6 mt-12 mb-12">
               <TabNav 
                 tabs={['CAST', 'CREW', 'DETAILS', 'GENRES', 'RELEASES']}
                 activeTab={activeTab}
@@ -172,6 +173,9 @@ const MovieDetails = () => {
                 </div>
               )}
             </div>
+            
+            <MovieReviews heading={"RECENT REVIEWS"} />
+            <MovieReviews heading={"POPULAR REVIEWS"} />
           </div>
           
           {/* Right Column - Actions & Rating (3 cols) */}
