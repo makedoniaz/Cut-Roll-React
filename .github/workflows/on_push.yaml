@@ -40,4 +40,4 @@ jobs:
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
         source: "dist/*"
-        target: "/home/cut-roll-user/Cut-Roll-React/dist"
+        target: "/home/cut-roll-user/Cut-Roll-React"
