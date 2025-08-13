@@ -32,15 +32,6 @@ jobs:
     - name: Check dist folder
       run: ls -la dist
 
-    # 6. Создаём папку на сервере, если её нет
-    - name: Create target folder on server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        script: sudo mkdir -p /home/cut-roll-user/Cut-Roll-React/dist
-
     # 7. Копируем dist на сервер
     - name: Deploy to server
       uses: appleboy/scp-action@v0.1.7
