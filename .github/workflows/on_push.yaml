@@ -10,20 +10,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Забираем код из репозитория
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # 2. Устанавливаем Node.js
     - name: Install Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '20'
 
+    # 3. Устанавливаем зависимости
     - name: Install dependencies
-      run: npm install
+      run: npm ci
 
+    # 4. Собираем проект (Vite по умолчанию делает папку dist)
     - name: Build project
       run: npm run build
 
+    # 5. Проверяем, что dist реально создан
+    - name: Check dist folder
+      run: ls -la dist
+
+    # 6. Создаём папку на сервере, если её нет
+    - name: Create target folder on server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: mkdir -p /home/cut-roll-user/Cut-Roll-React/dist
+
+    # 7. Копируем dist на сервер
     - name: Deploy to server
       uses: appleboy/scp-action@v0.1.7
       with:
