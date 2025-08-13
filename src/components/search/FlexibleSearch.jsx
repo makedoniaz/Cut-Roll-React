@@ -84,7 +84,7 @@ const FlexibleSearch = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mb-8">
+    <div className="w-full max-w-4xl">
       {/* Search Input */}
       <div className="relative mb-4 flex">
         <input
@@ -129,9 +129,9 @@ const FlexibleSearch = ({
 
       {/* Filters Panel */}
       {showFilters && filters.length > 0 && (
-        <div className={`bg-gray-900 border border-gray-700 rounded-lg p-6 mb-4 transition-all duration-300 ease-in-out transform ${
+        <div className={`bg-gray-900 border border-gray-700 rounded-lg transition-all duration-300 ease-in-out transform relative ${
             isFiltersOpen 
-            ? 'opacity-100 max-h-96 translate-y-0' 
+            ? 'opacity-100 max-h-96 translate-y-0 z-50 p-6 mb-4' 
             : 'opacity-0 max-h-0 -translate-y-2 overflow-hidden p-0'
         }`}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

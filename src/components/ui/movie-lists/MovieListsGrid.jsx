@@ -4,7 +4,7 @@ import PaginatedGridContainer from '../../layout/PaginatedGridContainer';
 
 const MovieListsGrid = ({heading, itemsPerRow, rows, movieLists}) => {
   return (
-    <div className="py-8">
+    <div className="py-2">
         <div className="max-w-7xl mx-auto">
             <SectionHeading heading={heading}/>
             <div>
