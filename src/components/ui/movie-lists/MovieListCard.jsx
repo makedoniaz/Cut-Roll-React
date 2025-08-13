@@ -5,16 +5,16 @@ import MovieListPoster from "./MovieListPoster";
 
 const MovieListCard = ({ list }) => {
   return (
-    <div className="group cursor-pointer">
-      <div className="mb-4">
+    <div className="group cursor-pointer flex flex-col h-full">
+      <div className="">
         <MovieListPoster images={list.coverImages} title={list.title} />
       </div>
-      
-      <div className="space-y-2">
-        <h3 className="text-white font-semibold text-lg leading-tight group-hover:text-blue-400 transition-colors">
-          {list.title}
-        </h3>
-        
+
+      <h3 className="text-white font-semibold text-lg leading-tight group-hover:text-blue-400 transition-colors w-60">
+        {list.title}
+      </h3>
+    
+      <div className="mt-auto space-y-2">
         <AuthorInfo author={list.author} />
         
         <ListStats 

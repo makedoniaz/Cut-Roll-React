@@ -11,35 +11,47 @@ const Grid = ({
 }) => {
   const totalSlots = itemsPerRow * rows;
   
+  // Разбиваем элементы по строкам
+  const itemsByRows = [];
+  for (let i = 0; i < rows; i++) {
+    const startIndex = i * itemsPerRow;
+    const endIndex = startIndex + itemsPerRow;
+    itemsByRows.push(Array.from({ length: itemsPerRow }).map((_, index) => {
+      const itemIndex = startIndex + index;
+      return items[itemIndex] || null;
+    }));
+  }
+  
   return (
-    <div 
-      className={`grid ${gap} ${className}`} 
-      style={{ 
-        gridTemplateColumns: `repeat(${itemsPerRow}, minmax(0, 1fr))`,
-        gridTemplateRows: `repeat(${rows}, 1fr)`
-      }}
-    >
-      {Array.from({ length: totalSlots }).map((_, index) => {
-        const item = items[index];
-        return (
-          <div key={index} className={`w-full ${itemHeight}`}>
-            {item ? (
-              renderItem ? renderItem(item, index) : (
-                <div 
-                  className="w-full h-full rounded-lg flex items-center justify-center text-gray-400 text-sm font-medium"
-                  style={{ backgroundColor: THEME.COLORS.DARK_LIGHTER }}
-                >
-                  Item {index + 1}
-                </div>
-              )
-            ) : (
-              <div className="w-full h-full" />
-            )}
-          </div>
-        );
-      })}
+    <div className={`space-y-6 ${className}`}>
+      {itemsByRows.map((rowItems, rowIndex) => (
+        <div 
+          key={rowIndex}
+          className="flex justify-between items-start" // или justify-evenly для равномерного распределения
+        >
+          {rowItems.map((item, itemIndex) => {
+            const globalIndex = rowIndex * itemsPerRow + itemIndex;
+            return (
+              <div key={globalIndex} className={`${itemHeight}`}>
+                {item ? (
+                  renderItem ? renderItem(item, globalIndex) : (
+                    <div 
+                      className="h-full rounded-lg flex items-center justify-center text-gray-400 text-sm font-medium"
+                      style={{ backgroundColor: THEME.COLORS.DARK_LIGHTER }}
+                    >
+                      Item {globalIndex + 1}
+                    </div>
+                  )
+                ) : (
+                  <div className="h-full" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 };
 
-export default Grid
+export default Grid;

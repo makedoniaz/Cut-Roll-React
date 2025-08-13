@@ -41,7 +41,7 @@ const PaginatedGridContainer = ({
         renderItem={renderItem}
         itemHeight={itemHeight}
         gap={gap}
-        className={`mb-6 ${gridClassName}`}
+        className={`mb-4 ${gridClassName}`}
       />
       
       {showPagination && totalPages > 1 && (
