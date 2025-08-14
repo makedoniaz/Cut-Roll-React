@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  frontend:
+    image: makedoniaz/cut-roll-react:latest
+    container_name: cut-roll-react
+    ports:
+      - "3000:80"
+    restart: unless-stopped
