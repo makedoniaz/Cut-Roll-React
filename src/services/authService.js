@@ -48,7 +48,7 @@ export class AuthService {
       throw new Error(errorMessage || 'Registration failed');
     }
 
-    return await response.json();
+    return await response;
   }
 
   static async refreshToken(refreshToken) {

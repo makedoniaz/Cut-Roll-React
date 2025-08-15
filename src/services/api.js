@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/authStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://40.113.170.140:5000/api';
 
 class ApiService {
   constructor() {
