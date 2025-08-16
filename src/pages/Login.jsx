@@ -41,7 +41,7 @@ const Login = () => {
     e.preventDefault();
     setLocalError('');
     
-    window.location.href = 'http://localhost:5000/api/Authentication/ExternalLogin';
+    window.location.href = 'http://40.113.170.140:5000/api/Authentication/ExternalLogin';
   };
 
   return (

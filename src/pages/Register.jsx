@@ -55,10 +55,14 @@ const Register = () => {
     
     if (result.success) {
       setSuccess(true);
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+
+      navigate('/confirm-email', { 
+        state: { 
+          fromRegistration: true,
+          email: formData.email 
+        }
+      })
+
     } else {
       setLocalError(result.error || 'Registration failed. Please try again.');
     }
@@ -68,7 +72,7 @@ const Register = () => {
     e.preventDefault();
     setLocalError('');
     
-    window.location.href = 'http://localhost:5000/api/Authentication/ExternalLogin';
+    window.location.href = 'http://40.113.170.140:5000/api/Authentication/ExternalLogin';
   };
 
   return (
@@ -95,7 +99,7 @@ const Register = () => {
             <div className="bg-green-500/10 border border-green-500 rounded-md p-3 flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-green-500" />
               <span className="text-green-500 text-sm">
-                Registration successful! Check your email for confirmation. Redirecting to login...
+                Registration successful!
               </span>
             </div>
           )}

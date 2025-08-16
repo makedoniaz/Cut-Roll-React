@@ -11,8 +11,11 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 import AuthInitializer from '../components/auth/AuthInitializer';
 import AuthCallback from '../components/auth/AuthCallback';
 import MovieDetails from '../pages/MovieDetails';
+import RegistrationProtectedRoute from '../components/auth/RegistrationProtectedRoute'
 
 import { useAuth } from '../hooks/useStores';
+import ConfirmEmail from '../pages/ConfirmEmail';
+import NewsCreatePage from '../pages/NewsCreatePage';
 
 // Redirect component for authenticated users
 const AuthRedirect = ({ children }) => {
@@ -38,17 +41,38 @@ const AppRouter = () => {
             <Route path="auth/callback" element={<AuthCallback />} />
 
             <Route path="test" element={<MovieDetails />} />
+
+
+            
+              <Route 
+                path="news/create" 
+                element={
+                  <ProtectedRoute>
+                    <NewsCreatePage />
+                  </ProtectedRoute>
+                } 
+              />
+            
             
             {/* Protected Profile Route */}
             <Route 
-              path="profile/:username" 
+                path="profile/:username" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+            </Route>
+          
+          <Route 
+              path="confirm-email" 
               element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
+                <RegistrationProtectedRoute>
+                  <ConfirmEmail />
+                </RegistrationProtectedRoute>
               } 
-            />
-          </Route>
+          />
 
           {/* Auth Routes (without main layout) */}
           <Route 
