@@ -7,22 +7,22 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Копируем весь проект и собираем
+# Копируем проект и собираем
 COPY . .
 RUN npm run build
 
-# 2. Stage: serve with nginx
-FROM nginx:1.27-alpine
+# 2. Stage: serve static files with 'serve'
+FROM node:20-alpine
 
-# Удаляем дефолтный nginx конфиг
-RUN rm /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Копируем свой nginx конфиг
-COPY nginx.conf /etc/nginx/conf.d
+# Устанавливаем лёгкий сервер для статики
+RUN npm install -g serve
 
-# Копируем собранный билд
-COPY --from=build /app/dist /usr/share/nginx/html
+# Копируем только собранный билд
+COPY --from=build /app/dist ./dist
 
-EXPOSE 80 443
+EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Запускаем сервер на порту 80
+CMD ["serve", "-s", "dist", "-l", "80"]
