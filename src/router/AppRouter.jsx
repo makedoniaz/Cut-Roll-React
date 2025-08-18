@@ -16,6 +16,7 @@ import RegistrationProtectedRoute from '../components/auth/RegistrationProtected
 import { useAuth } from '../hooks/useStores';
 import ConfirmEmail from '../pages/ConfirmEmail';
 import NewsCreatePage from '../pages/NewsCreatePage';
+import NewsPage from '../pages/NewsPage';
 
 // Redirect component for authenticated users
 const AuthRedirect = ({ children }) => {
@@ -41,7 +42,8 @@ const AppRouter = () => {
             <Route path="auth/callback" element={<AuthCallback />} />
 
             <Route path="test" element={<MovieDetails />} />
-
+            <Route path="news/create/test" element={<NewsCreatePage />} />
+            <Route path="news/test" element={<NewsPage />} />
 
             
               <Route 
