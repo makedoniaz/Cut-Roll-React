@@ -41,7 +41,7 @@ const Login = () => {
     e.preventDefault();
     setLocalError('');
     
-    window.location.href = 'https://cutnroll.it.com/api/identity/Authentication/ExternalLoginCallback';
+    window.location.href = 'https://cutnroll.it.com/api/identity/Authentication/ExternalLogin';
   };
 
   return (

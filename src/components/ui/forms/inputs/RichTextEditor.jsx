@@ -268,23 +268,6 @@ const RichTextEditor = ({
       <div className="rounded-t-lg bg-gray-900  p-2">
         <div className="flex flex-wrap items-center gap-1">
 
-          {/* Font Size Selector */}
-          <select
-            onChange={handleFontSizeChange}
-            className="px-2 py-1 text-sm border border-gray-700 rounded hover:bg-gray-700 focus:outline-none"
-            defaultValue=""
-          >
-            <option value="">Size</option>
-            <option value="1">Small</option>
-            <option value="3">Normal</option>
-            <option value="4">Medium</option>
-            <option value="5">Large</option>
-            <option value="6">X-Large</option>
-            <option value="7">XX-Large</option>
-          </select>
-
-          <div className="w-px h-6 bg-gray-300 mx-1" />
-
           {/* Format Buttons */}
           {formatButtons.map(({ command, icon: Icon, title, action }) => (
             <button
@@ -294,21 +277,6 @@ const RichTextEditor = ({
               className={`p-2 rounded transition-colors hover:bg-green-600 cursor-pointer ${
                 isCommandActive(command) ? 'bg-green-600' : 'text-white'
               }`}
-              title={title}
-            >
-              <Icon size={16} />
-            </button>
-          ))}
-
-          <div className="w-px h-6 bg-gray-300 mx-1" />
-
-          {/* List Buttons */}
-          {listButtons.map(({ command, icon: Icon, title, action }) => (
-            <button
-              key={command}
-              type="button"
-              onClick={action}
-              className="p-2 rounded transition-colors hover:bg-green-600 cursor-pointer text-white"
               title={title}
             >
               <Icon size={16} />
