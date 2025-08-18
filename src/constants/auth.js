@@ -6,9 +6,9 @@ export const JWT_CLAIMS = {
 };
 
 export const API_ENDPOINTS = {
-  LOGIN: '/Authentication/Login',
-  REGISTER: '/Authentication/Registration',
-  REFRESH_TOKEN: '/Authentication/UpdateToken',
-  UPDATE_PROFILE: '/User',
-  LOGIN_GOOGLE: '/Authentication/ExternalLogin'
+  LOGIN: 'identity/Authentication/Login',
+  REGISTER: 'identity/Authentication/Registration',
+  REFRESH_TOKEN: 'identity/Authentication/UpdateToken',
+  UPDATE_PROFILE: 'identity/User',
+  LOGIN_GOOGLE: 'identity/Authentication/ExternalLogin'
 };
