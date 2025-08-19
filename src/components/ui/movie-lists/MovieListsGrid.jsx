@@ -14,7 +14,8 @@ const MovieListsGrid = ({heading, itemsPerRow, rows, movieLists}) => {
                 rows={rows}
                 renderItem={(movieList) => <MovieListCard list={movieList} />}
                 itemHeight="h-60"
-                gap="gap-70"
+                itemWidth="w-58"
+                justify="justify-between"
                 />
             </div>
         </div>

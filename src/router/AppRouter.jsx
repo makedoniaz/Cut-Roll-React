@@ -17,6 +17,8 @@ import { useAuth } from '../hooks/useStores';
 import ConfirmEmail from '../pages/ConfirmEmail';
 import NewsCreatePage from '../pages/NewsCreatePage';
 import NewsPage from '../pages/NewsPage';
+import Lists from '../pages/Lists'
+import ListDetails from '../pages/ListDetails'
 
 // Redirect component for authenticated users
 const AuthRedirect = ({ children }) => {
@@ -44,6 +46,9 @@ const AppRouter = () => {
             <Route path="test" element={<MovieDetails />} />
             <Route path="news/create/test" element={<NewsCreatePage />} />
             <Route path="news/test" element={<NewsPage />} />
+
+            <Route path="lists" element={<Lists />} />
+            <Route path="lists/test" element={<ListDetails />} />
 
             
               <Route 

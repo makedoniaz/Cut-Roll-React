@@ -1,6 +1,7 @@
 import MovieGrid from "../components/ui/movies/MovieGrid";
 import NewsFeed from "../components/ui/news/NewsFeed";
 import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
+import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 
 const Home = () => {
   const movies = [
@@ -8,6 +9,7 @@ const Home = () => {
     { id: 2, title: 'Inception Dreams', year: 2010, poster: '🎭', rating: 5 },
     { id: 3, title: 'Interstellar Journey', year: 2014, poster: '🚀', rating: 5 },
     { id: 4, title: 'The Dark Knight Rises', year: 2012, poster: '🦇', rating: 4 },
+    { id: 5, title: 'Pulp Fiction Classic', year: 1994, poster: '🔫', rating: 5 },
     { id: 5, title: 'Pulp Fiction Classic', year: 1994, poster: '🔫', rating: 5 },
   ];
 
@@ -95,8 +97,8 @@ const Home = () => {
     <div>
       <h1 className="text-3xl font-bold mb-8">Welcome to CutRoll</h1>
 
-      <MovieGrid heading={"NEW RELEASES"} rows={1} itemsPerRow={5} movies={movies} />
-      <MovieGrid heading={"POPULAR ON CUT-N-ROLL"} rows={1} itemsPerRow={5} movies={movies} />
+      <MovieGrid heading={"NEW RELEASES"} rows={1} itemsPerRow={6} movies={movies} CardComponent={SmallMovieCard}/>
+      <MovieGrid heading={"POPULAR ON CUT-N-ROLL"} rows={1} itemsPerRow={6} movies={movies} CardComponent={SmallMovieCard}/>
       <MovieListsGrid heading={"POPULAR LISTS"} rows={1} itemsPerRow={4} movieLists={movieLists}/>
       <NewsFeed />
     </div>

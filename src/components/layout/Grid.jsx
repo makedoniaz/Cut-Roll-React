@@ -7,7 +7,9 @@ const Grid = ({
   renderItem,
   itemHeight = 'h-64',
   gap = 'gap-4',
-  className = '' 
+  className = '',
+  itemWidth = 'w-48',
+  justify
 }) => {
   const totalSlots = itemsPerRow * rows;
   
@@ -27,12 +29,12 @@ const Grid = ({
       {itemsByRows.map((rowItems, rowIndex) => (
         <div 
           key={rowIndex}
-          className="flex justify-between items-start" // или justify-evenly для равномерного распределения
+          className={`flex ${justify} items-start ${gap}`} // или justify-evenly для равномерного распределения
         >
           {rowItems.map((item, itemIndex) => {
             const globalIndex = rowIndex * itemsPerRow + itemIndex;
             return (
-              <div key={globalIndex} className={`${itemHeight}`}>
+              <div key={globalIndex} className={`${itemHeight} ${itemWidth}`}>
                 {item ? (
                   renderItem ? renderItem(item, globalIndex) : (
                     <div 

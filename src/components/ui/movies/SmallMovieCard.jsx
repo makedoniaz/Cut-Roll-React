@@ -1,4 +1,4 @@
-const TinyMovieCard = ({ movie }) => {
+const SmallMovieCard = ({ movie }) => {
   return (
     <div className="group cursor-pointer min-w-0">
       <div className="relative overflow-hidden rounded-md shadow-md transition-transform duration-200 hover:scale-105 hover:shadow-lg">
@@ -15,4 +15,4 @@ const TinyMovieCard = ({ movie }) => {
   );
 };
 
-export default TinyMovieCard;
+export default SmallMovieCard;

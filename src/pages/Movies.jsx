@@ -3,7 +3,7 @@ import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 
 const Movies = () => {
   const movies = [
-    { id: 1, title: 'The Matrix Reloaded', year: 2003, poster: '🎬', rating: 4 },
+    { id: 1, title: 'The Matrix Reloaded', year: 2003, poster: null, rating: 4 },
     { id: 2, title: 'Inception Dreams', year: 2010, poster: '🎭', rating: 5 },
     { id: 3, title: 'Interstellar Journey', year: 2014, poster: '🚀', rating: 5 },
     { id: 4, title: 'The Dark Knight Rises', year: 2012, poster: '🦇', rating: 4 },
@@ -31,7 +31,7 @@ const Movies = () => {
   return (
     <div>
       <div>
-        <MovieGrid heading={"FOR YOU"} rows={2} itemsPerRow={5} movies={movies} />
+        <MovieGrid heading={"FOR YOU"} rows={2} itemsPerRow={6} movies={movies} CardComponent={SmallMovieCard} />
         <MovieGrid heading={"RECENTLY WATCHED"} rows={1} itmesPerRow={6} movies={recently_watched} CardComponent={SmallMovieCard}/>
         <MovieGrid heading={"RECENTLY LIKED"} rows={1} itmesPerRow={6} movies={recently_watched} CardComponent={SmallMovieCard}/>
       </div>

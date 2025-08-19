@@ -14,7 +14,9 @@ const PaginatedGridContainer = ({
   className = '',
   gridClassName = '',
   paginationClassName = '',
-  pageInfoClassName = ''
+  pageInfoClassName = '',
+  itemWidth = 'w-48',
+  justify = "justify-start"
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -40,8 +42,10 @@ const PaginatedGridContainer = ({
         rows={rows}
         renderItem={renderItem}
         itemHeight={itemHeight}
+        itemWidth={itemWidth}
         gap={gap}
-        className={`mb-4 ${gridClassName}`}
+        className={`mb-6 ${gridClassName}`}
+        justify={justify}
       />
       
       {showPagination && totalPages > 1 && (
