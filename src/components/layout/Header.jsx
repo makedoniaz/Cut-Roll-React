@@ -82,7 +82,7 @@ const Header = () => {
           <div className="flex items-center space-x-4">
             <button 
               onClick={handleSearchClick}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              className="cursor-pointer p-2 hover:bg-gray-700 rounded-lg transition-colors"
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
@@ -92,7 +92,7 @@ const Header = () => {
               <>
                 <button 
                   onClick={handleUserClick}
-                  className="p-2 hover:bg-gray-700 rounded-lg transition-colors group relative"
+                  className="cursor-pointer p-2 hover:bg-gray-700 rounded-lg transition-colors group relative"
                   aria-label="Profile"
                 >
                   <User className="w-5 h-5" />
@@ -112,7 +112,7 @@ const Header = () => {
             ) : (
               <button 
                 onClick={handleUserClick}
-                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                className="cursor-pointer p-2 hover:bg-gray-700 rounded-lg transition-colors"
                 aria-label="Login"
               >
                 <User className="w-5 h-5" />
