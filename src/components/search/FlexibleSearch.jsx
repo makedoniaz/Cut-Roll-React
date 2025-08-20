@@ -11,6 +11,7 @@ const FlexibleSearch = ({
   filters = [],
   onSearch,
   onFiltersChange,
+  onSearchButtonPress,
   searchValue = "",
   filterValues = {},
   showFilters = true
@@ -28,6 +29,10 @@ const FlexibleSearch = ({
     const newFilterValues = { ...localFilterValues, [filterKey]: value };
     setLocalFilterValues(newFilterValues);
     onFiltersChange?.(newFilterValues);
+  };
+
+  const handleSearchButtonClick = () => {
+    onSearchButtonPress?.();
   };
 
   const clearFilters = () => {
@@ -96,6 +101,7 @@ const FlexibleSearch = ({
         />
         <button
           type="button"
+          onClick={handleSearchButtonClick}
           className="cursor-pointer px-4 py-3 bg-green-600 hover:bg-green-700 border border-green-600 rounded-r-lg transition-colors"
         >
           <Search className="w-5 h-5 text-white" />
@@ -134,7 +140,7 @@ const FlexibleSearch = ({
             ? 'opacity-100 max-h-96 translate-y-0 z-50 p-6 mb-4' 
             : 'opacity-0 max-h-0 -translate-y-2 overflow-hidden p-0'
         }`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filters.map(renderFilter)}
           </div>
         </div>

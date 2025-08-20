@@ -16,22 +16,39 @@ const PaginatedGridContainer = ({
   paginationClassName = '',
   pageInfoClassName = '',
   itemWidth = 'w-48',
-  justify = "justify-start"
+  justify = "justify-start",
+  // New props for external pagination control
+  currentPage: externalCurrentPage,
+  totalPages: externalTotalPages,
+  onPageChange: externalOnPageChange,
+  useExternalPagination = false
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [internalCurrentPage, setInternalCurrentPage] = useState(1);
+  
+  // Use external pagination if provided, otherwise use internal
+  const currentPage = useExternalPagination ? externalCurrentPage : internalCurrentPage;
+  const totalPages = useExternalPagination ? externalTotalPages : Math.ceil(items.length / (itemsPerRow * rows));
   
   const itemsPerPage = itemsPerRow * rows;
   
   const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return items.slice(startIndex, endIndex);
-  }, [items, currentPage, itemsPerPage]);
-  
-  const totalPages = Math.ceil(items.length / itemsPerPage);
+    if (useExternalPagination) {
+      // For external pagination, show all items (pagination is handled externally)
+      return items;
+    } else {
+      // For internal pagination, slice the items
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return items.slice(startIndex, endIndex);
+    }
+  }, [items, currentPage, itemsPerPage, useExternalPagination]);
   
   const handlePageChange = (page) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    if (useExternalPagination && externalOnPageChange) {
+      externalOnPageChange(page);
+    } else {
+      setInternalCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    }
   };
   
   return (

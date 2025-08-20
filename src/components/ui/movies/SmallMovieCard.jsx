@@ -1,4 +1,8 @@
+import { useNavigate } from 'react-router-dom';
+
 const SmallMovieCard = ({ movie }) => {
+  const navigate = useNavigate();
+  
   // Construct TMDB poster URL
   const getPosterUrl = (poster) => {
     if (poster && poster.filePath) {
@@ -14,13 +18,31 @@ const SmallMovieCard = ({ movie }) => {
   const movieId = movie.movieId || movie.id;
   const title = movie.title || 'Unknown Title';
 
+  // Handle click to navigate to movie details
+  const handleClick = () => {
+    if (movieId) {
+      navigate(`/movie/${movieId}`);
+    }
+  };
+
   return (
-    <div className="group cursor-pointer min-w-0 h-64">
-      <div className="relative overflow-hidden rounded-md shadow-md transition-transform duration-200 hover:scale-105 hover:shadow-lg h-full">
+    <div 
+      className="cursor-pointer min-w-0 h-64" 
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+    >
+      <div className="relative overflow-hidden rounded-md shadow-md h-full transition-transform duration-200 hover:scale-105 hover:shadow-lg">
         <img 
           src={getPosterUrl(movie.poster)}
           alt={title}
-          className="w-full h-full object-cover object-center transition-all duration-200 group-hover:brightness-110"
+          className="w-full h-full object-cover object-center"
           style={{ aspectRatio: '2/3' }}
           onError={(e) => {
             // Fallback to placeholder if image fails to load
@@ -28,8 +50,9 @@ const SmallMovieCard = ({ movie }) => {
           }}
         />
         
-        {/* Optional overlay on hover */}
-        <div className="absolute inset-0 group-hover:bg-opacity-20 transition-all duration-200"></div>
+
+        
+
       </div>
     </div>
   );

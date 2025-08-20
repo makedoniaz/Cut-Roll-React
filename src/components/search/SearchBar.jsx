@@ -1,7 +1,7 @@
 import FlexibleSearch from './FlexibleSearch';
 import { useState } from 'react';
 
-const SearchBar = ({ filters, filterValues, handleFiltersChange, handleSearch }) => {
+const SearchBar = ({ filters, filterValues, handleFiltersChange, handleSearch, onSearchButtonPress }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -12,6 +12,7 @@ const SearchBar = ({ filters, filterValues, handleFiltersChange, handleSearch })
           filters={filters}
           onSearch={handleSearch}
           onFiltersChange={handleFiltersChange}
+          onSearchButtonPress={onSearchButtonPress}
           searchValue={searchQuery}
           filterValues={filterValues}
         />
