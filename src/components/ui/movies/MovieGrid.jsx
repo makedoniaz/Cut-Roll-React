@@ -19,7 +19,7 @@ const MovieGrid = ({
                     itemsPerRow={itemsPerRow}
                     rows={rows}
                     renderItem={(movie) => <CardComponent movie={movie} />}
-                    itemHeight="h-66"
+                    itemHeight="h-64"
                     gap="gap-6"
                     />
                 </div>

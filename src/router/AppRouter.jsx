@@ -19,6 +19,7 @@ import NewsCreatePage from '../pages/NewsCreatePage';
 import NewsPage from '../pages/NewsPage';
 import Lists from '../pages/Lists'
 import ListDetails from '../pages/ListDetails'
+import Reviews from '../pages/Reviews'
 
 // Redirect component for authenticated users
 const AuthRedirect = ({ children }) => {
@@ -40,6 +41,7 @@ const AppRouter = () => {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="movies" element={<Movies />} />
+            <Route path="reviews" element={<Reviews />} />
             <Route path="search" element={<Search />} />
             <Route path="auth/callback" element={<AuthCallback />} />
 

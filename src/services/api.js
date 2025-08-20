@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/authStore';
 
-const API_BASE_URL = 'https://cutnroll.it.com/api/';
+const API_BASE_URL = 'http://40.113.170.140:5002/';
 
 class ApiService {
   constructor() {
