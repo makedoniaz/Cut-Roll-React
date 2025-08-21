@@ -84,6 +84,16 @@ const Header = () => {
             >
               News
             </Link>
+            {isAuthenticated && user?.role === 'User' && (
+              <Link 
+                to="/admin" 
+                className={`hover:text-green-500 transition-colors ${
+                  isActiveRoute('/admin') ? 'text-green-500' : 'text-white-400'
+                }`}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           {/* Search & User */}

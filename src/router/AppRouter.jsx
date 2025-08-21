@@ -8,6 +8,7 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import NotFound from '../pages/NotFound';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+import AdminRoute from '../components/auth/AdminRoute';
 import AuthInitializer from '../components/auth/AuthInitializer';
 import AuthCallback from '../components/auth/AuthCallback';
 import MovieDetails from '../pages/MovieDetails';
@@ -21,6 +22,7 @@ import NewsCreatePage from '../pages/NewsCreatePage';
 import Lists from '../pages/Lists'
 import ListDetails from '../pages/ListDetails'
 import Reviews from '../pages/Reviews'
+import AdminDashboard from '../pages/AdminDashboard'
 
 // Redirect component for authenticated users
 const AuthRedirect = ({ children }) => {
@@ -78,6 +80,16 @@ const AppRouter = () => {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+
+            {/* Admin Dashboard Route */}
+            <Route 
+                path="admin" 
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 } 
               />
