@@ -15,8 +15,9 @@ import RegistrationProtectedRoute from '../components/auth/RegistrationProtected
 
 import { useAuth } from '../hooks/useStores';
 import ConfirmEmail from '../pages/ConfirmEmail';
-import NewsCreatePage from '../pages/NewsCreatePage';
 import NewsPage from '../pages/NewsPage';
+import ArticlePage from '../pages/ArticlePage';
+import NewsCreatePage from '../pages/NewsCreatePage';
 import Lists from '../pages/Lists'
 import ListDetails from '../pages/ListDetails'
 import Reviews from '../pages/Reviews'
@@ -46,9 +47,16 @@ const AppRouter = () => {
             <Route path="search" element={<Search />} />
             <Route path="auth/callback" element={<AuthCallback />} />
 
-            <Route path="test" element={<MovieDetails />} />
-            <Route path="news/create/test" element={<NewsCreatePage />} />
-            <Route path="news/test" element={<NewsPage />} />
+            {/* News Routes */}
+            <Route path="news" element={<NewsPage />} />
+            <Route 
+              path="news/:id" 
+              element={
+                <ProtectedRoute>
+                  <ArticlePage />
+                </ProtectedRoute>
+              } 
+            />
 
             <Route path="lists" element={<Lists />} />
             <Route path="lists/test" element={<ListDetails />} />

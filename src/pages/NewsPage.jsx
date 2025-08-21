@@ -1,103 +1,140 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Newspaper, User } from 'lucide-react';
+import NewsFeed from '../components/news/NewsFeed';
+import TabNav from '../components/ui/common/TabNav';
+import { useAuthStore } from '../stores/authStore';
+import { useNavigate } from 'react-router-dom';
+import NewsForm from '../components/ui/forms/NewsForm';
 
-function NewsPage({ title, date, imageUrl, content }) {
-    const [copied, setCopied] = useState(false);
+const NewsPage = () => {
+  const { isAuthenticated, user } = useAuthStore();
+  const navigate = useNavigate();
+  
+  const [activeTab, setActiveTab] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Используем шаблонные тексты
-  const sampleTitle = "Sneak Auswertung 17.08 - Jane Austen und das Chaos in meinem Leben";
-  const sampleDate = "August 18, 2025";
-  const sampleImageUrl = "https://a.ltrbxd.com/resized/story/image/2/2/2/1/6/2/9/9/shard/45630/image-rhzqzktq-960-960-0-0-fill.jpg?v=2066dbad19";
-  const sampleContent = `Gestern lief in unserer Sneak Preview "Jane Austen und das Chaos in meinem Leben". Ihr habt die französische Komödie mit 5,88 Punkten Schnitt eher mittelmäßig bewertet.
+  const tabs = [
+    {
+      id: 'all',
+      label: 'All News',
+      icon: <Newspaper className="w-4 h-4" />,
+      count: null
+    },
+    ...(isAuthenticated ? [{
+      id: 'my-news',
+      label: 'My News',
+      icon: <User className="w-4 h-4" />,
+      count: null
+    }] : [])
+  ];
 
-Hier ein Best of der Kommentare: 
+  const handleCreateArticle = () => {
+    setShowCreateForm(true);
+  };
 
-"war mit Sicherheit nicht der beste und tiefgründigste Film meines Lebens, aber hat Spaß gemacht, war leicht und lustig und herrlich französisch" (8)
-"Schöne Szenerie, eher klischee Handlung" (8)
-"Sehr süß" (8)
-"Hat den französischen und britischen Humor charmant verbunden" (7)
-"wusste gar nicht, dass französisch so witzig sein kann, seichte Unterhaltung, Kind of literarisch" (6)
-"schöne Bilder, schöne Musik, allerdings recht vorhersehbar" (6)
-"nur der französische Film kann sich selbst aus Versehen und Stolz und Vorurteil mit voller Absicht parodieren, ohne völlig lächerlich zu sein" (6)
-"Porträt einer jungen Frau in Langeweile" (4)
-"Hofen sind eh überbewertet" (3)
-"Kaffee & Kuchen Pt.2, aber was war mit ihrer Phobie?" (3)
-"Dass so ein banaler, klischeehafter Film den Namen "Jane Austen" im Titel trägt, ist eine Beleidigung" (2)
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setShowCreateForm(false);
+  };
 
-Diesen Sonntag läuft ein Film entweder in Engl. OmU oder Deutsch OmeU!.
+  const handleFormClose = () => {
+    setShowCreateForm(false);
+  };
 
-Aliquam erat volutpat. Sed ut dui ut lacus dictum fermentum vel tincidunt neque. 
-Sed sed lacinia lectus.`;
-
-        const handleShare = () => {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000); // уведомление исчезает через 2 сек
-        });
-    };
+  // If showing create form, render the form
+  if (showCreateForm) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-4 mb-8">
+          <button
+            onClick={handleFormClose}
+            className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          >
+            ← Back to News
+          </button>
+          <div className="h-6 w-px bg-gray-700"></div>
+          <h1 className="text-3xl font-bold text-white">Create News Article</h1>
+        </div>
+        
+        <NewsForm onClose={handleFormClose} />
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto px-4 py-8 text-gray-100">
-      {/* Заголовок с кнопкой Share */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">{title || sampleTitle}</h1>
-        <button
-          onClick={handleShare}
-          className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
-            copied 
-              ? 'bg-green-700' 
-              : 'bg-gradient-to-r bg-gray-700'
-          }`}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className={`h-5 w-5 transition-transform duration-200 ${copied ? 'rotate-0' : 'group-hover:-rotate-12'}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-white mb-2">News</h1>
+          <p className="text-gray-400">
+            Stay updated with the latest movie news, reviews, and industry insights
+          </p>
+        </div>
+        
+        {/* Create Article Button - Only for authenticated users */}
+        {isAuthenticated && (
+          <button
+            onClick={handleCreateArticle}
+            className="mt-4 sm:mt-0 flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
           >
-            {copied ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-              />
-            )}
-          </svg>
-          <span className="font-medium">
-            {copied ? 'Copied!' : 'Share'}
-          </span>
-        </button>
+            <Plus className="w-5 h-5" />
+            Create Article
+          </button>
+        )}
       </div>
 
-      {/* Изображение */}
-      {(imageUrl || sampleImageUrl) && (
-        <img
-          src={imageUrl || sampleImageUrl}
-          alt={title || sampleTitle}
-          className="w-full rounded-lg mb-6 object-cover"
+      {/* Tab Navigation */}
+      <div className="mb-8">
+        <TabNav
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          className="bg-gray-900 border border-gray-700 rounded-lg p-1"
         />
-      )}
-
-      {/* Дата */}
-      <p className="text-sm text-gray-400 mb-4">{date || sampleDate}</p>
-
-      {/* Контент новости */}
-      <div className="prose prose-invert max-w-none">
-        {(content || sampleContent).split("\n").map((paragraph, i) => (
-          <p key={i}>{paragraph}</p>
-        ))}
       </div>
+
+      {/* Content based on active tab */}
+      <div className="min-h-96">
+        {activeTab === 'all' && (
+          <NewsFeed 
+            type="all"
+            loading={loading}
+            setLoading={setLoading}
+          />
+        )}
+        
+        {activeTab === 'my-news' && isAuthenticated && (
+          <NewsFeed 
+            type="user"
+            userId={user?.id}
+            loading={loading}
+            setLoading={setLoading}
+          />
+        )}
+      </div>
+
+      {/* Welcome message for non-authenticated users */}
+      {!isAuthenticated && (
+        <div className="mt-12 text-center p-8 bg-gray-900 border border-gray-700 rounded-lg">
+          <div className="text-6xl mb-4">📰</div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Want to share your thoughts?
+          </h3>
+          <p className="text-gray-400 mb-4">
+            Sign in to create your own news articles and share your movie insights with the community.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
+          >
+            Sign In
+          </button>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default NewsPage;

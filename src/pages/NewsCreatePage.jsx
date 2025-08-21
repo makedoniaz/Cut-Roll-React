@@ -1,11 +1,12 @@
-import NewsForm from "../components/ui/forms/NewsForm"
+import React from 'react'
+import NewsForm from '../components/ui/forms/NewsForm'
 
 const NewsCreatePage = () => {
   return (
-    <div className="w-full min-h-screen bg-gray-900 flex items-center justify-center">
-      <NewsForm />
+    <div>
+        <NewsForm />
     </div>
-  );
-};
+  )
+}
 
-export default NewsCreatePage;
+export default NewsCreatePage

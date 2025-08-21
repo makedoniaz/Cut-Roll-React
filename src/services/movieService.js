@@ -21,9 +21,6 @@ export class MovieService {
             sortBy: searchParams.sortBy || null
         };
         
-        if (Array.isArray(searchData.keyword) && searchData.keyword.length > 0) {
-            searchData.keyword = searchData.keyword.join(',');
-        }
 
         // Валидация параметров
         if (searchData.year && (searchData.year < 1950 || searchData.year > 2025)) {

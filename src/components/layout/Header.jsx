@@ -76,6 +76,14 @@ const Header = () => {
             >
               Reviews
             </Link>
+            <Link 
+              to="/news" 
+              className={`hover:text-green-500 transition-colors ${
+                isActiveRoute('/news') ? 'text-green-500' : ''
+              }`}
+            >
+              News
+            </Link>
           </nav>
 
           {/* Search & User */}
