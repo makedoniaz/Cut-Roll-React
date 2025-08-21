@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react";
 import FlexibleSearchInput from "../common/FlexibleSearchInput";
 import { MovieService } from "../../../services/movieService";
+import genreService from "../../../services/genreService";
 
 // Search functions for different reference types - defined outside component to prevent recreation
 const searchFunctions = {
     movie: async (query) => {
+      console.log('Movie search function called with query:', query);
       try {
         // Use MovieService to search movies by title
         const searchResults = await MovieService.searchMovies({
@@ -14,16 +16,21 @@ const searchFunctions = {
           sortDescending: false
         });
         
+        console.log('Raw movie search results:', searchResults);
+        
         // Transform the results to match the expected format
         if (searchResults && searchResults.data) {
-          return searchResults.data.map(movie => ({
+          const transformed = searchResults.data.map(movie => ({
             id: movie.movieId,
             name: movie.title,
             description: `Movie ID: ${movie.movieId}`,
             image: movie.poster?.filePath ? `https://image.tmdb.org/t/p/original${movie.poster.filePath}` : null
           }));
+          console.log('Transformed movie results:', transformed);
+          return transformed;
         }
         
+        console.log('No movie data found, returning empty array');
         return [];
       } catch (error) {
         console.error('Movie search error:', error);
@@ -42,14 +49,40 @@ const searchFunctions = {
       );
     },
     genre: async (query) => {
-      // Mock genre search
-      return [
-        { id: '1', name: 'Action', description: 'High-energy films' },
-        { id: '2', name: 'Sci-Fi', description: 'Science fiction' },
-        { id: '3', name: 'Drama', description: 'Character-driven stories' }
-      ].filter(genre => 
-        genre.name.toLowerCase().includes(query.toLowerCase())
-      );
+      console.log('Genre search function called with query:', query);
+      try {
+        // Use GenreService to search genres by name
+        const searchResults = await genreService.searchGenres({
+          name: query,
+          pageNumber: 0,
+          pageSize: 8
+        });
+        
+        console.log('Raw genre search results:', searchResults);
+        
+        // Parse the response to get JSON data
+        const responseData = await searchResults.json();
+        console.log('Parsed response data:', responseData);
+        
+        // Transform the results to match the expected format
+        if (responseData && responseData.data) {
+          const transformed = responseData.data.map(genre => ({
+            id: genre.id, // Use the id directly from the API response
+            name: genre.name,
+            description: `Genre: ${genre.name}`, // More user-friendly description
+            image: null // Genres typically don't have images
+          }));
+          console.log('Transformed genre results:', transformed);
+          return transformed;
+        }
+        
+        console.log('No genre data found, returning empty array');
+        return [];
+      } catch (error) {
+        console.error('Genre search error:', error);
+        // Return empty array on error
+        return [];
+      }
     },
     production_company: async (query) => {
       // Mock production company search
@@ -89,7 +122,10 @@ function LinkModal({ selectedText, onClose, onAddReference = null }) {
 
   // Create a stable search function that doesn't change on every render
   const currentSearchFunction = useCallback(async (query) => {
-    return searchFunctions[linkType](query);
+    console.log('Searching for:', linkType, 'with query:', query);
+    const result = await searchFunctions[linkType](query);
+    console.log('Search result for', linkType, ':', result);
+    return result;
   }, [linkType]);
 
   const linkTypes = [
@@ -186,6 +222,7 @@ function LinkModal({ selectedText, onClose, onAddReference = null }) {
           Search for reference
         </label>
         <FlexibleSearchInput
+          key={linkType} // Force re-render when linkType changes
           placeholder={`Search for ${linkTypes.find(t => t.value === linkType)?.label.toLowerCase()}...`}
           searchFunction={currentSearchFunction}
           onSelect={handleReferenceSelect}

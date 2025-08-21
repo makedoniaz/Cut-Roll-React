@@ -106,3 +106,6 @@ export const API_ENDPOINTS = {
 
 // Export news constants
 export * from './news.js';
+
+// Export genres constants
+export * from './genres.js';
