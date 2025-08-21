@@ -9,20 +9,20 @@ const Search = () => {
   // Enhanced filters that match movieService search parameters
   const movieFilters = [
     {
-      key: 'genre',
-      label: 'Genre',
+      key: 'genres',
+      label: 'Genres',
       type: 'multiselect',
       options: [
-        { value: 'action', label: 'Action' },
-        { value: 'comedy', label: 'Comedy' },
-        { value: 'drama', label: 'Drama' },
-        { value: 'horror', label: 'Horror' },
-        { value: 'sci-fi', label: 'Sci-Fi' },
-        { value: 'romance', label: 'Romance' },
-        { value: 'thriller', label: 'Thriller' },
-        { value: 'adventure', label: 'Adventure' },
-        { value: 'fantasy', label: 'Fantasy' },
-        { value: 'animation', label: 'Animation' }
+        { value: 'Action', label: 'Action' },
+        { value: 'Comedy', label: 'Comedy' },
+        { value: 'Drama', label: 'Drama' },
+        { value: 'Horror', label: 'Horror' },
+        { value: 'Sci-fi', label: 'Sci-Fi' },
+        { value: 'Romance', label: 'Romance' },
+        { value: 'Thriller', label: 'Thriller' },
+        { value: 'Adventure', label: 'Adventure' },
+        { value: 'Fantasy', label: 'Fantasy' },
+        { value: 'Animation', label: 'Animation' }
       ],
       defaultValue: []
     },
@@ -39,9 +39,9 @@ const Search = () => {
       label: 'Rating Range',
       type: 'range',
       min: 0,
-      max: 5,
+      max: 10,
       step: 0.5,
-      defaultValue: [0, 5]
+      defaultValue: [0, 10]
     },
     {
       key: 'director',
@@ -89,9 +89,9 @@ const Search = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState({
-    genre: [],
+    genres: [],
     year: [1950, 2025],
-    rating: [0, 5],
+    rating: [0, 10],
     director: '',
     actor: '',
     keyword: '',
@@ -128,7 +128,7 @@ const Search = () => {
         page: page,
         pageSize: 20, // Show 20 movies per page
         title: searchQuery.trim() || null,
-        genre: filterValues.genre.length > 0 ? filterValues.genre.join(',') : null,
+        genres: filterValues.genres.length > 0 ? filterValues.genres : null,
         actor: filterValues.actor || null,
         director: filterValues.director || null,
         keyword: filterValues.keyword || null,
@@ -267,7 +267,7 @@ const Search = () => {
                         </span>
                         {searchQuery.trim() && (
                           <span className="text-gray-400 ml-2">
-                            for "{searchQuery.trim()}"
+                            for "{searchQuery.trim()}""
                           </span>
                         )}
                         {hasActiveFilters() && (

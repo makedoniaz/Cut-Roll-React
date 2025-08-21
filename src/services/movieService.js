@@ -9,7 +9,7 @@ export class MovieService {
             pageSize: searchParams.pageSize || 10,
             sortDescending: searchParams.sortDescending !== undefined ? searchParams.sortDescending : true,
             title: searchParams.title || null,
-            genre: searchParams.genre || null,
+            genres: searchParams.genres || null,
             actor: searchParams.actor || null,
             director: searchParams.director || null,
             keyword: searchParams.keyword || null,
@@ -20,17 +20,21 @@ export class MovieService {
             language: searchParams.language || null,
             sortBy: searchParams.sortBy || null
         };
+        
+        if (Array.isArray(searchData.keyword) && searchData.keyword.length > 0) {
+            searchData.keyword = searchData.keyword.join(',');
+        }
 
         // Валидация параметров
         if (searchData.year && (searchData.year < 1950 || searchData.year > 2025)) {
             throw new Error('Year must be between 1950 and 2025');
         }
         
-        if (searchData.minRating && (searchData.minRating < 0 || searchData.minRating > 5)) {
+        if (searchData.minRating && (searchData.minRating < 0 || searchData.minRating > 10)) {
             throw new Error('minRating must be between 0 and 5');
         }
         
-        if (searchData.maxRating && (searchData.maxRating < 0 || searchData.maxRating > 5)) {
+        if (searchData.maxRating && (searchData.maxRating < 0 || searchData.maxRating > 10)) {
             throw new Error('maxRating must be between 0 and 5');
         }
 

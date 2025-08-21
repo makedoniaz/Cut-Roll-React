@@ -1,5 +1,5 @@
 export const API_ENDPOINTS = {
-    SEARCH: 'movie/search',
-    BASE: 'movie/',
+    SEARCH: 'movies/Movie/search/',
+    BASE: 'movies/Movie/',
     COUNT: 'movie/count'
 };
