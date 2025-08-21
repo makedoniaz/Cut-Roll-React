@@ -109,3 +109,6 @@ export * from './news.js';
 
 // Export genres constants
 export * from './genres.js';
+
+// Export persons constants
+export * from './persons.js';

@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import FlexibleSearchInput from "../common/FlexibleSearchInput";
 import { MovieService } from "../../../services/movieService";
 import genreService from "../../../services/genreService";
+import personService from "../../../services/personService";
 
 // Search functions for different reference types - defined outside component to prevent recreation
 const searchFunctions = {
@@ -39,14 +40,40 @@ const searchFunctions = {
       }
     },
     people: async (query) => {
-      // Mock people search - replace with PeopleService.searchPeople() when available
-      return [
-        { id: '1', name: 'Keanu Reeves', description: 'Actor • The Matrix' },
-        { id: '2', name: 'Christopher Nolan', description: 'Director • Inception' },
-        { id: '3', name: 'Leonardo DiCaprio', description: 'Actor • Inception' }
-      ].filter(person => 
-        person.name.toLowerCase().includes(query.toLowerCase())
-      );
+      console.log('People search function called with query:', query);
+      try {
+        // Use PersonService to search people by name
+        const searchResults = await personService.searchPeople({
+          name: query,
+          pageNumber: 1,
+          pageSize: 8
+        });
+        
+        console.log('Raw people search results:', searchResults);
+        
+        // Parse the response to get JSON data
+        const responseData = await searchResults.json();
+        console.log('Parsed response data:', responseData);
+        
+        // Transform the results to match the expected format
+        if (responseData && responseData.data) {
+          const transformed = responseData.data.map(person => ({
+            id: person.id,
+            name: person.name,
+            description: `Person: ${person.name}`,
+            image: null // People typically don't have images in this context
+          }));
+          console.log('Transformed people results:', transformed);
+          return transformed;
+        }
+        
+        console.log('No people data found, returning empty array');
+        return [];
+      } catch (error) {
+        console.error('People search error:', error);
+        // Return empty array on error
+        return [];
+      }
     },
     genre: async (query) => {
       console.log('Genre search function called with query:', query);
@@ -54,7 +81,7 @@ const searchFunctions = {
         // Use GenreService to search genres by name
         const searchResults = await genreService.searchGenres({
           name: query,
-          pageNumber: 0,
+          pageNumber: 1,
           pageSize: 8
         });
         
