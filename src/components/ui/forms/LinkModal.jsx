@@ -3,6 +3,8 @@ import FlexibleSearchInput from "../common/FlexibleSearchInput";
 import { MovieService } from "../../../services/movieService";
 import genreService from "../../../services/genreService";
 import personService from "../../../services/personService";
+import keywordService from "../../../services/keywordService";
+import productionCompanyService from "../../../services/productionCompanyService";
 
 // Search functions for different reference types - defined outside component to prevent recreation
 const searchFunctions = {
@@ -112,24 +114,77 @@ const searchFunctions = {
       }
     },
     production_company: async (query) => {
-      // Mock production company search
-      return [
-        { id: '1', name: 'Warner Bros.', description: 'Major studio' },
-        { id: '2', name: 'Paramount', description: 'Film studio' },
-        { id: '3', name: 'Universal', description: 'Entertainment company' }
-      ].filter(company => 
-        company.name.toLowerCase().includes(query.toLowerCase())
-      );
+      console.log('Production company search function called with query:', query);
+      try {
+        // Use ProductionCompanyService to search production companies by name
+        const searchResults = await productionCompanyService.searchProductionCompanies({
+          name: query,
+          countryCode: null, // Always null for name-only search
+          pageNumber: 0,
+          pageSize: 8
+        });
+        
+        console.log('Raw production company search results:', searchResults);
+        
+        // Parse the response to get JSON data
+        const responseData = await searchResults.json();
+        console.log('Parsed response data:', responseData);
+        
+        // Transform the results to match the expected format
+        if (responseData && responseData.data) {
+          const transformed = responseData.data.map(company => ({
+            id: company.id,
+            name: company.name,
+            description: `Production Company: ${company.name}`,
+            image: null // Production companies typically don't have images
+          }));
+          console.log('Transformed production company results:', transformed);
+          return transformed;
+        }
+        
+        console.log('No production company data found, returning empty array');
+        return [];
+      } catch (error) {
+        console.error('Production company search error:', error);
+        // Return empty array on error
+        return [];
+      }
     },
     keyword: async (query) => {
-      // Mock keyword search
-      return [
-        { id: '1', name: 'Artificial Intelligence', description: 'AI-related content' },
-        { id: '2', name: 'Time Travel', description: 'Temporal themes' },
-        { id: '3', name: 'Virtual Reality', description: 'VR experiences' }
-      ].filter(keyword => 
-        keyword.name.toLowerCase().includes(query.toLowerCase())
-      );
+      console.log('Keyword search function called with query:', query);
+      try {
+        // Use KeywordService to search keywords by name
+        const searchResults = await keywordService.searchKeywords({
+          name: query,
+          pageNumber: 1,
+          pageSize: 8
+        });
+        
+        console.log('Raw keyword search results:', searchResults);
+        
+        // Parse the response to get JSON data
+        const responseData = await searchResults.json();
+        console.log('Parsed response data:', responseData);
+        
+        // Transform the results to match the expected format
+        if (responseData && responseData.data) {
+          const transformed = responseData.data.map(keyword => ({
+            id: keyword.id,
+            name: keyword.name,
+            description: `Keyword: ${keyword.name}`,
+            image: null // Keywords typically don't have images
+          }));
+          console.log('Transformed keyword results:', transformed);
+          return transformed;
+        }
+        
+        console.log('No keyword data found, returning empty array');
+        return [];
+      } catch (error) {
+        console.error('Keyword search error:', error);
+        // Return empty array on error
+        return [];
+      }
     },
     news: async (query) => {
       // Mock news search - replace with NewsService.searchNews() when available

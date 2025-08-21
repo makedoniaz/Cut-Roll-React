@@ -112,3 +112,9 @@ export * from './genres.js';
 
 // Export persons constants
 export * from './persons.js';
+
+// Export keywords constants
+export * from './keywords.js';
+
+// Export production companies constants
+export * from './productionCompanies.js';
