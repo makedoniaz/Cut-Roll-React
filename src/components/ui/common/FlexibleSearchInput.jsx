@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronDown, X, Search } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 
 const FlexibleSearchInput = ({
   placeholder = "Search...",
@@ -14,7 +14,9 @@ const FlexibleSearchInput = ({
   clearable = true,
   multiple = false,
   selectedItems = [],
-  onSelectedItemsChange
+  onSelectedItemsChange,
+  autoOpen = false,
+  onClear
 }) => {
   const [inputValue, setInputValue] = useState(value);
   const [searchResults, setSearchResults] = useState([]);
@@ -26,13 +28,21 @@ const FlexibleSearchInput = ({
   
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
+  const previousValueRef = useRef(value);
+  const previousSelectedItemsRef = useRef(selectedItems);
 
   // Update local selected items when prop changes
   useEffect(() => {
-    setLocalSelectedItems(selectedItems);
+    // Only update if selectedItems is provided and different from previous value
+    if (selectedItems && JSON.stringify(selectedItems) !== JSON.stringify(previousSelectedItemsRef.current)) {
+      setLocalSelectedItems(selectedItems);
+      previousSelectedItemsRef.current = selectedItems;
+    }
   }, [selectedItems]);
 
   // Debounced search function
+  // Note: searchFunction dependency removed to prevent infinite loops
+  // The searchFunction should be stable (memoized in parent component)
   const performSearch = useCallback(async (query) => {
     if (!query.trim() || !searchFunction) {
       setSearchResults([]);
@@ -49,7 +59,7 @@ const FlexibleSearchInput = ({
     } finally {
       setIsLoading(false);
     }
-  }, [searchFunction, maxResults]);
+  }, [maxResults]); // Removed searchFunction dependency to prevent recreation
 
   // Handle input change with debouncing
   const handleInputChange = (e) => {
@@ -89,7 +99,7 @@ const FlexibleSearchInput = ({
       
       // Clear input and close dropdown
       setInputValue('');
-      onChange?.('');
+      if (onChange) onChange('');
       setIsDropdownOpen(false);
       setSearchResults([]);
     } else {
@@ -117,16 +127,19 @@ const FlexibleSearchInput = ({
     setLocalSelectedItems([]);
     onSelectedItemsChange?.([]);
     setSearchResults([]);
-    setIsDropdownOpen(false);
-    onChange?.('');
+    // Don't close dropdown when clearing - keep it open for new input
+    if (onChange) onChange('');
+    
+    // Call parent's onClear function if provided
+    if (onClear) {
+      onClear();
+    }
   };
 
   // Handle focus
   const handleFocus = () => {
     setIsFocused(true);
-    if (inputValue.trim()) {
-      setIsDropdownOpen(true);
-    }
+    setIsDropdownOpen(true);
   };
 
   // Handle blur
@@ -134,14 +147,18 @@ const FlexibleSearchInput = ({
     setIsFocused(false);
     // Delay closing dropdown to allow for item selection
     setTimeout(() => {
-      setIsDropdownOpen(false);
+      // Only close if we're not clicking on the dropdown itself
+      if (!dropdownRef.current?.contains(document.activeElement)) {
+        setIsDropdownOpen(false);
+      }
     }, 200);
   };
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
+          inputRef.current && !inputRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
     };
@@ -161,9 +178,12 @@ const FlexibleSearchInput = ({
     };
   }, [searchTimeout]);
 
-  // Update input value when external value changes
+  // Update input value when external value changes (only if value prop is provided)
   useEffect(() => {
-    setInputValue(value);
+    if (value !== undefined && value !== previousValueRef.current) {
+      setInputValue(value);
+      previousValueRef.current = value;
+    }
   }, [value]);
 
   return (
@@ -203,30 +223,27 @@ const FlexibleSearchInput = ({
           className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
         />
         
-        {/* Search Icon */}
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-          <Search className="w-5 h-5" />
-        </div>
-
         {/* Clear Button */}
         {clearable && (inputValue || (multiple && localSelectedItems.length > 0)) && (
           <button
             type="button"
             onClick={clearAll}
-            className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         )}
 
-        {/* Dropdown Toggle */}
-        <button
-          type="button"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-        >
-          <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-        </button>
+        {/* Dropdown Toggle - Only show if not autoOpen */}
+        {!autoOpen && (
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+        )}
       </div>
 
       {/* Dropdown */}
@@ -287,11 +304,15 @@ const FlexibleSearchInput = ({
                 );
               })}
             </div>
-          ) : inputValue.trim() && !isLoading ? (
+          ) : inputValue.trim() ? (
             <div className="px-4 py-3 text-gray-400 text-center">
               No results found
             </div>
-          ) : null}
+          ) : (
+            <div className="px-4 py-3 text-gray-400 text-center">
+              No results yet
+            </div>
+          )}
         </div>
       )}
     </div>

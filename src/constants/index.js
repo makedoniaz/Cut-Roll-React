@@ -27,7 +27,9 @@ export const ROUTES = {
   REVIEWS: '/reviews',
   SEARCH: '/search',
   LOGIN: '/login',
-  REGISTER: '/register'
+  REGISTER: '/register',
+  NEWS: '/news',
+  NEWS_CREATE: '/news/create'
 };
 
 // Movie Genres (TMDB genre IDs)
@@ -101,3 +103,6 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: '/user/change-password'
   }
 };
+
+// Export news constants
+export * from './news.js';

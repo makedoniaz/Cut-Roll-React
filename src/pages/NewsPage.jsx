@@ -4,7 +4,6 @@ import NewsFeed from '../components/news/NewsFeed';
 import TabNav from '../components/ui/common/TabNav';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
-import NewsForm from '../components/ui/forms/NewsForm';
 
 const NewsPage = () => {
   const { isAuthenticated, user } = useAuthStore();
@@ -12,7 +11,6 @@ const NewsPage = () => {
   
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(false);
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const tabs = [
     {
@@ -30,37 +28,12 @@ const NewsPage = () => {
   ];
 
   const handleCreateArticle = () => {
-    setShowCreateForm(true);
+    navigate('/news/create');
   };
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
-    setShowCreateForm(false);
   };
-
-  const handleFormClose = () => {
-    setShowCreateForm(false);
-  };
-
-  // If showing create form, render the form
-  if (showCreateForm) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={handleFormClose}
-            className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
-          >
-            ← Back to News
-          </button>
-          <div className="h-6 w-px bg-gray-700"></div>
-          <h1 className="text-3xl font-bold text-white">Create News Article</h1>
-        </div>
-        
-        <NewsForm onClose={handleFormClose} />
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

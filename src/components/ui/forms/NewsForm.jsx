@@ -15,6 +15,7 @@ function NewsForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [savedSelectedText, setSavedSelectedText] = useState(''); // Сохраненный текст для модалки
+  const [references, setReferences] = useState([]);
 
   const handleSelectionChange = (text) => {
     console.log('Selection changed:', text);
@@ -67,6 +68,18 @@ function NewsForm() {
       setIsModalOpen(true);
       console.log('Modal opened with saved text:', textToSave);
     }
+  };
+
+  const handleAddReference = (referenceData) => {
+    console.log('Reference added:', referenceData);
+    setReferences(prev => [...prev, referenceData]);
+    
+    // Here you would typically update the content to include the reference
+    // For now, we'll just log it and close the modal
+    setIsModalOpen(false);
+    
+    // Also log the current references state
+    console.log('Current references:', references);
   };
 
   // Button should only be enabled when text is selected
@@ -125,6 +138,29 @@ function NewsForm() {
               Add reference
             </button>
 
+            {/* References Display */}
+            {references.length > 0 && (
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-white mb-3">Added References ({references.length})</h3>
+                <div className="space-y-2">
+                  {references.map((ref, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-600 rounded">
+                      <div className="text-white">
+                        <span className="font-medium">{ref.originalText}</span>
+                        <span className="text-gray-300 ml-2">→ {ref.reference.name} ({ref.reference.type})</span>
+                      </div>
+                      <button
+                        onClick={() => setReferences(prev => prev.filter((_, i) => i !== index))}
+                        className="text-red-400 hover:text-red-300 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-between">
               <div className="text-sm text-gray-400">
                 {selectedText && `Selected: "${selectedText.substring(0, 30)}${selectedText.length > 30 ? '...' : ''}"`}
@@ -154,7 +190,11 @@ function NewsForm() {
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <LinkModal selectedText={savedSelectedText} onClose={() => setIsModalOpen(false)} />
+        <LinkModal 
+          selectedText={savedSelectedText} 
+          onClose={() => setIsModalOpen(false)}
+          onAddReference={handleAddReference}
+        />
       </Modal>
     </div>
   );
