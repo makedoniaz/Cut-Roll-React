@@ -84,6 +84,17 @@ const Search = () => {
         { value: 'releasedate', label: 'Release Date' },
         { value: 'revenue', label: 'Revenue' }
       ]
+    },
+    {
+      key: 'sortDescending',
+      label: 'Sort Order',
+      type: 'select',
+      placeholder: 'Sort order...',
+      options: [
+        { value: true, label: 'Descending (High to Low)' },
+        { value: false, label: 'Ascending (Low to High)' }
+      ],
+      defaultValue: true
     }
   ];
 
@@ -97,7 +108,8 @@ const Search = () => {
     keyword: '',
     country: '',
     language: '',
-    sortBy: ''
+    sortBy: '',
+    sortDescending: true
   });
 
   const [movies, setMovies] = useState([]);
@@ -107,9 +119,15 @@ const Search = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
 
+  // Debug: Log initial filter values
+  useEffect(() => {
+    console.log('Search component mounted with filter values:', filterValues);
+  }, []);
+
   // Search movies using movieService
   const searchMovies = useCallback(async (page = 1) => {
     console.log('Search triggered with:', { searchQuery, hasActiveFilters: hasActiveFilters() });
+    console.log('Current filter values:', filterValues);
     
     if (!searchQuery.trim() && !hasActiveFilters()) {
       console.log('No search query and no active filters, clearing results');
@@ -134,11 +152,11 @@ const Search = () => {
         keyword: filterValues.keyword || null,
         year: filterValues.year[1] !== 2025 ? filterValues.year[1] : null, // Use max year if not default
         minRating: filterValues.rating[0] !== 0 ? filterValues.rating[0] : null,
-        maxRating: filterValues.rating[1] !== 5 ? filterValues.rating[1] : null,
+        maxRating: filterValues.rating[1] !== 10 ? filterValues.rating[1] : null,
         country: filterValues.country || null,
         language: filterValues.language || null,
         sortBy: filterValues.sortBy || null,
-        sortDescending: true
+        sortDescending: filterValues.sortDescending
       };
 
       // Remove null values
@@ -181,12 +199,17 @@ const Search = () => {
 
   // Check if there are any active filters
   const hasActiveFilters = () => {
-    return Object.values(filterValues).some(value => {
+    return Object.entries(filterValues).some(([key, value]) => {
+      if (key === 'sortDescending') {
+        // sortDescending is only considered active if it's different from default (true)
+        return value === false;
+      }
+      
       if (Array.isArray(value)) {
         if (value.length === 2) {
           // For range filters, check if they're not at default values
           if (value[0] === 1950 && value[1] === 2025) return false; // year
-          if (value[0] === 0 && value[1] === 5) return false; // rating
+          if (value[0] === 0 && value[1] === 10) return false; // rating
           return true;
         }
         return value.length > 0;
@@ -203,6 +226,7 @@ const Search = () => {
 
   // Handle filter changes (just update state, don't search yet)
   const handleFiltersChange = (filters) => {
+    console.log('Filter values changed:', filters);
     setFilterValues(filters);
     setCurrentPage(1); // Reset to first page
   };

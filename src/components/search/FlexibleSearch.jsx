@@ -4,7 +4,7 @@ import RangeFilter from "./filters/RangeFilter"
 import MultiSelectFilter from "./filters/MultiSelectFilter"
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const FlexibleSearch = ({
   placeholder = "Search...",
@@ -20,13 +20,24 @@ const FlexibleSearch = ({
   const [localSearchValue, setLocalSearchValue] = useState(searchValue);
   const [localFilterValues, setLocalFilterValues] = useState(filterValues);
 
+  // Sync local state with prop changes
+  useEffect(() => {
+    setLocalFilterValues(filterValues);
+  }, [filterValues]);
+
+  useEffect(() => {
+    setLocalSearchValue(searchValue);
+  }, [searchValue]);
+
   const handleSearchChange = (value) => {
     setLocalSearchValue(value);
     onSearch?.(value);
   };
 
   const handleFilterChange = (filterKey, value) => {
+    console.log('Filter change in FlexibleSearch:', { filterKey, value, currentLocalValues: localFilterValues });
     const newFilterValues = { ...localFilterValues, [filterKey]: value };
+    console.log('New filter values:', newFilterValues);
     setLocalFilterValues(newFilterValues);
     onFiltersChange?.(newFilterValues);
   };
@@ -45,6 +56,14 @@ const FlexibleSearch = ({
         case 'range':
           clearedFilters[filter.key] = filter.defaultValue || [filter.min || 0, filter.max || 100];
           break;
+        case 'select':
+          // Handle boolean values properly for select filters
+          if (filter.defaultValue !== undefined) {
+            clearedFilters[filter.key] = filter.defaultValue;
+          } else {
+            clearedFilters[filter.key] = '';
+          }
+          break;
         default:
           clearedFilters[filter.key] = filter.defaultValue || '';
       }
@@ -62,6 +81,9 @@ const FlexibleSearch = ({
     } else if (filter.type === 'range') {
       const current = currentValue || defaultValue;
       return current[0] !== defaultValue[0] || current[1] !== defaultValue[1];
+    } else if (filter.type === 'select' && filter.defaultValue !== undefined) {
+      // Handle boolean values properly for select filters with default values
+      return currentValue !== defaultValue;
     } else {
       return currentValue && currentValue !== defaultValue && currentValue !== '';
     }
