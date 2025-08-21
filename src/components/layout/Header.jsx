@@ -84,9 +84,9 @@ const Header = () => {
             >
               News
             </Link>
-            {isAuthenticated && user?.role === 'User' && (
+            {isAuthenticated && user?.role === 'Admin' && (
               <Link 
-                to="/admin" 
+                to="/admin"
                 className={`hover:text-green-500 transition-colors ${
                   isActiveRoute('/admin') ? 'text-green-500' : 'text-white-400'
                 }`}
