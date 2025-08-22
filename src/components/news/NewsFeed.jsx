@@ -1,10 +1,61 @@
 import { useState, useEffect } from 'react';
 import NewsCard from './NewsCard';
 import { useAuthStore } from '../../stores/authStore';
+import { NewsService } from '../../services/newsService';
+import { getPlainText } from '../../utils/contentParser';
+
+// Transform API response to NewsCard expected format
+const transformNewsData = (apiData) => {
+  if (!Array.isArray(apiData)) {
+    console.warn('transformNewsData: Expected array, got:', typeof apiData);
+    return [];
+  }
+
+  return apiData.map(article => {
+    if (!article) {
+      console.warn('transformNewsData: Null or undefined article found');
+      return null;
+    }
+
+    // Calculate estimated read time based on content length
+    const wordCount = article.content ? article.content.split(' ').length : 0;
+    const readTimeMinutes = Math.max(1, Math.ceil(wordCount / 200)); // Assume 200 words per minute
+    
+    return {
+      id: article.id || `temp-${Date.now()}-${Math.random()}`,
+      title: article.title || 'Untitled Article',
+      content: article.content || '',
+      excerpt: article.content 
+        ? (() => {
+            const plainText = getPlainText(article.content);
+            return plainText.length > 200 
+              ? plainText.substring(0, 200).trim() + '...' 
+              : plainText.trim();
+          })()
+        : 'No content available',
+      likes: article.likesCount || 0,
+      likesCount: article.likesCount || 0,
+      comments: 0, // Not provided by API yet
+      category: 'News', // Default category since not provided by API
+      imageUrl: '/poster-placeholder.png', // Default image since not provided by API
+      readTime: `${readTimeMinutes} min read`,
+      publishedAt: article.createdAt || new Date().toISOString(),
+      createdAt: article.createdAt || new Date().toISOString(),
+      updatedAt: article.updatedAt,
+      authorId: article.authorId || 'unknown',
+      author: {
+        id: article.authorId || 'unknown',
+        name: 'Anonymous User', // Default since author info not provided by API
+        avatar: null
+      }
+    };
+  }).filter(Boolean); // Remove any null entries
+};
 
 const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
   const [news, setNews] = useState([]);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
@@ -13,16 +64,65 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
       setError(null);
       
       try {
-        // TODO: Replace with actual API call
-        // For now, set empty array to show no articles state
-        setNews([]);
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+        if (type === 'all') {
+          // Fetch first 10 news articles using pagination
+          console.log('Fetching news with pagination...');
+          const newsData = await NewsService.getNewsByPagination(0, 10);
+          console.log('News data received:', newsData);
+          
+          // Handle different possible response structures
+          let rawArticles = [];
+          if (Array.isArray(newsData)) {
+            rawArticles = newsData;
+          } else if (newsData && Array.isArray(newsData.data)) {
+            rawArticles = newsData.data;
+          } else if (newsData && Array.isArray(newsData.articles)) {
+            rawArticles = newsData.articles;
+          } else if (newsData && Array.isArray(newsData.items)) {
+            rawArticles = newsData.items;
+          } else {
+            console.warn('Unexpected news data structure:', newsData);
+            rawArticles = [];
+          }
+          
+          // Transform the data to match NewsCard expectations
+          const transformedArticles = transformNewsData(rawArticles);
+          setNews(transformedArticles);
+          setSuccess(true);
+        } else if (type === 'user' && userId) {
+          // Fetch user's news articles
+          console.log('Fetching user news for userId:', userId);
+          const userNews = await NewsService.getUserNews(userId, 1, 10);
+          console.log('User news data received:', userNews);
+          
+          // Handle different possible response structures
+          let rawArticles = [];
+          if (Array.isArray(userNews)) {
+            rawArticles = userNews;
+          } else if (userNews && Array.isArray(userNews.data)) {
+            rawArticles = userNews.data;
+          } else if (userNews && Array.isArray(userNews.articles)) {
+            rawArticles = userNews.articles;
+          } else if (userNews && Array.isArray(userNews.items)) {
+            rawArticles = userNews.items;
+          } else {
+            console.warn('Unexpected user news data structure:', userNews);
+            rawArticles = [];
+          }
+          
+          // Transform the data to match NewsCard expectations
+          const transformedArticles = transformNewsData(rawArticles);
+          setNews(transformedArticles);
+          setSuccess(true);
+        } else {
+          setNews([]);
+          setSuccess(false);
+        }
         
       } catch (err) {
-        setError('Failed to fetch news articles');
         console.error('Error fetching news:', err);
+        setError(err.message || 'Failed to fetch news articles. Please try again later.');
+        setSuccess(false);
       } finally {
         setLoading(false);
       }
@@ -34,6 +134,10 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
   if (loading) {
     return (
       <div className="space-y-6">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading news articles...</p>
+        </div>
         {[...Array(3)].map((_, index) => (
           <div key={index} className="bg-gray-900 border border-gray-700 rounded-lg p-6 animate-pulse">
             <div className="h-48 bg-gray-800 rounded-lg mb-4"></div>
@@ -53,12 +157,61 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
         <div className="text-6xl mb-4">❌</div>
         <h3 className="text-xl font-semibold text-white mb-2">Error Loading News</h3>
         <p className="text-gray-400 mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
-        >
-          Try Again
-        </button>
+        <div className="flex justify-center space-x-3">
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
+          >
+            Try Again
+          </button>
+          <button
+            onClick={() => {
+              setError(null);
+              setSuccess(false);
+              setLoading(true);
+              // Trigger a re-fetch
+              const fetchNews = async () => {
+                try {
+                  if (type === 'all') {
+                    const newsData = await NewsService.getNewsByPagination(0, 10);
+                    let articles = [];
+                    if (Array.isArray(newsData)) {
+                      articles = newsData;
+                    } else if (newsData && Array.isArray(newsData.data)) {
+                      articles = newsData.data;
+                    } else if (newsData && Array.isArray(newsData.articles)) {
+                      articles = newsData.articles;
+                    } else if (newsData && Array.isArray(newsData.items)) {
+                      articles = newsData.items;
+                    }
+                    setNews(articles);
+                  } else if (type === 'user' && userId) {
+                    const userNews = await NewsService.getUserNews(userId, 1, 10);
+                    let articles = [];
+                    if (Array.isArray(userNews)) {
+                      articles = userNews;
+                    } else if (userNews && Array.isArray(userNews.data)) {
+                      articles = userNews.data;
+                    } else if (userNews && Array.isArray(userNews.articles)) {
+                      articles = userNews.articles;
+                    } else if (userNews && Array.isArray(userNews.items)) {
+                      articles = userNews.items;
+                    }
+                    setNews(articles);
+                  }
+                } catch (err) {
+                  setError(err.message || 'Failed to fetch news articles. Please try again later.');
+                } finally {
+                  setLoading(false);
+                }
+              };
+              fetchNews();
+            }}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
     );
   }
@@ -95,6 +248,8 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
 
   return (
     <div className="space-y-6">
+      
+
       {news.map((article) => (
         <NewsCard
           key={article.id}

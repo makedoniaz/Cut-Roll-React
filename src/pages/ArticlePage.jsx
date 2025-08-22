@@ -1,32 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { NewsService } from "../services/newsService";
+import { parseContentWithReferences, convertToHTMLWithReferences } from "../utils/contentParser";
+import { useAuthStore } from "../stores/authStore";
 
-function ArticlePage({ title, date, imageUrl, content }) {
+function ArticlePage() {
     const [copied, setCopied] = useState(false);
+    const [article, setArticle] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [parsedContent, setParsedContent] = useState({ text: '', references: [] });
+    const [isLiking, setIsLiking] = useState(false);
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { isAuthenticated, user } = useAuthStore();
 
-  // Используем шаблонные тексты
-  const sampleTitle = "Sneak Auswertung 17.08 - Jane Austen und das Chaos in meinem Leben";
-  const sampleDate = "August 18, 2025";
-  const sampleImageUrl = "https://a.ltrbxd.com/resized/story/image/2/2/2/1/6/2/9/9/shard/45630/image-rhzqzktq-960-960-0-0-fill.jpg?v=2066dbad19";
-  const sampleContent = `Gestern lief in unserer Sneak Preview "Jane Austen und das Chaos in meinem Leben". Ihr habt die französische Komödie mit 5,88 Punkten Schnitt eher mittelmäßig bewertet.
+    useEffect(() => {
+        const fetchArticle = async () => {
+            if (!id) {
+                setError('No article ID provided');
+                setLoading(false);
+                return;
+            }
 
-Hier ein Best of der Kommentare: 
+            try {
+                setLoading(true);
+                setError(null);
+                console.log('Fetching article with ID:', id);
+                const articleData = await NewsService.getNewsById(id);
+                console.log('Article data received:', articleData);
+                setArticle(articleData);
+                
+                // Parse content with references
+                if (articleData.content) {
+                    const parsed = parseContentWithReferences(articleData.content, articleData.references || []);
+                    setParsedContent(parsed);
+                    console.log('Parsed content:', parsed);
+                }
+            } catch (err) {
+                console.error('Error fetching article:', err);
+                setError(err.message || 'Failed to fetch article');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-"war mit Sicherheit nicht der beste und tiefgründigste Film meines Lebens, aber hat Spaß gemacht, war leicht und lustig und herrlich französisch" (8)
-"Schöne Szenerie, eher klischee Handlung" (8)
-"Sehr süß" (8)
-"Hat den französischen und britischen Humor charmant verbunden" (7)
-"wusste gar nicht, dass französisch so witzig sein kann, seichte Unterhaltung, Kind of literarisch" (6)
-"schöne Bilder, schöne Musik, allerdings recht vorhersehbar" (6)
-"nur der französische Film kann sich selbst aus Versehen und Stolz und Vorurteil mit voller Absicht parodieren, ohne völlig lächerlich zu sein" (6)
-"Porträt einer jungen Frau in Langeweile" (4)
-"Hofen sind eh überbewertet" (3)
-"Kaffee & Kuchen Pt.2, aber was war mit ihrer Phobie?" (3)
-"Dass so ein banaler, klischeehafter Film den Namen "Jane Austen" im Titel trägt, ist eine Beleidigung" (2)
+        fetchArticle();
+    }, [id]);
 
-Diesen Sonntag läuft ein Film entweder in Engl. OmU oder Deutsch OmeU!.
-
-Aliquam erat volutpat. Sed ut dui ut lacus dictum fermentum vel tincidunt neque. 
-Sed sed lacinia lectus.`;
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Unknown date';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Invalid date';
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
         const handleShare = () => {
         const url = window.location.href;
@@ -36,67 +69,242 @@ Sed sed lacinia lectus.`;
     });
 };
 
+    const handleLike = async () => {
+        if (!article || isLiking || article.isLiked) return;
+        
+        setIsLiking(true);
+        try {
+            // Like the article
+            await NewsService.likeNewsArticle(article.id);
+            setArticle(prev => ({
+                ...prev,
+                isLiked: true,
+                likesCount: (prev.likesCount || 0) + 1
+            }));
+        } catch (error) {
+            console.error('Error liking article:', error);
+            // You could show a toast notification here
+        } finally {
+            setIsLiking(false);
+        }
+    };
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="max-w-4xl mx-auto px-4 py-8">
+                <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+                    <p className="text-gray-400">Loading article...</p>
+                </div>
+                
+                {/* Loading skeleton */}
+                <div className="space-y-4 animate-pulse">
+                    <div className="h-8 bg-gray-800 rounded w-3/4"></div>
+                    <div className="h-64 bg-gray-800 rounded"></div>
+                    <div className="h-4 bg-gray-800 rounded w-1/4"></div>
+                    <div className="space-y-2">
+                        <div className="h-4 bg-gray-800 rounded"></div>
+                        <div className="h-4 bg-gray-800 rounded w-5/6"></div>
+                        <div className="h-4 bg-gray-800 rounded w-4/6"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <div className="max-w-4xl mx-auto px-4 py-8">
+                <div className="text-center py-12">
+                    <div className="text-6xl mb-4">❌</div>
+                    <h3 className="text-xl font-semibold text-white mb-2">Error Loading Article</h3>
+                    <p className="text-gray-400 mb-4">{error}</p>
+                    <div className="flex justify-center space-x-3">
+                        <button
+                            onClick={() => navigate('/news')}
+                            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
+                        >
+                            Back to News
+                        </button>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // No article found
+    if (!article) {
+        return (
+            <div className="max-w-4xl mx-auto px-4 py-8">
+                <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📄</div>
+                    <h3 className="text-xl font-semibold text-white mb-2">Article Not Found</h3>
+                    <p className="text-gray-400 mb-4">The article you're looking for doesn't exist.</p>
+                    <button
+                        onClick={() => navigate('/news')}
+                        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
+                    >
+                        Back to News
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
-      <div className="mx-auto px-4 py-8 text-gray-100">
-        {/* Заголовок с кнопкой Share */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">{title || sampleTitle}</h1>
-          <button
-            onClick={handleShare}
-            className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
-              copied 
-                ? 'bg-green-700' 
-                : 'bg-gradient-to-r bg-gray-700'
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className={`h-5 w-5 transition-transform duration-200 ${copied ? 'rotate-0' : 'group-hover:-rotate-12'}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+        <div className="max-w-4xl mx-auto px-4 py-8 text-gray-100">
+            {/* Back button */}
+            <button
+                onClick={() => navigate('/news')}
+                className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors mb-6"
             >
-              {copied ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                />
-              )}
-            </svg>
-            <span className="font-medium">
-              {copied ? 'Copied!' : 'Share'}
-            </span>
-          </button>
+                ← Back to News
+            </button>
+
+            {/* Header with Share and Like buttons */}
+            <div className="flex items-start justify-between mb-6">
+                <h1 className="text-3xl font-bold flex-1 mr-4">{article.title}</h1>
+                <div className="flex items-center space-x-3">
+                    {/* Like Button - Only show for authenticated users */}
+                    {isAuthenticated && (
+                        <button
+                            onClick={handleLike}
+                            disabled={isLiking || article.isLiked}
+                            className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
+                                isLiking || article.isLiked
+                                    ? 'bg-red-600 cursor-not-allowed' 
+                                    : 'bg-gray-700 hover:bg-gray-600'
+                            }`}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5 transition-transform duration-200 text-white"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                />
+                            </svg>
+                            <span className="font-medium">
+                                {isLiking ? 'Liking...' : (article.isLiked ? 'Liked' : 'Like')}
+                            </span>
+                        </button>
+                    )}
+
+                    {/* Share Button */}
+                    <button
+                        onClick={handleShare}
+                        className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
+                            copied 
+                                ? 'bg-green-700' 
+                                : 'bg-gradient-to-r bg-gray-700 hover:bg-gray-600'
+                        }`}
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className={`h-5 w-5 transition-transform duration-200 ${copied ? 'rotate-0' : 'group-hover:-rotate-12'}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            {copied ? (
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                />
+                            ) : (
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                                />
+                            )}
+                        </svg>
+                        <span className="font-medium">
+                            {copied ? 'Copied!' : 'Share'}
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Article metadata */}
+            <div className="flex items-center gap-4 mb-6 text-sm text-gray-400">
+                <span>User ID: {article.authorId}</span>
+                <span>•</span>
+                <span>{formatDate(article.createdAt)}</span>
+                {article.updatedAt && article.updatedAt !== article.createdAt && (
+                    <>
+                        <span>•</span>
+                        <span>Updated: {formatDate(article.updatedAt)}</span>
+                    </>
+                )}
+            </div>
+
+            {/* Article image */}
+            <img
+                src="/poster-placeholder.png"
+                alt={article.title}
+                className="w-full rounded-lg mb-6 object-cover max-h-96"
+            />
+
+            {/* Article content */}
+            <div className="prose prose-invert max-w-none">
+                {parsedContent.text ? (
+                    parsedContent.text.split("\n").map((paragraph, i) => (
+                        <p key={i} className="mb-4 leading-relaxed">
+                            {paragraph || '\u00A0'} {/* Non-breaking space for empty paragraphs */}
+                        </p>
+                    ))
+                ) : (
+                    <p className="text-gray-400">No content available</p>
+                )}
+            </div>
+
+            {/* References section */}
+            {parsedContent.references && parsedContent.references.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-gray-700">
+                    <h3 className="text-lg font-semibold text-white mb-4">References</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {parsedContent.references.map((ref, index) => (
+                            <div key={index} className="bg-gray-800 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium text-blue-400 capitalize">{ref.type}</span>
+                                    <span className="text-xs text-gray-400">ID: {ref.referencedId}</span>
+                                </div>
+                                <div className="text-sm text-gray-300">
+                                    Reference Type: {ref.referenceType}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Article stats */}
+            <div className="mt-8 pt-6 border-t border-gray-700">
+                <div className="flex items-center gap-4 text-sm text-gray-400">
+                    <span>❤️ {article.likesCount || 0} likes</span>
+                    <span>•</span>
+                    <span>Article ID: {article.id}</span>
+                </div>
+            </div>
         </div>
-
-        {/* Изображение */}
-        {(imageUrl || sampleImageUrl) && (
-          <img
-            src={imageUrl || sampleImageUrl}
-            alt={title || sampleTitle}
-            className="w-full rounded-lg mb-6 object-cover"
-          />
-        )}
-
-        {/* Дата */}
-        <p className="text-sm text-gray-400 mb-4">{date || sampleDate}</p>
-
-        {/* Контент новости */}
-        <div className="prose prose-invert max-w-none">
-          {(content || sampleContent).split("\n").map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))}
-        </div>
-      </div>
     );
 }
 

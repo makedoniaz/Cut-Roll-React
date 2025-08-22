@@ -51,14 +51,7 @@ const AppRouter = () => {
 
             {/* News Routes */}
             <Route path="news" element={<NewsPage />} />
-            <Route 
-              path="news/:id" 
-              element={
-                <ProtectedRoute>
-                  <ArticlePage />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="news/:id" element={<ArticlePage />} />
 
             <Route path="lists" element={<Lists />} />
             <Route path="lists/test" element={<ListDetails />} />

@@ -103,6 +103,31 @@ export class NewsService {
         return parseInt(count, 10);
     }
 
+    static async getNewsByPagination(page = 0, pageSize = 10) {
+        if (page < 0) {
+            throw new Error('Page must be 0 or greater');
+        }
+
+        if (pageSize < 1 || pageSize > 100) {
+            throw new Error('Page size must be between 1 and 100');
+        }
+
+        const paginationData = {
+            page: page,
+            pageSize: pageSize
+        };
+
+        const response = await api.post(API_ENDPOINTS.PAGINATION, paginationData, { skipAuth: true });
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to fetch news articles');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
     static async updateNewsArticle(newsId, newsData) {
         if (!newsId) {
             throw new Error('News ID is required');
@@ -162,5 +187,25 @@ export class NewsService {
             sortBy: 'createdAt',
             sortDescending: true
         });
+    }
+
+    static async likeNewsArticle(newsId) {
+        if (!newsId) {
+            throw new Error('News ID is required');
+        }
+
+        // Replace the placeholder with actual newsId
+        const endpoint = API_ENDPOINTS.LIKE.replace('{newsId}', newsId);
+        console.log(endpoint)
+        
+        const response = await api.post(endpoint);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to like news article');
+        }
+
+        const data = await response.json();
+        return data;
     }
 }

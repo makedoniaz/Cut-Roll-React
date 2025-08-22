@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, Edit, Trash2, Eye, Calendar, Clock } from 'lucide-react';
+import { Heart, Share2, Edit, Trash2, Eye, Calendar, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import CategoryBadge from './CategoryBadge';
 import Avatar from '../ui/users/Avatar';
 
 const NewsCard = ({ article, showAuthor = true, showActions = false }) => {
@@ -19,14 +18,22 @@ const NewsCard = ({ article, showAuthor = true, showActions = false }) => {
   };
 
   const formatTimeAgo = (dateString) => {
+    if (!dateString) return 'Unknown date';
+    
     const now = new Date();
     const date = new Date(dateString);
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
     
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'Invalid date';
     
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
     const diffInDays = Math.floor(diffInHours / 24);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInDays < 7) return `${diffInDays}d ago`;
     
     const diffInWeeks = Math.floor(diffInDays / 7);
@@ -77,13 +84,10 @@ const NewsCard = ({ article, showAuthor = true, showActions = false }) => {
       {/* Image */}
       <div className="relative h-48 sm:h-64 overflow-hidden">
         <img
-          src={article.imageUrl}
+          src={article.imageUrl || '/news-placeholder.jpg'}
           alt={article.title}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute top-4 left-4">
-          <CategoryBadge category={article.category} />
-        </div>
         <div className="absolute top-4 right-4 flex items-center gap-2 text-white text-sm">
           <Clock className="w-4 h-4" />
           <span>{article.readTime}</span>
@@ -110,37 +114,19 @@ const NewsCard = ({ article, showAuthor = true, showActions = false }) => {
           {showAuthor && (
             <div className="flex items-center gap-2">
               <Avatar user={article.author} size="sm" />
-              <span>{article.author.name}</span>
+              <span>User ID: {article.authorId}</span>
             </div>
           )}
           
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            <span>{formatTimeAgo(article.publishedAt)}</span>
+            <span>{formatTimeAgo(article.createdAt)}</span>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {/* Like Button */}
-            <button
-              onClick={handleLike}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
-                liked 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
-              <span>{likesCount}</span>
-            </button>
-
-            {/* Comments */}
-            <button className="flex items-center gap-2 px-3 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors duration-200">
-              <MessageCircle className="w-4 h-4" />
-              <span>{article.comments}</span>
-            </button>
 
             {/* Share */}
             <button

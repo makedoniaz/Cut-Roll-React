@@ -198,7 +198,7 @@ const searchFunctions = {
     }
 };
 
-function LinkModal({ selectedText, onClose, onAddReference = null }) {
+function LinkModal({ onClose, onAddReference = null }) {
   const [linkType, setLinkType] = useState('movie');
   const [selectedReference, setSelectedReference] = useState(null);
 
@@ -224,7 +224,7 @@ function LinkModal({ selectedText, onClose, onAddReference = null }) {
   };
 
   const handleAddReference = () => {
-    if (selectedText && selectedReference) {
+    if (selectedReference) {
       // Create the reference object with all necessary data
       const reference = {
         id: selectedReference.id,
@@ -234,20 +234,13 @@ function LinkModal({ selectedText, onClose, onAddReference = null }) {
         image: selectedReference.image
       };
 
-      // Create HTML link that will replace the selected text
-      const htmlLink = `<a href="#" data-reference-id="${reference.id}" data-reference-type="${reference.type}" class="reference-link text-blue-400 hover:text-blue-300 underline cursor-pointer" title="${reference.description}">${selectedText}</a>`;
-
-      // Call the parent's onAddReference function with all the data
+      // Call the parent's onAddReference function with the reference data
       if (onAddReference && typeof onAddReference === 'function') {
         onAddReference({
-          originalText: selectedText,
-          htmlText: htmlLink,
           reference: reference
         });
       } else {
         console.log('Reference data:', {
-          originalText: selectedText,
-          htmlText: htmlLink,
           reference: reference
         });
       }
@@ -265,17 +258,7 @@ function LinkModal({ selectedText, onClose, onAddReference = null }) {
     <div>
       <h2 className="text-2xl font-bold text-white mb-6">Add Reference</h2>
       
-      {/* Selected Text Display */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Selected Text
-        </label>
-        <div className="p-3 bg-gray-700 border border-gray-600 rounded-lg">
-          <p className="text-white italic">
-            {selectedText ? `"${selectedText}"` : 'No text selected'}
-          </p>
-        </div>
-      </div>
+
 
       {/* Link Type Selector */}
       <div className="mb-6">
@@ -349,9 +332,9 @@ function LinkModal({ selectedText, onClose, onAddReference = null }) {
         </button>
         <button
           type="button"
-          disabled={!selectedText || !selectedReference}
+          disabled={!selectedReference}
           className={`px-4 py-2 rounded-lg transition-colors ${
-            selectedText && selectedReference
+            selectedReference
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-500 text-gray-300 cursor-not-allowed'
           }`}

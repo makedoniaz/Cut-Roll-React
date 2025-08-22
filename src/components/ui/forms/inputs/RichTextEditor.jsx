@@ -7,7 +7,8 @@ const RichTextBox = ({
   onSelectionChange, // Новый пропс для отслеживания выделения
   placeholder = "Start typing...",
   minHeight = "16rem",
-  className = ""
+  className = "",
+  disabled = false
 }) => {
   const editorRef = useRef(null);
   const [isEditorFocused, setIsEditorFocused] = useState(false);
@@ -20,7 +21,7 @@ const RichTextBox = ({
 
   // Функция для обработки изменения выделения
   const handleSelectionChange = () => {
-    if (!onSelectionChange) return;
+    if (!onSelectionChange || disabled) return;
     
     const selection = window.getSelection();
     const selectedText = selection.toString().trim();
@@ -37,7 +38,7 @@ const RichTextBox = ({
   // Глобальное отслеживание изменений выделения
   useEffect(() => {
     const handleDocumentSelectionChange = () => {
-      if (isEditorFocused) {
+      if (isEditorFocused && !disabled) {
         handleSelectionChange();
       }
     };
@@ -47,16 +48,18 @@ const RichTextBox = ({
     return () => {
       document.removeEventListener('selectionchange', handleDocumentSelectionChange);
     };
-  }, [isEditorFocused, onSelectionChange]);
+  }, [isEditorFocused, onSelectionChange, disabled]);
 
   const handleContentChange = () => {
-    if (editorRef.current) {
+    if (editorRef.current && !disabled) {
       onChange(editorRef.current.innerHTML);
     }
   };
 
   const handleFocus = () => {
-    setIsEditorFocused(true);
+    if (!disabled) {
+      setIsEditorFocused(true);
+    }
   };
 
   const handleBlur = () => {
@@ -69,13 +72,13 @@ const RichTextBox = ({
 
   // Дополнительные обработчики для более точного отслеживания
   const handleMouseUp = () => {
-    if (isEditorFocused) {
+    if (isEditorFocused && !disabled) {
       setTimeout(handleSelectionChange, 0); // Небольшая задержка для корректной работы
     }
   };
 
   const handleKeyUp = () => {
-    if (isEditorFocused) {
+    if (isEditorFocused && !disabled) {
       setTimeout(handleSelectionChange, 0);
     }
   };
@@ -90,7 +93,7 @@ const RichTextBox = ({
 
       <div
         ref={editorRef}
-        contentEditable
+        contentEditable={!disabled}
         onInput={handleContentChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
@@ -98,10 +101,10 @@ const RichTextBox = ({
         onKeyUp={handleKeyUp}
         className={`rich-text-editor w-full p-4 border rounded-lg outline-none bg-gray-900 text-white overflow-y-auto min-h-[20rem] ${
           isEditorFocused ? "border-transparent" : "border-gray-800"
-        }`}
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         style={{ minHeight }}
         suppressContentEditableWarning={true}
-        data-placeholder={placeholder}
+        data-placeholder={disabled ? '' : placeholder}
       />
     </div>
   );
