@@ -1,14 +1,36 @@
+import { useNavigate } from 'react-router-dom';
+
 const CastGrid = ({ cast }) => {
+  const navigate = useNavigate();
+
+  const handleCastMemberClick = (castMember) => {
+    // Navigate to search page with actor filter pre-filled
+    navigate('/search', { 
+      state: { 
+        prefillFilters: { 
+          actor: castMember.person?.name || castMember 
+        } 
+      } 
+    });
+  };
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-      {cast.map((member, index) => (
-        <button 
-          key={index}
-          className="bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded text-sm text-center transition-colors"
-        >
-          {member}
-        </button>
-      ))}
+    <div className="flex flex-wrap gap-2">
+      {cast.map((member, index) => {
+        // Handle both old format (string) and new format (object)
+        const isObject = typeof member === 'object' && member !== null;
+        const actorName = isObject ? member.person?.name : member;
+        
+        return (
+          <button 
+            key={member.id || index}
+            onClick={() => handleCastMemberClick(member)}
+            className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer text-white"
+          >
+            {actorName}
+          </button>
+        );
+      })}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import SearchBar from '../components/search/SearchBar';
 import PaginatedGridContainer from '../components/layout/PaginatedGridContainer';
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
@@ -6,6 +7,8 @@ import SearchTypesList from '../components/search/SearchTypesList';
 import { MovieService } from '../services/movieService';
 
 const Search = () => {
+  const location = useLocation();
+  
   // Enhanced filters that match movieService search parameters
   const movieFilters = [
     {
@@ -13,16 +16,25 @@ const Search = () => {
       label: 'Genres',
       type: 'multiselect',
       options: [
+        { value: 'War', label: 'War' },
+        { value: 'Science Fiction', label: 'Science Fiction' },
+        { value: 'Animation', label: 'Animation' },
         { value: 'Action', label: 'Action' },
-        { value: 'Comedy', label: 'Comedy' },
-        { value: 'Drama', label: 'Drama' },
-        { value: 'Horror', label: 'Horror' },
-        { value: 'Sci-fi', label: 'Sci-Fi' },
-        { value: 'Romance', label: 'Romance' },
+        { value: 'Music', label: 'Music' },
+        { value: 'Crime', label: 'Crime' },
+        { value: 'Documentary', label: 'Documentary' },
         { value: 'Thriller', label: 'Thriller' },
+        { value: 'Western', label: 'Western' },
         { value: 'Adventure', label: 'Adventure' },
-        { value: 'Fantasy', label: 'Fantasy' },
-        { value: 'Animation', label: 'Animation' }
+        { value: 'Mystery', label: 'Mystery' },
+        { value: 'Family', label: 'Family' },
+        { value: 'TV Movie', label: 'TV Movie' },
+        { value: 'Horror', label: 'Horror' },
+        { value: 'Drama', label: 'Drama' },
+        { value: 'Comedy', label: 'Comedy' },
+        { value: 'History', label: 'History' },
+        { value: 'Romance', label: 'Romance' },
+        { value: 'Fantasy', label: 'Fantasy' }
       ],
       defaultValue: []
     },
@@ -119,10 +131,55 @@ const Search = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
 
+  // Handle pre-filled filters from navigation state
+  useEffect(() => {
+    if (location.state?.prefillFilters) {
+      const prefillFilters = location.state.prefillFilters;
+      console.log('Applying pre-filled filters:', prefillFilters);
+      
+      // Update filter values with pre-filled data
+      const newFilterValues = { ...filterValues };
+      
+      if (prefillFilters.actor) {
+        newFilterValues.actor = prefillFilters.actor;
+      }
+      if (prefillFilters.director) {
+        newFilterValues.director = prefillFilters.director;
+      }
+      if (prefillFilters.keyword) {
+        newFilterValues.keyword = prefillFilters.keyword;
+      }
+      if (prefillFilters.genres) {
+        newFilterValues.genres = prefillFilters.genres;
+      }
+      if (prefillFilters.productionCompany) {
+        // For production company, we'll use the search query since it's not a standard filter
+        setSearchQuery(prefillFilters.productionCompany);
+      }
+      
+      setFilterValues(newFilterValues);
+      
+      // Clear the navigation state to prevent re-applying on re-renders
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   // Debug: Log initial filter values
   useEffect(() => {
     console.log('Search component mounted with filter values:', filterValues);
   }, []);
+
+  // Auto-trigger search when filters are pre-filled
+  useEffect(() => {
+    if (location.state?.prefillFilters) {
+      // Small delay to ensure state is updated
+      const timer = setTimeout(() => {
+        searchMovies(1);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [filterValues]);
 
   // Search movies using movieService
   const searchMovies = useCallback(async (page = 1) => {

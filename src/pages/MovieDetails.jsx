@@ -135,7 +135,7 @@ const MovieDetails = () => {
   };
 
   const getCastNames = () => {
-    return movie.cast?.map(member => member.person?.name || member.character || 'Unknown') || [];
+    return movie.cast?.sort((a, b) => a.castOrder - b.castOrder) || [];
   };
 
   const getCrewMembers = () => {
@@ -251,7 +251,29 @@ const MovieDetails = () => {
               {/* Tab Content */}
               {activeTab === 'CAST' && (
                 <div className="space-y-4">
-                  <CastGrid cast={displayedCast} />
+                  <div className="flex flex-wrap gap-2">
+                    {displayedCast && displayedCast.length > 0 ? (
+                      displayedCast.map((member, index) => (
+                        <button
+                          key={member.id || index}
+                          onClick={() => navigate('/search', { 
+                            state: { 
+                              prefillFilters: { 
+                                actor: member.person?.name 
+                              } 
+                            } 
+                          })}
+                          className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer text-white"
+                        >
+                          {member.person?.name || 'Unknown Actor'}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-gray-500 text-center py-4 w-full">
+                        No cast information available
+                      </div>
+                    )}
+                  </div>
                   {!showAllCast && getCastNames().length > 18 && (
                     <button 
                       onClick={() => setShowAllCast(true)}
@@ -356,9 +378,19 @@ const MovieDetails = () => {
                       {keywords && keywords.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
                           {keywords.map((keyword, index) => (
-                            <span key={index} className="bg-blue-600 text-white px-3 py-2 rounded-full text-sm hover:bg-blue-700 transition-colors cursor-pointer">
+                            <button
+                              key={index}
+                              onClick={() => navigate('/search', { 
+                                state: { 
+                                  prefillFilters: { 
+                                    keyword: keyword.keyword?.name || keyword.keywordId || keyword || 'Unknown Keyword'
+                                  } 
+                                } 
+                              })}
+                              className="bg-blue-600 text-white px-3 py-2 rounded-full text-sm hover:bg-blue-700 transition-colors cursor-pointer"
+                            >
                               {keyword.keyword?.name || keyword.keywordId || keyword || 'Unknown Keyword'}
-                            </span>
+                            </button>
                           ))}
                         </div>
                       ) : (
@@ -381,7 +413,19 @@ const MovieDetails = () => {
                  <div className="flex flex-wrap gap-2">
                    {genres && genres.length > 0 ? (
                      genres.map((genre, index) => (
-                       <span key={index} className="bg-gray-700 px-4 py-2 rounded-full">{genre}</span>
+                       <button
+                         key={index}
+                         onClick={() => navigate('/search', { 
+                           state: { 
+                             prefillFilters: { 
+                               genres: [genre]
+                             } 
+                           } 
+                         })}
+                         className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-full transition-colors cursor-pointer"
+                       >
+                         {genre}
+                       </button>
                      ))
                    ) : (
                      <div className="text-center py-8 text-gray-500">
@@ -392,21 +436,47 @@ const MovieDetails = () => {
                  </div>
                )}
               
-                             {activeTab === 'CREW' && (
-                 <div className="grid grid-cols-2 gap-4 text-gray-300">
-                   {crewMembers && Object.keys(crewMembers).length > 0 ? (
-                     Object.entries(crewMembers).map(([job, names]) => (
-                       <div key={job}>
-                         <span className="text-gray-500">{job}:</span> {names.join(', ')}
-                       </div>
-                     ))
-                   ) : (
-                     <div className="col-span-2 text-gray-500 text-center py-4">
-                       No crew information available
-                     </div>
-                   )}
-                 </div>
-               )}
+                                           {activeTab === 'CREW' && (
+                <div className="grid grid-cols-2 gap-4 text-gray-300">
+                  {crewMembers && Object.keys(crewMembers).length > 0 ? (
+                    Object.entries(crewMembers).map(([job, names]) => (
+                      <div key={job}>
+                        <span className="text-gray-500">{job}:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {names.map((name, index) => (
+                            job === 'Director' ? (
+                              <button
+                                key={index}
+                                onClick={() => navigate('/search', { 
+                                  state: { 
+                                    prefillFilters: { 
+                                      director: name 
+                                    } 
+                                  } 
+                                })}
+                                className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer"
+                              >
+                                {name}
+                              </button>
+                            ) : (
+                              <span
+                                key={index}
+                                className="bg-gray-700 px-2 py-1 rounded text-xs"
+                              >
+                                {name}
+                              </span>
+                            )
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2 text-gray-500 text-center py-4">
+                      No crew information available
+                    </div>
+                  )}
+                </div>
+              )}
               
                              
 
