@@ -16,7 +16,8 @@ const FlexibleSearchInput = ({
   selectedItems = [],
   onSelectedItemsChange,
   autoOpen = false,
-  onClear
+  onClear,
+  showSelectedItemsAsTags = true
 }) => {
   const [inputValue, setInputValue] = useState(value);
   const [searchResults, setSearchResults] = useState([]);
@@ -97,11 +98,12 @@ const FlexibleSearchInput = ({
       setLocalSelectedItems(newSelectedItems);
       onSelectedItemsChange?.(newSelectedItems);
       
-      // Clear input and close dropdown
+      // Clear input but keep dropdown open for multiple selection
       setInputValue('');
       if (onChange) onChange('');
-      setIsDropdownOpen(false);
-      setSearchResults([]);
+      // Keep dropdown open for multiple selection
+      setIsDropdownOpen(true);
+      // Don't clear search results for multiple selection to allow easy selection of more items
     } else {
       // For single selection, call onSelect
       if (onSelect) {
@@ -189,7 +191,7 @@ const FlexibleSearchInput = ({
   return (
     <div className={`relative ${className}`}>
       {/* Selected Items Display */}
-      {multiple && localSelectedItems.length > 0 && (
+      {multiple && showSelectedItemsAsTags && localSelectedItems.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-2">
           {localSelectedItems.map((item) => (
             <div
@@ -218,7 +220,7 @@ const FlexibleSearchInput = ({
           onChange={handleInputChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          placeholder={multiple ? `${placeholder} (select multiple)` : placeholder}
+          placeholder={placeholder}
           disabled={disabled}
           className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
         />
@@ -234,16 +236,7 @@ const FlexibleSearchInput = ({
           </button>
         )}
 
-        {/* Dropdown Toggle - Only show if not autoOpen */}
-        {!autoOpen && (
-          <button
-            type="button"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
-        )}
+
       </div>
 
       {/* Dropdown */}
@@ -259,17 +252,12 @@ const FlexibleSearchInput = ({
           ) : searchResults.length > 0 ? (
             <div>
               {searchResults.map((item) => {
-                const isSelected = localSelectedItems.find(selected => selected.id === item.id);
                 return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => handleItemSelect(item)}
-                    className={`w-full px-4 py-3 text-left transition-colors border-b border-gray-700 last:border-b-0 ${
-                      isSelected 
-                        ? 'bg-green-600 text-white' 
-                        : 'text-white hover:bg-gray-700'
-                    }`}
+                    className="w-full px-4 py-3 text-left transition-colors border-b border-gray-700 last:border-b-0 text-white hover:bg-gray-700"
                   >
                     <div className="flex items-center gap-3">
                       {/* Item Icon/Image if available */}
@@ -293,12 +281,7 @@ const FlexibleSearchInput = ({
                         )}
                       </div>
                       
-                      {/* Selection indicator for multiple mode */}
-                      {multiple && isSelected && (
-                        <div className="text-green-300">
-                          <X className="w-4 h-4" />
-                        </div>
-                      )}
+
                     </div>
                   </button>
                 );

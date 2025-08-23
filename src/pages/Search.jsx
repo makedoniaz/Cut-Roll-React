@@ -70,8 +70,10 @@ const Search = () => {
     {
       key: 'keyword',
       label: 'Keyword',
-      type: 'text',
-      placeholder: 'Enter keyword...'
+      type: 'dynamicsearch',
+      searchType: 'keyword',
+      placeholder: 'Search for keywords',
+      defaultValue: []
     },
     {
       key: 'country',
@@ -117,7 +119,7 @@ const Search = () => {
     rating: [0, 10],
     director: '',
     actor: '',
-    keyword: '',
+    keyword: [],
     country: '',
     language: '',
     sortBy: '',
@@ -147,7 +149,13 @@ const Search = () => {
         newFilterValues.director = prefillFilters.director;
       }
       if (prefillFilters.keyword) {
-        newFilterValues.keyword = prefillFilters.keyword;
+        // Handle both string and array formats for backward compatibility
+        if (Array.isArray(prefillFilters.keyword)) {
+          newFilterValues.keyword = prefillFilters.keyword;
+        } else {
+          // Convert string to array format for the new dynamic search filter
+          newFilterValues.keyword = [{ id: 'prefilled', name: prefillFilters.keyword, description: `Keyword: ${prefillFilters.keyword}` }];
+        }
       }
       if (prefillFilters.genres) {
         newFilterValues.genres = prefillFilters.genres;
@@ -206,7 +214,7 @@ const Search = () => {
         genres: filterValues.genres.length > 0 ? filterValues.genres : null,
         actor: filterValues.actor || null,
         director: filterValues.director || null,
-        keyword: filterValues.keyword || null,
+        keyword: filterValues.keyword && filterValues.keyword.length > 0 ? filterValues.keyword.map(k => k.name) : null,
         year: filterValues.year[1] !== 2025 ? filterValues.year[1] : null, // Use max year if not default
         minRating: filterValues.rating[0] !== 0 ? filterValues.rating[0] : null,
         maxRating: filterValues.rating[1] !== 10 ? filterValues.rating[1] : null,

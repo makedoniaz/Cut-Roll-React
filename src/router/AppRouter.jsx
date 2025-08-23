@@ -23,6 +23,7 @@ import Lists from '../pages/Lists'
 import ListDetails from '../pages/ListDetails'
 import Reviews from '../pages/Reviews'
 import AdminDashboard from '../pages/AdminDashboard'
+import DynamicSearchFilterExample from '../components/examples/DynamicSearchFilterExample'
 
 // Redirect component for authenticated users
 const AuthRedirect = ({ children }) => {
@@ -47,6 +48,7 @@ const AppRouter = () => {
             <Route path="movie/:id" element={<MovieDetails />} />
             <Route path="reviews" element={<Reviews />} />
             <Route path="search" element={<Search />} />
+            <Route path="test-filter" element={<DynamicSearchFilterExample />} />
             <Route path="auth/callback" element={<AuthCallback />} />
 
             {/* News Routes */}

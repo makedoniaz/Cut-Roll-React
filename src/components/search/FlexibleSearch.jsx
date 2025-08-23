@@ -2,6 +2,7 @@ import TextFilter from "./filters/TextFilter"
 import SelectFilter from "./filters/SelectFilter"
 import RangeFilter from "./filters/RangeFilter"
 import MultiSelectFilter from "./filters/MultiSelectFilter"
+import DynamicSearchFilter from "./filters/DynamicSearchFilter"
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
@@ -51,6 +52,7 @@ const FlexibleSearch = ({
     filters.forEach(filter => {
       switch (filter.type) {
         case 'multiselect':
+      case 'dynamicsearch':
           clearedFilters[filter.key] = filter.defaultValue || [];
           break;
         case 'range':
@@ -76,7 +78,7 @@ const FlexibleSearch = ({
     const currentValue = localFilterValues[filter.key];
     const defaultValue = filter.defaultValue || (filter.type === 'multiselect' ? [] : filter.type === 'range' ? [filter.min || 0, filter.max || 100] : '');
     
-    if (filter.type === 'multiselect') {
+    if (filter.type === 'multiselect' || filter.type === 'dynamicsearch') {
       return currentValue && currentValue.length > 0;
     } else if (filter.type === 'range') {
       const current = currentValue || defaultValue;
@@ -92,7 +94,7 @@ const FlexibleSearch = ({
   const renderFilter = (filter) => {
     const commonProps = {
       label: filter.label,
-      value: localFilterValues[filter.key] || filter.defaultValue || (filter.type === 'multiselect' ? [] : filter.type === 'range' ? [filter.min || 0, filter.max || 100] : ''),
+      value: localFilterValues[filter.key] || filter.defaultValue || (filter.type === 'multiselect' || filter.type === 'dynamicsearch' ? [] : filter.type === 'range' ? [filter.min || 0, filter.max || 100] : ''),
       onChange: (value) => handleFilterChange(filter.key, value)
     };
 
@@ -105,6 +107,8 @@ const FlexibleSearch = ({
         return <RangeFilter key={filter.key} {...commonProps} min={filter.min} max={filter.max} step={filter.step} />;
       case 'multiselect':
         return <MultiSelectFilter key={filter.key} {...commonProps} options={filter.options} />;
+      case 'dynamicsearch':
+        return <DynamicSearchFilter key={filter.key} {...commonProps} type={filter.searchType} />;
       default:
         return null;
     }
