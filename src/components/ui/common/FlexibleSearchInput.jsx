@@ -98,17 +98,18 @@ const FlexibleSearchInput = ({
       setLocalSelectedItems(newSelectedItems);
       onSelectedItemsChange?.(newSelectedItems);
       
-      // Clear input and close dropdown after selection for better UX
-      setInputValue('');
-      if (onChange) onChange('');
+      // Don't clear input for multiple selection - keep it for better UX
+      // setInputValue('');
+      // if (onChange) onChange('');
       setIsDropdownOpen(false);
       setSearchResults([]);
     } else {
-      // For single selection, call onSelect
-      if (onSelect) {
-        onSelect(item);
-      }
+      // For single selection, update selected items and call onSelectedItemsChange
+      const newSelectedItems = [item];
+      setLocalSelectedItems(newSelectedItems);
+      onSelectedItemsChange?.(newSelectedItems);
       
+      // For single selection, set the input to show the selected item name
       setInputValue(item.name || item.title || item.label || '');
       setIsDropdownOpen(false);
       setSearchResults([]);

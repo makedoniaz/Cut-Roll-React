@@ -1,9 +1,6 @@
 import FlexibleSearch from './FlexibleSearch';
-import { useState } from 'react';
 
-const SearchBar = ({ filters, filterValues, handleFiltersChange, handleSearch, onSearchButtonPress }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-
+const SearchBar = ({ filters, filterValues, handleFiltersChange, handleSearch, onSearchButtonPress, searchValue = "" }) => {
   return (
     <div className="bg-gray-900">
       <div className="max-w-8xl">
@@ -13,7 +10,7 @@ const SearchBar = ({ filters, filterValues, handleFiltersChange, handleSearch, o
           onSearch={handleSearch}
           onFiltersChange={handleFiltersChange}
           onSearchButtonPress={onSearchButtonPress}
-          searchValue={searchQuery}
+          searchValue={searchValue}
           filterValues={filterValues}
         />
       </div>

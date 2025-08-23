@@ -23,6 +23,8 @@ const FlexibleSearch = ({
 
   // Sync local state with prop changes
   useEffect(() => {
+    console.log('FlexibleSearch: filterValues prop changed:', filterValues);
+    console.log('FlexibleSearch: Setting localFilterValues to:', filterValues);
     setLocalFilterValues(filterValues);
   }, [filterValues]);
 
@@ -36,8 +38,13 @@ const FlexibleSearch = ({
   };
 
   const handleFilterChange = (filterKey, value) => {
+    console.log(`FlexibleSearch: Filter ${filterKey} changed to:`, value);
+    console.log(`FlexibleSearch: Current localFilterValues:`, localFilterValues);
+    
     const newFilterValues = { ...localFilterValues, [filterKey]: value };
     setLocalFilterValues(newFilterValues);
+    
+    console.log(`FlexibleSearch: Calling onFiltersChange with:`, newFilterValues);
     onFiltersChange?.(newFilterValues);
   };
 
@@ -50,8 +57,15 @@ const FlexibleSearch = ({
     filters.forEach(filter => {
       switch (filter.type) {
         case 'multiselect':
-      case 'dynamicsearch':
           clearedFilters[filter.key] = filter.defaultValue || [];
+          break;
+        case 'dynamicsearch':
+          // For dynamicsearch, check if it's a country (single object) or keyword (array)
+          if (filter.searchType === 'country') {
+            clearedFilters[filter.key] = filter.defaultValue || null;
+          } else {
+            clearedFilters[filter.key] = filter.defaultValue || [];
+          }
           break;
         case 'range':
           clearedFilters[filter.key] = filter.defaultValue || [filter.min || 0, filter.max || 100];
@@ -76,8 +90,16 @@ const FlexibleSearch = ({
     const currentValue = localFilterValues[filter.key];
     const defaultValue = filter.defaultValue || (filter.type === 'multiselect' ? [] : filter.type === 'range' ? [filter.min || 0, filter.max || 100] : '');
     
-    if (filter.type === 'multiselect' || filter.type === 'dynamicsearch') {
+    if (filter.type === 'multiselect') {
       return currentValue && currentValue.length > 0;
+    } else if (filter.type === 'dynamicsearch') {
+      // For dynamicsearch, check if it's a country (single object) or keyword (array)
+      if (filter.searchType === 'country') {
+        return currentValue !== null && currentValue !== undefined;
+      } else {
+        // For keywords, check if array has items
+        return currentValue && currentValue.length > 0;
+      }
     } else if (filter.type === 'range') {
       const current = currentValue || defaultValue;
       return current[0] !== defaultValue[0] || current[1] !== defaultValue[1];
@@ -90,9 +112,27 @@ const FlexibleSearch = ({
   });
 
   const renderFilter = (filter) => {
+    let value;
+    if (filter.type === 'select' && filter.defaultValue !== undefined) {
+      // For select filters with default values, check if the value exists in localFilterValues
+      // Use the local value if it exists, otherwise fall back to default
+      value = localFilterValues.hasOwnProperty(filter.key) ? localFilterValues[filter.key] : filter.defaultValue;
+    } else if (filter.type === 'dynamicsearch') {
+      // For dynamicsearch, check if it's a country (single object) or keyword (array)
+      if (filter.searchType === 'country') {
+        value = localFilterValues[filter.key] || filter.defaultValue || null;
+      } else {
+        // For keywords, use array logic
+        value = localFilterValues[filter.key] || filter.defaultValue || [];
+      }
+    } else {
+      // For other filter types, use the existing logic
+      value = localFilterValues[filter.key] || filter.defaultValue || (filter.type === 'multiselect' ? [] : filter.type === 'range' ? [filter.min || 0, filter.max || 100] : '');
+    }
+
     const commonProps = {
       label: filter.label,
-      value: localFilterValues[filter.key] || filter.defaultValue || (filter.type === 'multiselect' || filter.type === 'dynamicsearch' ? [] : filter.type === 'range' ? [filter.min || 0, filter.max || 100] : ''),
+      value: value,
       onChange: (value) => handleFilterChange(filter.key, value)
     };
 

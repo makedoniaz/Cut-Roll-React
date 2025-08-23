@@ -78,8 +78,10 @@ const Search = () => {
     {
       key: 'country',
       label: 'Country',
-      type: 'text',
-      placeholder: 'Enter country...'
+      type: 'dynamicsearch',
+      searchType: 'country',
+      placeholder: 'Search for countries',
+      defaultValue: null
     },
     {
       key: 'language',
@@ -120,7 +122,7 @@ const Search = () => {
     director: '',
     actor: '',
     keyword: [],
-    country: '',
+    country: null,
     language: '',
     sortBy: '',
     sortDescending: true
@@ -132,6 +134,7 @@ const Search = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Handle pre-filled filters from navigation state
   useEffect(() => {
@@ -155,6 +158,16 @@ const Search = () => {
         } else {
           // Convert string to array format for the new dynamic search filter
           newFilterValues.keyword = [{ id: 'prefilled', name: prefillFilters.keyword, description: `Keyword: ${prefillFilters.keyword}` }];
+        }
+      }
+      if (prefillFilters.country) {
+        // Handle both string and array formats for backward compatibility
+        if (Array.isArray(prefillFilters.country)) {
+          // Take the first country if it's an array
+          newFilterValues.country = prefillFilters.country[0] || null;
+        } else {
+          // Convert string to single country object format
+          newFilterValues.country = { id: 'prefilled', name: prefillFilters.country, description: `Country: ${prefillFilters.country}` };
         }
       }
       if (prefillFilters.genres) {
@@ -206,6 +219,10 @@ const Search = () => {
     setError(null);
 
     try {
+      // Debug: Log the current filter values before preparing search params
+      console.log('Current filter values before preparing search params:', filterValues);
+      console.log('Country filter value specifically:', filterValues.country);
+      
       // Prepare search parameters for movieService
       const searchParams = {
         page: page,
@@ -218,7 +235,7 @@ const Search = () => {
         year: filterValues.year[1] !== 2025 ? filterValues.year[1] : null, // Use max year if not default
         minRating: filterValues.rating[0] !== 0 ? filterValues.rating[0] : null,
         maxRating: filterValues.rating[1] !== 10 ? filterValues.rating[1] : null,
-        country: filterValues.country || null,
+        country: filterValues.country ? filterValues.country.name : null,
         language: filterValues.language || null,
         sortBy: filterValues.sortBy || null,
         sortDescending: filterValues.sortDescending
@@ -233,6 +250,17 @@ const Search = () => {
 
       // Debug: Log the final search parameters being sent
       console.log('Final search parameters being sent:', searchParams);
+      if (searchParams.hasOwnProperty('sortDescending')) {
+        console.log('Sort descending being sent to API:', searchParams.sortDescending, 'Type:', typeof searchParams.sortDescending);
+      }
+      if (searchParams.hasOwnProperty('country')) {
+        console.log('Country being sent to API:', searchParams.country, 'Type:', typeof searchParams.country);
+        console.log('Original country filter value:', filterValues.country);
+      }
+      if (searchParams.hasOwnProperty('keyword')) {
+        console.log('Keywords being sent to API:', searchParams.keyword, 'Type:', typeof searchParams.keyword);
+        console.log('Original keyword filter value:', filterValues.keyword);
+      }
 
       const response = await MovieService.searchMovies(searchParams);
       
@@ -245,11 +273,13 @@ const Search = () => {
         setTotalResults(response.totalCount || response.data.length);
         setTotalPages(response.totalPages || Math.ceil((response.totalCount || response.data.length) / 20));
         setCurrentPage(page);
+        setHasSearched(true); // Set to true after successful search
       } else {
         console.log('No data in response or response is empty');
         setMovies([]);
         setTotalResults(0);
         setTotalPages(1);
+        setHasSearched(false); // Reset to false if no data
       }
     } catch (err) {
       console.error('Search error:', err);
@@ -257,6 +287,7 @@ const Search = () => {
       setMovies([]);
       setTotalResults(0);
       setTotalPages(1);
+      setHasSearched(false); // Reset to false on error
     } finally {
       setLoading(false);
     }
@@ -266,8 +297,10 @@ const Search = () => {
   const hasActiveFilters = () => {
     return Object.entries(filterValues).some(([key, value]) => {
       if (key === 'sortDescending') {
-        // sortDescending is only considered active if it's different from default (true)
-        return value === false;
+        // sortDescending is considered active if it's different from default (true)
+        // But we need to handle the case where it might be explicitly set to true
+        const defaultValue = movieFilters.find(f => f.key === 'sortDescending')?.defaultValue;
+        return value !== defaultValue;
       }
       
       if (Array.isArray(value)) {
@@ -279,6 +312,11 @@ const Search = () => {
         }
         return value.length > 0;
       }
+      // Handle country as single object
+      if (key === 'country') {
+        console.log('Checking country filter:', value, 'Is active:', value !== null);
+        return value !== null;
+      }
       return value && value !== '';
     });
   };
@@ -287,13 +325,29 @@ const Search = () => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page
+    setHasSearched(false); // Reset search flag when search query changes
   };
 
   // Handle filter changes (just update state, don't search yet)
   const handleFiltersChange = (filters) => {
     console.log('Filter values changed:', filters);
+    if (filters.hasOwnProperty('sortDescending')) {
+      console.log('Sort descending changed to:', filters.sortDescending, 'Type:', typeof filters.sortDescending);
+    }
+    if (filters.hasOwnProperty('country')) {
+      console.log('Country changed to:', filters.country, 'Type:', typeof filters.country);
+      if (filters.country) {
+        console.log('Country details:', { id: filters.country.id, name: filters.country.name });
+      } else {
+        console.log('Country is null/undefined');
+      }
+    }
+    if (filters.hasOwnProperty('keyword')) {
+      console.log('Keywords changed to:', filters.keyword, 'Type:', typeof filters.keyword);
+    }
     setFilterValues(filters);
     setCurrentPage(1); // Reset to first page
+    setHasSearched(false); // Reset search flag when filters change
   };
 
   // Handle explicit search button press
@@ -325,6 +379,7 @@ const Search = () => {
             handleSearch={handleSearch}
             handleFiltersChange={handleFiltersChange}
             onSearchButtonPress={handleSearchButtonPress}
+            searchValue={searchQuery}
           />
 
           {/* Loading State */}
@@ -346,7 +401,7 @@ const Search = () => {
           {!loading && !error && (
             <>
               {/* Results Count - Show when there's a search query or active filters */}
-              {(searchQuery.trim() || hasActiveFilters()) && (
+              {hasSearched && (searchQuery.trim() || hasActiveFilters()) && (
                 <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
                   <div className="text-gray-300">
                     {movies.length > 0 ? (
@@ -377,7 +432,7 @@ const Search = () => {
               )}
 
               {/* No Results Message */}
-              {movies.length === 0 && (searchQuery.trim() || hasActiveFilters()) && (
+              {movies.length === 0 && hasSearched && (
                 <div className="mt-8 text-center text-gray-400">
                   <div className="text-6xl mb-4">🔍</div>
                   <p className="text-lg mb-2">No movies found matching your criteria</p>
@@ -407,7 +462,7 @@ const Search = () => {
               )}
 
               {/* Initial State - No Search Yet */}
-              {movies.length === 0 && !searchQuery.trim() && !hasActiveFilters() && (
+              {movies.length === 0 && !searchQuery.trim() && !hasActiveFilters() && !hasSearched && (
                 <div className="mt-8 text-center text-gray-400">
                   <div className="text-6xl mb-4">🎬</div>
                   <p className="text-lg mb-2">Ready to search for movies?</p>
