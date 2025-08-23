@@ -98,12 +98,11 @@ const FlexibleSearchInput = ({
       setLocalSelectedItems(newSelectedItems);
       onSelectedItemsChange?.(newSelectedItems);
       
-      // Clear input but keep dropdown open for multiple selection
+      // Clear input and close dropdown after selection for better UX
       setInputValue('');
       if (onChange) onChange('');
-      // Keep dropdown open for multiple selection
-      setIsDropdownOpen(true);
-      // Don't clear search results for multiple selection to allow easy selection of more items
+      setIsDropdownOpen(false);
+      setSearchResults([]);
     } else {
       // For single selection, call onSelect
       if (onSelect) {

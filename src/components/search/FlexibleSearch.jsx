@@ -36,9 +36,7 @@ const FlexibleSearch = ({
   };
 
   const handleFilterChange = (filterKey, value) => {
-    console.log('Filter change in FlexibleSearch:', { filterKey, value, currentLocalValues: localFilterValues });
     const newFilterValues = { ...localFilterValues, [filterKey]: value };
-    console.log('New filter values:', newFilterValues);
     setLocalFilterValues(newFilterValues);
     onFiltersChange?.(newFilterValues);
   };

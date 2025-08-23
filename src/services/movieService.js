@@ -12,7 +12,7 @@ export class MovieService {
             genres: searchParams.genres || null,
             actor: searchParams.actor || null,
             director: searchParams.director || null,
-            keywords: searchParams.keyword ? [searchParams.keyword] : null,
+            keywords: searchParams.keyword || null,
             year: searchParams.year || null,
             minRating: searchParams.minRating || null,
             maxRating: searchParams.maxRating || null,
