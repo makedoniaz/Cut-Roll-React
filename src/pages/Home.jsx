@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import MovieGrid from "../components/ui/movies/MovieGrid";
 import NewsFeed from "../components/ui/news/NewsFeed";
 import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
@@ -10,6 +11,7 @@ import { MovieService } from "../services/movieService";
 
 const Home = () => {
   const { user, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
   const [newReleases, setNewReleases] = useState([]);
   const [popularMovies, setPopularMovies] = useState([]);
   const [isLoadingNewReleases, setIsLoadingNewReleases] = useState(false);
@@ -53,9 +55,9 @@ const Home = () => {
 
       const popularMoviesData = await MovieService.searchMovies({
         pageSize: 6,
-        page: 7,
+        page: 1,
         minRating: 5,
-        sortBy: 'rating',
+        sortBy: 'revenue',
         sortDescending: true
       });
 
@@ -235,7 +237,17 @@ const Home = () => {
                     <span>Loading...</span>
                   </div>
                 )}
-                <button className="cursor-pointer font-medium text-gray-400 hover:text-green-500">
+                <button 
+                  onClick={() => navigate('/search', { 
+                    state: { 
+                      prefillFilters: { 
+                        sortBy: 'releasedate', 
+                        sortDescending: true 
+                      } 
+                    } 
+                  })}
+                  className="cursor-pointer font-medium text-gray-400 hover:text-green-500"
+                >
                   MORE
                 </button>
               </div>
@@ -269,7 +281,7 @@ const Home = () => {
         <div className="py-2">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-medium text-gray-400 tracking-wider">POPULAR ON CUT-N-ROLL</h2>
+              <h2 className="text-base font-medium text-gray-400 tracking-wider">BIGGEST HITS</h2>
               <div className="flex items-center gap-3">
                 {isLoadingPopular && (
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
@@ -277,7 +289,17 @@ const Home = () => {
                     <span>Loading...</span>
                   </div>
                 )}
-                <button className="cursor-pointer font-medium text-gray-400 hover:text-green-500">
+                <button 
+                  onClick={() => navigate('/search', { 
+                    state: { 
+                      prefillFilters: { 
+                        sortBy: 'revenue', 
+                        sortDescending: true 
+                      } 
+                    } 
+                  })}
+                  className="cursor-pointer font-medium text-gray-400 hover:text-green-500"
+                >
                   MORE
                 </button>
               </div>

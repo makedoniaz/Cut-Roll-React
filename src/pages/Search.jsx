@@ -173,6 +173,12 @@ const Search = () => {
       if (prefillFilters.genres) {
         newFilterValues.genres = prefillFilters.genres;
       }
+      if (prefillFilters.sortBy) {
+        newFilterValues.sortBy = prefillFilters.sortBy;
+      }
+      if (prefillFilters.sortDescending !== undefined) {
+        newFilterValues.sortDescending = prefillFilters.sortDescending;
+      }
       if (prefillFilters.productionCompany) {
         // For production company, we'll use the search query since it's not a standard filter
         setSearchQuery(prefillFilters.productionCompany);
@@ -301,6 +307,11 @@ const Search = () => {
         // But we need to handle the case where it might be explicitly set to true
         const defaultValue = movieFilters.find(f => f.key === 'sortDescending')?.defaultValue;
         return value !== defaultValue;
+      }
+      
+      if (key === 'sortBy') {
+        // sortBy is considered active if it has a non-empty string value
+        return value && value !== '';
       }
       
       if (Array.isArray(value)) {
