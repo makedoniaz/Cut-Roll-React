@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const SmallMovieCard = ({ movie }) => {
+const SmallMovieCard = ({ movie, searchContext }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Construct TMDB poster URL
   const getPosterUrl = (poster) => {
@@ -18,10 +19,36 @@ const SmallMovieCard = ({ movie }) => {
   const movieId = movie.movieId || movie.id;
   const title = movie.title || 'Unknown Title';
 
-  // Handle click to navigate to movie details
+  // Handle click to navigate to movie details with search context
   const handleClick = () => {
     if (movieId) {
-      navigate(`/movie/${movieId}`);
+      // If we have search context, pass it along for back navigation
+      if (searchContext && searchContext.hasSearched) {
+        // Store search context in sessionStorage as backup for page refreshes
+        try {
+          const contextString = JSON.stringify(searchContext);
+          // Only store if it's not too large (sessionStorage has size limits)
+          if (contextString.length < 1000000) { // 1MB limit
+            sessionStorage.setItem('lastSearchContext', contextString);
+          }
+        } catch (error) {
+          console.warn('Failed to store search context in sessionStorage:', error);
+        }
+        
+        navigate(`/movie/${movieId}`, { 
+          state: { 
+            searchContext,
+            fromSearch: true 
+          } 
+        });
+      } else {
+        // No search context or not from search - regular navigation
+        navigate(`/movie/${movieId}`, {
+          state: {
+            fromSearch: false
+          }
+        });
+      }
     }
   };
 

@@ -9,11 +9,12 @@ import MovieReviews from "../components/ui/reviews/MovieReviews"
 import { MovieService } from '../services/movieService';
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 const MovieDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [userRating, setUserRating] = useState(0);
   const [activeTab, setActiveTab] = useState('CAST');
   const [showAllCast, setShowAllCast] = useState(false);
@@ -107,6 +108,36 @@ const MovieDetails = () => {
   }
 
   // Helper functions
+  const getSearchContext = () => {
+    // First try to get from navigation state
+    if (location.state?.searchContext) {
+      return location.state.searchContext;
+    }
+    
+    // Fallback to sessionStorage if navigation state is lost (e.g., page refresh)
+    try {
+      const storedContext = sessionStorage.getItem('lastSearchContext');
+      if (storedContext) {
+        return JSON.parse(storedContext);
+      }
+    } catch (error) {
+      console.warn('Failed to parse stored search context:', error);
+    }
+    
+    return null;
+  };
+
+  const isFromSearch = () => {
+    // Check if we came from search page
+    if (location.state?.fromSearch === true) {
+      return true;
+    }
+    
+    // Check if we have stored search context (fallback for page refresh)
+    const storedContext = sessionStorage.getItem('lastSearchContext');
+    return storedContext !== null;
+  };
+
   const getPosterUrl = (images) => {
     const poster = images?.find(img => img.type === 'poster');
     if (poster?.filePath) {
@@ -199,6 +230,35 @@ const MovieDetails = () => {
   return (
     <div className="min-h-screen from-gray-900 via-gray-900 to-black text-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Back Button */}
+        <div className="mb-6 flex gap-4">
+          {isFromSearch() ? (
+            <button
+              onClick={() => navigate('/search', { 
+                state: { 
+                  restoreSearch: getSearchContext() 
+                } 
+              })}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Search Results
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Go Back
+            </button>
+          )}
+        </div>
+        
         {/* Main 3 Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           

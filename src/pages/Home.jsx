@@ -243,7 +243,7 @@ const Home = () => {
                       prefillFilters: { 
                         sortBy: 'releasedate', 
                         sortDescending: true 
-                      } 
+                      }
                     } 
                   })}
                   className="cursor-pointer font-medium text-gray-400 hover:text-green-500"
@@ -262,7 +262,12 @@ const Home = () => {
                     items={newReleases}
                     itemsPerRow={6}
                     rows={1}
-                    renderItem={(movie) => <SmallMovieCard movie={movie} />}
+                    renderItem={(movie) => (
+                      <SmallMovieCard 
+                        movie={movie} 
+                        searchContext={null}
+                      />
+                    )}
                     itemHeight="h-64"
                   />
                 </div>
@@ -295,7 +300,7 @@ const Home = () => {
                       prefillFilters: { 
                         sortBy: 'revenue', 
                         sortDescending: true 
-                      } 
+                      }
                     } 
                   })}
                   className="cursor-pointer font-medium text-gray-400 hover:text-green-500"
@@ -314,7 +319,12 @@ const Home = () => {
                     items={popularMovies}
                     itemsPerRow={6}
                     rows={1}
-                    renderItem={(movie) => <SmallMovieCard movie={movie} />}
+                    renderItem={(movie) => (
+                      <SmallMovieCard 
+                        movie={movie} 
+                        searchContext={null}
+                      />
+                    )}
                     itemHeight="h-64"
                   />
                 </div>

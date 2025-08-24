@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import SearchBar from '../components/search/SearchBar';
 import PaginatedGridContainer from '../components/layout/PaginatedGridContainer';
@@ -135,12 +135,17 @@ const Search = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isManualSearch, setIsManualSearch] = useState(false);
+  const [lastSearchSource, setLastSearchSource] = useState(null); // 'manual', 'restore', 'prefill'
 
   // Handle pre-filled filters from navigation state
   useEffect(() => {
     if (location.state?.prefillFilters) {
       const prefillFilters = location.state.prefillFilters;
       console.log('Applying pre-filled filters:', prefillFilters);
+      
+      setIsRestoring(true);
       
       // Update filter values with pre-filled data
       const newFilterValues = { ...filterValues };
@@ -191,29 +196,46 @@ const Search = () => {
     }
   }, [location.state]);
 
-  // Debug: Log initial filter values
-  useEffect(() => {
-    console.log('Search component mounted with filter values:', filterValues);
-  }, []);
-
-  // Auto-trigger search when filters are pre-filled
-  useEffect(() => {
-    if (location.state?.prefillFilters) {
-      // Small delay to ensure state is updated
-      const timer = setTimeout(() => {
-        searchMovies(1);
-      }, 100);
+  // Check if there are any active filters
+  const hasActiveFilters = useCallback(() => {
+    return Object.entries(filterValues).some(([key, value]) => {
+      if (key === 'sortDescending') {
+        // sortDescending is considered active if it's different from default (true)
+        // But we need to handle the case where it might be explicitly set to true
+        const defaultValue = movieFilters.find(f => f.key === 'sortDescending')?.defaultValue;
+        return value !== defaultValue;
+      }
       
-      return () => clearTimeout(timer);
-    }
-  }, [filterValues]);
+      if (key === 'sortBy') {
+        // sortBy is considered active if it has a non-empty string value
+        return value && value !== '';
+      }
+      
+      if (Array.isArray(value)) {
+        if (value.length === 2) {
+          // For range filters, check if they're not at default values
+          if (value[0] === 1950 && value[1] === 2025) return false; // year
+          if (value[0] === 0 && value[1] === 10) return false; // rating
+          return true;
+        }
+        return value.length > 0;
+      }
+      // Handle country as single object
+      if (key === 'country') {
+        console.log('Checking country filter:', value, 'Is active:', value !== null);
+        return value !== null;
+      }
+      return value && value !== '';
+    });
+  }, [filterValues, movieFilters]);
 
   // Search movies using movieService
-  const searchMovies = useCallback(async (page = 1) => {
-    console.log('Search triggered with:', { searchQuery, hasActiveFilters: hasActiveFilters() });
+  const searchMovies = useCallback(async (page = 1, source = 'unknown') => {
+    const hasActive = hasActiveFilters();
+    console.log('🔍 Search triggered with:', { searchQuery, hasActiveFilters: hasActive, page, isManualSearch, source });
     console.log('Current filter values:', filterValues);
     
-    if (!searchQuery.trim() && !hasActiveFilters()) {
+    if (!searchQuery.trim() && !hasActive) {
       console.log('No search query and no active filters, clearing results');
       setMovies([]);
       setTotalResults(0);
@@ -296,47 +318,119 @@ const Search = () => {
       setHasSearched(false); // Reset to false on error
     } finally {
       setLoading(false);
+      // Reset manual search flag after search completes
+      setIsManualSearch(false);
     }
   }, [searchQuery, filterValues]);
 
-  // Check if there are any active filters
-  const hasActiveFilters = () => {
-    return Object.entries(filterValues).some(([key, value]) => {
-      if (key === 'sortDescending') {
-        // sortDescending is considered active if it's different from default (true)
-        // But we need to handle the case where it might be explicitly set to true
-        const defaultValue = movieFilters.find(f => f.key === 'sortDescending')?.defaultValue;
-        return value !== defaultValue;
-      }
+  // Handle restoring search state when coming back from movie details
+  useEffect(() => {
+    if (location.state?.restoreSearch) {
+      const restoreData = location.state.restoreSearch;
+      console.log('Restoring search state:', restoreData);
       
-      if (key === 'sortBy') {
-        // sortBy is considered active if it has a non-empty string value
-        return value && value !== '';
-      }
+      setIsRestoring(true);
       
-      if (Array.isArray(value)) {
-        if (value.length === 2) {
-          // For range filters, check if they're not at default values
-          if (value[0] === 1950 && value[1] === 2025) return false; // year
-          if (value[0] === 0 && value[1] === 10) return false; // rating
-          return true;
-        }
-        return value.length > 0;
+      // Restore all search state
+      setSearchQuery(restoreData.searchQuery || '');
+      setFilterValues(restoreData.filterValues || filterValues);
+      setCurrentPage(restoreData.currentPage || 1);
+      setTotalPages(restoreData.totalPages || 1);
+      setTotalResults(restoreData.totalResults || 0);
+      setHasSearched(restoreData.hasSearched || false);
+      
+      console.log('State restored, will trigger auto-restore effect');
+      
+      // Clear the navigation state to prevent re-applying on re-renders
+      window.history.replaceState({}, document.title);
+      
+      // Clean up stored search context from sessionStorage
+      sessionStorage.removeItem('lastSearchContext');
+      
+      // Reset the flag after a short delay to allow state updates to complete
+      setTimeout(() => {
+        setIsRestoring(false);
+      }, 200);
+    }
+  }, [location.state]);
+
+  // Auto-restore search results when state is restored
+  useEffect(() => {
+    // Don't run if we're in the process of restoring from pre-filled filters
+    if (isRestoring) {
+      console.log('⏭️ Skipping auto-restore - currently restoring from pre-filled filters');
+      return;
+    }
+    
+    // Don't run if this was a manual search (to prevent duplicate API calls)
+    if (isManualSearch) {
+      console.log('⏭️ Skipping auto-restore - this was a manual search');
+      return;
+    }
+    
+    // Don't run if the last search was manual or prefill (to prevent duplicate API calls)
+    if (lastSearchSource === 'manual' || lastSearchSource === 'prefill') {
+      console.log('⏭️ Skipping auto-restore - last search was:', lastSearchSource);
+      return;
+    }
+    
+    console.log('🔄 Auto-restore effect triggered:', { hasSearched, searchQuery, hasActiveFilters: hasActiveFilters() });
+    if (hasSearched && (searchQuery.trim() || hasActiveFilters())) {
+      console.log('🔄 Restoring search results for page:', currentPage);
+      // Small delay to ensure all state is updated
+      const timer = setTimeout(() => {
+        setLastSearchSource('restore');
+        searchMovies(currentPage, 'restore');
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasSearched, searchQuery, currentPage, isRestoring, isManualSearch, lastSearchSource, searchMovies]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      // If user navigates back and there's no state, clear search results
+      if (!location.state) {
+        setMovies([]);
+        setTotalResults(0);
+        setTotalPages(1);
+        setHasSearched(false);
+        setCurrentPage(1);
       }
-      // Handle country as single object
-      if (key === 'country') {
-        console.log('Checking country filter:', value, 'Is active:', value !== null);
-        return value !== null;
-      }
-      return value && value !== '';
-    });
-  };
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [location.state]);
+
+  // Debug: Log initial filter values
+  useEffect(() => {
+    console.log('Search component mounted with filter values:', filterValues);
+  }, []);
+
+  // Auto-trigger search when filters are pre-filled
+  useEffect(() => {
+    if (location.state?.prefillFilters) {
+      // Small delay to ensure state is updated
+      const timer = setTimeout(async () => {
+        setIsManualSearch(true); // Set flag to prevent auto-restore from running
+        setLastSearchSource('prefill');
+        await searchMovies(1, 'prefill');
+        setIsRestoring(false); // Reset the flag after search is complete
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location.state?.prefillFilters, searchMovies]);
 
   // Handle search query changes (just update state, don't search yet)
   const handleSearch = (query) => {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page
     setHasSearched(false); // Reset search flag when search query changes
+    setIsManualSearch(false); // Reset manual search flag when search query changes
+    setLastSearchSource(null); // Reset search source when search query changes
   };
 
   // Handle filter changes (just update state, don't search yet)
@@ -359,17 +453,23 @@ const Search = () => {
     setFilterValues(filters);
     setCurrentPage(1); // Reset to first page
     setHasSearched(false); // Reset search flag when filters change
+    setIsManualSearch(false); // Reset manual search flag when filters change
+    setLastSearchSource(null); // Reset search source when filters change
   };
 
   // Handle explicit search button press
   const handleSearchButtonPress = () => {
-    searchMovies(1);
+    setIsManualSearch(true);
+    setLastSearchSource('manual');
+    searchMovies(1, 'manual');
   };
 
   // Handle page changes
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    searchMovies(page);
+    setIsManualSearch(true);
+    setLastSearchSource('manual');
+    searchMovies(page, 'manual');
   };
 
   // Handle item selection (navigation to movie details)
@@ -460,7 +560,19 @@ const Search = () => {
                     items={movies}
                     itemsPerRow={5}
                     rows={4}
-                    renderItem={(movie) => <SmallMovieCard movie={movie} />}
+                    renderItem={(movie) => (
+                      <SmallMovieCard 
+                        movie={movie} 
+                        searchContext={{
+                          searchQuery,
+                          filterValues,
+                          currentPage,
+                          totalPages,
+                          totalResults,
+                          hasSearched
+                        }}
+                      />
+                    )}
                     itemHeight="h-64"
                     gap="gap-6"
                     itemWidth="w-40"
