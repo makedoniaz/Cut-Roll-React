@@ -23,7 +23,7 @@ const AdminRoute = ({ children }) => {
   }
 
   // Check if user has admin role
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role !== 'Admin') {
     return <Navigate to="/" replace />;
   }
 

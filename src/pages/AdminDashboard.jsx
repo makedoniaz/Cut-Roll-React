@@ -324,7 +324,7 @@ const AdminDashboard = () => {
                       className="px-3 py-1 text-xs font-medium bg-gray-600 border border-gray-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value="user">User</option>
-                      <option value="moderator">Moderator</option>
+                      <option value="publisher">Publisher</option>
                       <option value="admin">Admin</option>
                     </select>
                   </div>
