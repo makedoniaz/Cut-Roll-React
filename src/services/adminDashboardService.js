@@ -19,9 +19,9 @@ export class AdminDashboardService {
     // Build request body with defaults
     const requestBody = {
       searchTerm: filterParams.searchTerm ?? ADMIN_DASHBOARD_DEFAULTS.SEARCH_TERM,
-      role: filterParams.role ?? ADMIN_DASHBOARD_DEFAULTS.ROLE,
-      isBanned: filterParams.isBanned ?? ADMIN_DASHBOARD_DEFAULTS.IS_BANNED,
-      isMuted: filterParams.isMuted ?? ADMIN_DASHBOARD_DEFAULTS.IS_MUTED,
+      role: filterParams.role,
+      isBanned: filterParams.isBanned,
+      isMuted: filterParams.isMuted,
       registeredAfter: filterParams.registeredAfter ?? ADMIN_DASHBOARD_DEFAULTS.REGISTERED_AFTER,
       registeredBefore: filterParams.registeredBefore ?? ADMIN_DASHBOARD_DEFAULTS.REGISTERED_BEFORE,
       pageNumber: filterParams.pageNumber ?? ADMIN_DASHBOARD_DEFAULTS.PAGE_NUMBER,
@@ -35,10 +35,6 @@ export class AdminDashboardService {
 
     if (requestBody.pageSize < 1 || requestBody.pageSize > 100) {
       throw new Error('Page size must be between 1 and 100');
-    }
-
-    if (requestBody.role !== null && ![0, 1, 2].includes(requestBody.role)) {
-      throw new Error('Role must be 0 (User), 1 (Admin), or 2 (Moderator)');
     }
 
     // Validate date format if provided

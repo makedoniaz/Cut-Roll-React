@@ -377,28 +377,37 @@ const AdminDashboard = () => {
 
         {/* Main Content with Dimming Effect */}
         <div className={`transition-all duration-300 ${isFiltersSidebarOpen ? 'opacity-70' : 'opacity-100'}`}>
-          {/* Search Bar and Filter Button Row */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1">
-              <div className="flex gap-4">
-                <input
-                  type="text"
-                  placeholder="Search by username or email..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearchButtonPress()}
-                  className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={handleSearchButtonPress}
-                  disabled={loading}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
-                >
-                  <Search className="w-4 h-4" />
-                  {loading ? 'Searching...' : 'Search'}
-                </button>
-              </div>
-            </div>
+                     {/* Search Bar and Filter Button Row */}
+           <div className="flex items-center gap-4 mb-6">
+                            <div className="flex-1">
+                 <div className="relative flex">
+                   <input
+                     type="text"
+                     placeholder="Search by username or email..."
+                     value={searchQuery}
+                     onChange={(e) => handleSearch(e.target.value)}
+                     onKeyPress={(e) => e.key === 'Enter' && handleSearchButtonPress()}
+                     className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-l-lg focus:outline-none focus:border-green-500 text-white placeholder-gray-400"
+                   />
+                   {searchQuery && (
+                     <button
+                       type="button"
+                       onClick={() => handleSearch('')}
+                       className="absolute right-16 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-white transition-colors"
+                     >
+                       <X className="w-4 h-4" />
+                     </button>
+                   )}
+                   <button
+                     type="button"
+                     onClick={handleSearchButtonPress}
+                     disabled={loading}
+                     className="cursor-pointer px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed border border-green-600 rounded-r-lg transition-colors"
+                   >
+                     <Search className="w-5 h-5 text-white" />
+                   </button>
+                 </div>
+               </div>
             <button
               onClick={() => setIsFiltersSidebarOpen(!isFiltersSidebarOpen)}
               className="cursor-pointer flex items-center space-x-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 transition-colors text-white whitespace-nowrap"
