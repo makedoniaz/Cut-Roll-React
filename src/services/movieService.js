@@ -18,6 +18,7 @@ export class MovieService {
             maxRating: searchParams.maxRating || null,
             country: searchParams.country || null,
             language: searchParams.language || null,
+            productionCompany: searchParams.productionCompany || null,
             sortBy: searchParams.sortBy || null
         };
         
