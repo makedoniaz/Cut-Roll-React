@@ -82,12 +82,12 @@ export class AdminDashboardService {
   static async getUsersFilteredCount(filterParams = {}) {
     // Build request body with defaults (same as getUsersFiltered)
     const requestBody = {
-      searchTerm: filterParams.searchTerm ?? ADMIN_DASHBOARD_DEFAULTS.SEARCH_TERM,
-      role: filterParams.role ?? ADMIN_DASHBOARD_DEFAULTS.ROLE,
-      isBanned: filterParams.isBanned ?? ADMIN_DASHBOARD_DEFAULTS.IS_BANNED,
-      isMuted: filterParams.isMuted ?? ADMIN_DASHBOARD_DEFAULTS.IS_MUTED,
-      registeredAfter: filterParams.registeredAfter ?? ADMIN_DASHBOARD_DEFAULTS.REGISTERED_AFTER,
-      registeredBefore: filterParams.registeredBefore ?? ADMIN_DASHBOARD_DEFAULTS.REGISTERED_BEFORE,
+      searchTerm: filterParams.searchTerm,
+      role: filterParams.role,
+      isBanned: filterParams.isBanned,
+      isMuted: filterParams.isMuted,
+      registeredAfter: filterParams.registeredAfter,
+      registeredBefore: filterParams.registeredBefore,
       pageNumber: filterParams.pageNumber ?? ADMIN_DASHBOARD_DEFAULTS.PAGE_NUMBER,
       pageSize: filterParams.pageSize ?? ADMIN_DASHBOARD_DEFAULTS.PAGE_SIZE
     };

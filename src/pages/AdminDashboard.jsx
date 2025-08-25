@@ -12,13 +12,8 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   
   // Filter configuration for admin dashboard
+  // Note: searchTerm is handled separately in the main search input above
   const adminFilters = [
-    {
-      key: 'searchTerm',
-      label: 'Search Term',
-      type: 'text',
-      placeholder: 'Search by username or email...'
-    },
     {
       key: 'role',
       label: 'User Role',
@@ -26,31 +21,23 @@ const AdminDashboard = () => {
       placeholder: 'Select role...',
       options: [
         { value: null, label: 'All Roles' },
-        { value: USER_ROLES.USER, label: 'User' },
-        { value: USER_ROLES.MODERATOR, label: 'Moderator' },
-        { value: USER_ROLES.ADMIN, label: 'Admin' }
+        { value: 1, label: 'User' },
+        { value: 0, label: 'Admin' },
+        { value: 2, label: 'Moderator' }
       ],
       defaultValue: null
     },
     {
-      key: 'isBanned',
-      label: 'Ban Status',
-      type: 'checkbox',
-      options: [
-        { value: true, label: 'Banned Users Only' },
-        { value: false, label: 'Active Users Only' }
-      ],
-      defaultValue: null
+      key: 'showBannedOnly',
+      label: 'Banned Users Only',
+      type: 'simpleCheckbox',
+      defaultValue: false
     },
     {
-      key: 'isMuted',
-      label: 'Mute Status',
-      type: 'checkbox',
-      options: [
-        { value: true, label: 'Muted Users Only' },
-        { value: false, label: 'Unmuted Users Only' }
-      ],
-      defaultValue: null
+      key: 'showMutedOnly',
+      label: 'Muted Users Only',
+      type: 'simpleCheckbox',
+      defaultValue: false
     },
     {
       key: 'registrationDateRange',
@@ -67,10 +54,9 @@ const AdminDashboard = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState({
-    searchTerm: '',
     role: null,
-    isBanned: null,
-    isMuted: null,
+    showBannedOnly: false,
+    showMutedOnly: false,
     registrationDateRange: [new Date('2025-08-01').getTime(), new Date().getTime()]
   });
 
@@ -84,20 +70,54 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0); // Total users without filters
   const [hasSearched, setHasSearched] = useState(false);
   const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
+
+  // Get total users count (without filters) for statistics
+  const getTotalUsersCount = useCallback(async () => {
+    try {
+      console.log('🔍 Getting total users count...');
+      const count = await AdminDashboardService.getUsersFilteredCount({
+        searchTerm: null,
+        role: null,
+        isBanned: null,
+        isMuted: null,
+        registeredAfter: null,
+        registeredBefore: null,
+        pageNumber: null,
+        pageSize: null
+      });
+      console.log('📊 Raw count response:', count);
+      console.log('📊 Count type:', typeof count);
+      console.log('📊 Count length:', count.length);
+      console.log('📊 Count char codes:', Array.from(count).map(c => c.charCodeAt(0)));
+      
+      const parsedCount = parseInt(count);
+      console.log('📊 Parsed count:', parsedCount);
+      console.log('📊 Is NaN:', isNaN(parsedCount));
+      
+      setTotalUsers(parsedCount || 0);
+      console.log('📊 Set totalUsers to:', parsedCount || 0);
+    } catch (error) {
+      console.error('Failed to get total users count:', error);
+      setTotalUsers(0);
+    }
+  }, []);
+
+  // Load total users count on component mount
+  useEffect(() => {
+    getTotalUsersCount();
+  }, [getTotalUsersCount]);
 
   // Check if there are any active filters
   const hasActiveFilters = useCallback(() => {
     return Object.entries(filterValues).some(([key, value]) => {
-      if (key === 'searchTerm') {
-        return value && value.trim() !== '';
-      }
       if (key === 'role') {
         return value !== null;
       }
-      if (key === 'isBanned' || key === 'isMuted') {
-        return value !== null; // Checkbox filters are active when not null
+      if (key === 'showBannedOnly' || key === 'showMutedOnly') {
+        return value !== false; // Simple checkbox is active when not false
       }
       if (key === 'registrationDateRange') {
         return value && value.length === 2 && value[0] !== defaultStartDate && value[1] !== defaultEndDate;
@@ -128,13 +148,22 @@ const AdminDashboard = () => {
       const searchParams = {
         searchTerm: searchQuery.trim() || null,
         role: filterValues.role,
-        isBanned: filterValues.isBanned,
-        isMuted: filterValues.isMuted,
+        isBanned: filterValues.showBannedOnly ? true : null, // Use showBannedOnly to filter banned
+        isMuted: filterValues.showMutedOnly ? true : null, // Use showMutedOnly to filter muted
         registeredAfter: filterValues.registrationDateRange[0] ? `${new Date(filterValues.registrationDateRange[0]).toISOString().slice(0, 10)}T00:00:00.000Z` : null,
         registeredBefore: filterValues.registrationDateRange[1] ? `${new Date(filterValues.registrationDateRange[1]).toISOString().slice(0, 10)}T23:59:59.999Z` : null,
         pageNumber: page,
         pageSize: 10
       };
+
+      // Add a note about filter behavior in the console
+      if (filterValues.showBannedOnly && filterValues.showMutedOnly) {
+        console.log('Both filters active: Will show users that are both banned AND muted');
+      } else if (filterValues.showBannedOnly) {
+        console.log('Banned filter active: Will show only banned users');
+      } else if (filterValues.showMutedOnly) {
+        console.log('Muted filter active: Will show only muted users');
+      }
 
       // Remove null values
       Object.keys(searchParams).forEach(key => {
@@ -147,14 +176,19 @@ const AdminDashboard = () => {
 
       const response = await AdminDashboardService.getUsersFiltered(searchParams);
       
-      if (response && response.users) {
-        setUsers(response.users);
-        setTotalResults(response.totalCount || response.users.length);
-        setTotalPages(response.totalPages || Math.ceil((response.totalCount || response.users.length) / 10));
+      console.log('API Response:', response);
+      
+      if (response && response.data) {
+        console.log('Setting users:', response.data);
+        setUsers(response.data);
+        // totalResults should represent the filtered count, not total users
+        setTotalResults(response.totalCount || response.data.length);
+        setTotalPages(response.totalPages || Math.ceil((response.totalCount || response.data.length) / 10));
         setCurrentPage(page);
         setHasSearched(true);
       } else {
         console.log('No data in response or response is empty');
+        console.log('Response structure:', response);
         setUsers([]);
         setTotalResults(0);
         setTotalPages(1);
@@ -182,6 +216,7 @@ const AdminDashboard = () => {
   // Handle filter changes
   const handleFiltersChange = (filters) => {
     console.log('Filter values changed:', filters);
+    console.log('Role filter value:', filters.role);
     setFilterValues(filters);
     setCurrentPage(1);
     setHasSearched(false);
@@ -226,13 +261,15 @@ const AdminDashboard = () => {
       // First remove current role, then assign new role
       const currentUser = users.find(u => u.id === userId);
       if (currentUser && currentUser.role !== newRole) {
-        if (window.confirm(`Are you sure you want to change ${currentUser.username}'s role from ${currentUser.role} to ${newRole}?`)) {
+        if (window.confirm(`Are you sure you want to change ${currentUser.username}'s role from ${currentUser.role || 'No Role'} to ${newRole || 'No Role'}?`)) {
           // Remove current role first
-          if (currentUser.role !== null) {
+          if (currentUser.role) {
             await AdminDashboardService.removeRole(userId, currentUser.role);
           }
           // Assign new role
-          await AdminDashboardService.assignRole(userId, newRole);
+          if (newRole) {
+            await AdminDashboardService.assignRole(userId, newRole);
+          }
           // Refresh the current search results
           searchUsers(currentPage);
         }
@@ -245,11 +282,11 @@ const AdminDashboard = () => {
 
   const getRoleBadgeColor = (role) => {
     switch (role) {
-      case USER_ROLES.ADMIN:
+      case 'Admin':
         return 'bg-red-600 text-white';
-      case USER_ROLES.MODERATOR:
+      case 'Moderator':
         return 'bg-blue-600 text-white';
-      case USER_ROLES.USER:
+      case 'User':
         return 'bg-gray-600 text-white';
       default:
         return 'bg-gray-600 text-white';
@@ -257,16 +294,7 @@ const AdminDashboard = () => {
   };
 
   const getRoleLabel = (role) => {
-    switch (role) {
-      case USER_ROLES.ADMIN:
-        return 'Admin';
-      case USER_ROLES.MODERATOR:
-        return 'Moderator';
-      case USER_ROLES.USER:
-        return 'User';
-      default:
-        return 'Unknown';
-    }
+    return role || 'No Role';
   };
 
   const getStatusBadge = (user) => {
@@ -307,7 +335,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-3">
               <Users className="w-8 h-8 text-blue-400" />
               <div>
-                <div className="text-2xl font-bold text-white">{totalResults || 0}</div>
+                <div className="text-2xl font-bold text-white">{totalUsers}</div>
                 <div className="text-gray-400 text-sm">Total Users</div>
               </div>
             </div>
@@ -317,7 +345,7 @@ const AdminDashboard = () => {
               <Shield className="w-8 h-8 text-blue-400" />
               <div>
                 <div className="text-2xl font-bold text-blue-400">
-                  {users.filter(u => u.role === USER_ROLES.MODERATOR).length}
+                  {users.filter(u => u.role === 'Moderator').length}
                 </div>
                 <div className="text-gray-400 text-sm">Moderators</div>
               </div>
@@ -407,6 +435,9 @@ const AdminDashboard = () => {
                         <span className="font-semibold text-blue-400">
                           Found {totalResults} user{totalResults !== 1 ? 's' : ''}
                         </span>
+                        <span className="text-gray-400 ml-2">
+                          out of {totalUsers} total users
+                        </span>
                         {searchQuery.trim() && (
                           <span className="text-gray-400 ml-2">
                             for "{searchQuery.trim()}"
@@ -423,7 +454,25 @@ const AdminDashboard = () => {
                         No users found
                         {searchQuery.trim() && ` for "${searchQuery.trim()}"`}
                         {hasActiveFilters() && ' with current filters'}
+                        <span className="ml-2">(out of {totalUsers} total users)</span>
                       </span>
+                    )}
+                    
+                    {/* Active Filters Display */}
+                    {(filterValues.showBannedOnly || filterValues.showMutedOnly) && (
+                      <div className="mt-2 pt-2 border-t border-gray-700">
+                        <span className="text-gray-400 text-sm">Active filters: </span>
+                        {filterValues.showBannedOnly && (
+                          <span className="inline-block px-2 py-1 text-xs bg-red-900 text-red-200 rounded mr-2">
+                            Banned Only
+                          </span>
+                        )}
+                        {filterValues.showMutedOnly && (
+                          <span className="inline-block px-2 py-1 text-xs bg-yellow-900 text-yellow-200 rounded mr-2">
+                            Muted Only
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -467,16 +516,16 @@ const AdminDashboard = () => {
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-400 mb-4">
                         <div>
-                          <span className="font-medium">Join Date:</span> {user.joinDate}
-                        </div>
-                        <div>
-                          <span className="font-medium">Last Active:</span> {user.lastActive}
+                          <span className="font-medium">Join Date:</span> {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                         </div>
                         <div>
                           <span className="font-medium">User ID:</span> {user.id}
                         </div>
                         <div>
                           <span className="font-medium">Status:</span> {user.isBanned ? 'Banned' : user.isMuted ? 'Muted' : 'Active'}
+                        </div>
+                        <div>
+                          <span className="font-medium">Avatar:</span> {user.avatarPath ? 'Yes' : 'No'}
                         </div>
                       </div>
 
@@ -506,13 +555,13 @@ const AdminDashboard = () => {
 
                         <select
                           value={user.role || ''}
-                          onChange={(e) => handleRoleChange(user.id, parseInt(e.target.value))}
+                          onChange={(e) => handleRoleChange(user.id, e.target.value)}
                           className="px-3 py-1 text-xs font-medium bg-gray-600 border border-gray-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                           <option value="">No Role</option>
-                          <option value={USER_ROLES.USER}>User</option>
-                          <option value={USER_ROLES.MODERATOR}>Moderator</option>
-                          <option value={USER_ROLES.ADMIN}>Admin</option>
+                          <option value="User">User</option>
+                          <option value="Moderator">Moderator</option>
+                          <option value="Admin">Admin</option>
                         </select>
                       </div>
                     </div>
@@ -595,7 +644,7 @@ const AdminDashboard = () => {
                     let value;
                     if (filter.type === 'select' && filter.defaultValue !== undefined) {
                       value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
-                    } else if (filter.type === 'checkbox') {
+                    } else if (filter.type === 'simpleCheckbox') {
                       value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
                     } else if (filter.type === 'range') {
                       value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
@@ -624,17 +673,27 @@ const AdminDashboard = () => {
                           <SelectFilter
                             key={filter.key}
                             label={filter.label}
-                            value={value}
+                            value={filterValues[filter.key] !== undefined ? filterValues[filter.key] : filter.defaultValue}
                             onChange={(newValue) => {
+                              console.log('=== ADMIN DASHBOARD FILTER CHANGE ===');
+                              console.log('Filter key:', filter.key);
+                              console.log('Old value:', filterValues[filter.key]);
+                              console.log('New value:', newValue);
+                              console.log('Type of new value:', typeof newValue);
+                              console.log('Current filterValues:', filterValues);
+                              
                               const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                              console.log('New filterValues:', newFilterValues);
+                              
                               setFilterValues(newFilterValues);
+                              console.log('=== END FILTER CHANGE ===');
                             }}
                             options={filter.options}
                             placeholder={filter.placeholder}
                           />
                         );
                         break;
-                      case 'checkbox':
+                      case 'simpleCheckbox':
                         filterComponent = (
                           <CheckboxFilter
                             key={filter.key}
@@ -644,7 +703,7 @@ const AdminDashboard = () => {
                               const newFilterValues = { ...filterValues, [filter.key]: newValue };
                               setFilterValues(newFilterValues);
                             }}
-                            options={filter.options}
+                            type="simpleCheckbox"
                           />
                         );
                         break;
@@ -683,8 +742,8 @@ const AdminDashboard = () => {
                     adminFilters.forEach(filter => {
                       if (filter.type === 'select' && filter.defaultValue !== undefined) {
                         clearedFilters[filter.key] = filter.defaultValue;
-                      } else if (filter.type === 'checkbox') {
-                        clearedFilters[filter.key] = null; // Clear checkbox values
+                      } else if (filter.type === 'simpleCheckbox') {
+                        clearedFilters[filter.key] = false; // Clear simple checkbox values
                       } else if (filter.type === 'range') {
                         clearedFilters[filter.key] = [defaultStartDate, defaultEndDate];
                       } else {
@@ -692,6 +751,7 @@ const AdminDashboard = () => {
                       }
                     });
                     setFilterValues(clearedFilters);
+                    // Note: searchQuery is handled separately and not cleared here
                   }}
                   className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-gray-300 hover:text-white transition-colors border border-gray-600 rounded-lg hover:border-gray-500 bg-gray-800 hover:bg-gray-700"
                 >
