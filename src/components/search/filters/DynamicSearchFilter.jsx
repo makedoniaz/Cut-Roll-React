@@ -3,7 +3,7 @@ import FlexibleSearchInput from '../../ui/common/FlexibleSearchInput';
 import keywordService from '../../../services/keywordService';
 import countryService from '../../../services/countryService';
 import languageService from '../../../services/languageService';
-import castService from '../../../services/castService';
+import personService from '../../../services/personService';
 import { API_CONFIG } from '../../../constants/index.js';
 
 const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyword' }) => {
@@ -13,8 +13,8 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
   // Update selectedItems when value prop changes
   useEffect(() => {
     console.log('DynamicSearchFilter: value prop changed:', value, 'type:', type);
-    if (type === 'country' || type === 'language' || type === 'actor') {
-      // For countries, languages, and actors, convert single value to array
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director') {
+      // For countries, languages, actors, and directors, convert single value to array
       const singleValueArray = value ? [value] : [];
       console.log(`DynamicSearchFilter: Setting selectedItems for ${type} to:`, singleValueArray);
       setSelectedItems(singleValueArray);
@@ -104,38 +104,44 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
         console.error('Language search error:', error);
         return [];
       }
-              } else if (type === 'actor') {
+         } else if (type === 'actor') {
        try {
-         const searchResults = await castService.searchActor(query, null, 1, 8);
+         // Use personService.searchPeople with role: 0 for cast members
+         const searchResults = await personService.searchPeople({
+           name: query,
+           role: 0, // 0 for cast members
+           pageNumber: 1,
+           pageSize: 8
+         });
          
          const responseData = await searchResults.json();
          
          // Debug: Log the actual profilePath values
          console.log('Actor search response data:', responseData.data);
          if (responseData.data && responseData.data.length > 0) {
-           console.log('First actor profilePath:', responseData.data[0].person.profilePath);
+           console.log('First actor profilePath:', responseData.data[0].profilePath);
          }
          
          if (responseData && responseData.data) {
-           return responseData.data.map(castItem => {
+           return responseData.data.map(person => {
              // Check if profilePath is already a full URL
              let imageUrl = null;
-             if (castItem.person.profilePath) {
-               if (castItem.person.profilePath.startsWith('http')) {
+             if (person.profilePath) {
+               if (person.profilePath.startsWith('http')) {
                  // Already a full URL
-                 imageUrl = castItem.person.profilePath;
+                 imageUrl = person.profilePath;
                } else {
                  // Relative path, construct TMDB URL
-                 imageUrl = `${API_CONFIG.TMDB_IMAGE_BASE_URL}/w185${castItem.person.profilePath}`;
+                 imageUrl = `${API_CONFIG.TMDB_IMAGE_BASE_URL}/w185${person.profilePath}`;
                }
              }
              
              console.log('Constructed image URL:', imageUrl);
              
              return {
-               id: castItem.person.id,
-               name: castItem.person.name,
-               description: `Actor: ${castItem.person.name}`,
+               id: person.id,
+               name: person.name,
+               description: `Actor: ${person.name}`,
                image: imageUrl
              };
            });
@@ -144,6 +150,54 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
          return [];
        } catch (error) {
          console.error('Actor search error:', error);
+         return [];
+       }
+     } else if (type === 'director') {
+       try {
+         // Use personService.searchPeople with role: 1 for crew members
+         const searchResults = await personService.searchPeople({
+           name: query,
+           role: 1, // 1 for crew members
+           pageNumber: 1,
+           pageSize: 8
+         });
+         
+         const responseData = await searchResults.json();
+         
+         // Debug: Log the actual profilePath values
+         console.log('Crew search response data:', responseData.data);
+         if (responseData.data && responseData.data.length > 0) {
+           console.log('First crew member profilePath:', responseData.data[0].profilePath);
+         }
+         
+         if (responseData && responseData.data) {
+           return responseData.data.map(person => {
+             // Check if profilePath is already a full URL
+             let imageUrl = null;
+             if (person.profilePath) {
+               if (person.profilePath.startsWith('http')) {
+                 // Already a full URL
+                 imageUrl = person.profilePath;
+               } else {
+                 // Relative path, construct TMDB URL
+                 imageUrl = `${API_CONFIG.TMDB_IMAGE_BASE_URL}/w185${person.profilePath}`;
+               }
+             }
+             
+             console.log('Constructed image URL:', imageUrl);
+             
+             return {
+               id: person.id,
+               name: person.name,
+               description: `Crew: ${person.name}`,
+               image: imageUrl
+             };
+           });
+         }
+         
+         return [];
+       } catch (error) {
+         console.error('Crew search error:', error);
          return [];
        }
      }
@@ -157,8 +211,8 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     
     setSelectedItems(newSelectedItems);
     
-    // For countries, languages, and actors (single selection), pass the first item or null
-    if (type === 'country' || type === 'language' || type === 'actor') {
+    // For countries, languages, actors, and directors (single selection), pass the first item or null
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director') {
       const singleValue = newSelectedItems && newSelectedItems.length > 0 ? newSelectedItems[0] : null;
       console.log(`DynamicSearchFilter: ${type} filter changed:`, singleValue);
       console.log(`DynamicSearchFilter: Calling onChange with ${type} value:`, singleValue);
@@ -175,7 +229,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     console.log('DynamicSearchFilter: Clearing selectedItems and calling onChange');
     
     setSelectedItems([]);
-    if (type === 'country' || type === 'language' || type === 'actor') {
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director') {
       onChange(null);
     } else {
       onChange([]);
@@ -206,15 +260,15 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
         isCompletelyDifferent
       });
       
-      if (isCompletelyDifferent) {
-        console.log('DynamicSearchFilter: Clearing selected items due to completely different input');
-        setSelectedItems([]);
-        if (type === 'country' || type === 'language') {
-          onChange(null);
-        } else {
-          onChange([]);
+              if (isCompletelyDifferent) {
+          console.log('DynamicSearchFilter: Clearing selected items due to completely different input');
+          setSelectedItems([]);
+          if (type === 'country' || type === 'language' || type === 'actor' || type === 'director') {
+            onChange(null);
+          } else {
+            onChange([]);
+          }
         }
-      }
     }
   };
 

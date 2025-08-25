@@ -44,9 +44,11 @@ const Search = () => {
     },
     {
       key: 'director',
-      label: 'Director',
-      type: 'text',
-      placeholder: 'Enter director name...'
+      label: 'Crew member',
+      type: 'dynamicsearch',
+      searchType: 'director',
+      placeholder: 'Search for crew members',
+      defaultValue: null
     },
     {
       key: 'actor',
@@ -284,7 +286,7 @@ const Search = () => {
         title: searchQuery.trim() || null,
         genres: filterValues.genres.length > 0 ? filterValues.genres : null,
         actor: filterValues.actor ? filterValues.actor.name : null,
-        director: filterValues.director || null,
+        director: filterValues.director ? filterValues.director.name : null,
         keyword: filterValues.keyword && filterValues.keyword.length > 0 ? filterValues.keyword.map(k => k.name) : null,
         year: filterValues.year[1] !== 2025 ? filterValues.year[1] : null, // Use max year if not default
         minRating: filterValues.rating[0] !== 0 ? filterValues.rating[0] : null,
@@ -322,6 +324,10 @@ const Search = () => {
       if (searchParams.hasOwnProperty('keyword')) {
         console.log('Keywords being sent to API:', searchParams.keyword, 'Type:', typeof searchParams.keyword);
         console.log('Original keyword filter value:', filterValues.keyword);
+      }
+      if (searchParams.hasOwnProperty('director')) {
+        console.log('Director being sent to API:', searchParams.director, 'Type:', typeof searchParams.director);
+        console.log('Original director filter value:', filterValues.director);
       }
 
       const response = await MovieService.searchMovies(searchParams);
