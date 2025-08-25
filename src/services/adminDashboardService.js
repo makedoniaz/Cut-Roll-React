@@ -220,7 +220,7 @@ export class AdminDashboardService {
         throw new Error(errorMessage || 'Failed to toggle ban status for user');
       }
 
-      const data = await response.json();
+      const data = await response.text();
       return data;
     } catch (error) {
       console.error('Admin dashboard service error:', error);
@@ -247,7 +247,7 @@ export class AdminDashboardService {
         throw new Error(errorMessage || 'Failed to toggle mute status for user');
       }
 
-      const data = await response.json();
+      const data = await response.text();
       return data;
     } catch (error) {
       console.error('Admin dashboard service error:', error);
