@@ -121,3 +121,6 @@ export * from './productionCompanies.js';
 
 // Export admin dashboard constants
 export * from './adminDashboard.js';
+
+// Export language constants
+export * from './language.js';

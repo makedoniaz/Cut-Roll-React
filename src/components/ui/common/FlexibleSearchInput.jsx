@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronDown, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const FlexibleSearchInput = ({
   placeholder = "Search...",
@@ -67,6 +67,11 @@ const FlexibleSearchInput = ({
     const newValue = e.target.value;
     setInputValue(newValue);
     onChange?.(newValue);
+
+    // Open dropdown when user starts typing
+    if (newValue.trim()) {
+      setIsDropdownOpen(true);
+    }
 
     // Clear previous timeout
     if (searchTimeout) {
@@ -141,7 +146,10 @@ const FlexibleSearchInput = ({
   // Handle focus
   const handleFocus = () => {
     setIsFocused(true);
-    setIsDropdownOpen(true);
+    // Only open dropdown if there's input value or search results
+    if (inputValue.trim() || searchResults.length > 0) {
+      setIsDropdownOpen(true);
+    }
   };
 
   // Handle blur
@@ -149,8 +157,9 @@ const FlexibleSearchInput = ({
     setIsFocused(false);
     // Delay closing dropdown to allow for item selection
     setTimeout(() => {
-      // Only close if we're not clicking on the dropdown itself
-      if (!dropdownRef.current?.contains(document.activeElement)) {
+      // Only close if we're not clicking on the dropdown itself or the toggle button
+      if (!dropdownRef.current?.contains(document.activeElement) && 
+          !inputRef.current?.contains(document.activeElement)) {
         setIsDropdownOpen(false);
       }
     }, 200);

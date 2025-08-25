@@ -2,6 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import FlexibleSearchInput from '../../ui/common/FlexibleSearchInput';
 import keywordService from '../../../services/keywordService';
 import countryService from '../../../services/countryService';
+import languageService from '../../../services/languageService';
+import castService from '../../../services/castService';
+import { API_CONFIG } from '../../../constants/index.js';
 
 const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyword' }) => {
   const [selectedItems, setSelectedItems] = useState(value || []);
@@ -10,11 +13,11 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
   // Update selectedItems when value prop changes
   useEffect(() => {
     console.log('DynamicSearchFilter: value prop changed:', value, 'type:', type);
-    if (type === 'country') {
-      // For countries, convert single value to array
-      const countryArray = value ? [value] : [];
-      console.log('DynamicSearchFilter: Setting selectedItems for country to:', countryArray);
-      setSelectedItems(countryArray);
+    if (type === 'country' || type === 'language' || type === 'actor') {
+      // For countries, languages, and actors, convert single value to array
+      const singleValueArray = value ? [value] : [];
+      console.log(`DynamicSearchFilter: Setting selectedItems for ${type} to:`, singleValueArray);
+      setSelectedItems(singleValueArray);
     } else {
       // For keywords, use value directly (should already be array)
       console.log('DynamicSearchFilter: Setting selectedItems for keyword to:', value || []);
@@ -32,7 +35,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     }
   }, [selectedItems]);
 
-  // Create a stable search function for keywords and countries
+  // Create a stable search function for keywords, countries, and languages
   const searchFunction = useCallback(async (query) => {
     if (type === 'keyword') {
       try {
@@ -62,7 +65,6 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
       try {
         const searchResults = await countryService.searchCountries({
           name: query,
-          pageNumber: 1,
           pageSize: 8
         });
         
@@ -82,7 +84,69 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
         console.error('Country search error:', error);
         return [];
       }
-    }
+    } else if (type === 'language') {
+      try {
+        const searchResults = await languageService.searchLanguage(query, 1, 8);
+        
+        const responseData = await searchResults.json();
+        
+        if (responseData && responseData.data) {
+          return responseData.data.map(language => ({
+            id: language.id,
+            name: language.name,
+            description: `Language: ${language.name}`,
+            image: null
+          }));
+        }
+        
+        return [];
+      } catch (error) {
+        console.error('Language search error:', error);
+        return [];
+      }
+              } else if (type === 'actor') {
+       try {
+         const searchResults = await castService.searchActor(query, null, 1, 8);
+         
+         const responseData = await searchResults.json();
+         
+         // Debug: Log the actual profilePath values
+         console.log('Actor search response data:', responseData.data);
+         if (responseData.data && responseData.data.length > 0) {
+           console.log('First actor profilePath:', responseData.data[0].person.profilePath);
+         }
+         
+         if (responseData && responseData.data) {
+           return responseData.data.map(castItem => {
+             // Check if profilePath is already a full URL
+             let imageUrl = null;
+             if (castItem.person.profilePath) {
+               if (castItem.person.profilePath.startsWith('http')) {
+                 // Already a full URL
+                 imageUrl = castItem.person.profilePath;
+               } else {
+                 // Relative path, construct TMDB URL
+                 imageUrl = `${API_CONFIG.TMDB_IMAGE_BASE_URL}/w185${castItem.person.profilePath}`;
+               }
+             }
+             
+             console.log('Constructed image URL:', imageUrl);
+             
+             return {
+               id: castItem.person.id,
+               name: castItem.person.name,
+               description: `Actor: ${castItem.person.name}`,
+               image: imageUrl
+             };
+           });
+         }
+         
+         return [];
+       } catch (error) {
+         console.error('Actor search error:', error);
+         return [];
+       }
+     }
     
     return [];
   }, [type]);
@@ -93,12 +157,12 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     
     setSelectedItems(newSelectedItems);
     
-    // For countries (single selection), pass the first item or null
-    if (type === 'country') {
-      const countryValue = newSelectedItems && newSelectedItems.length > 0 ? newSelectedItems[0] : null;
-      console.log('DynamicSearchFilter: Country filter changed:', countryValue);
-      console.log('DynamicSearchFilter: Calling onChange with country value:', countryValue);
-      onChange(countryValue);
+    // For countries, languages, and actors (single selection), pass the first item or null
+    if (type === 'country' || type === 'language' || type === 'actor') {
+      const singleValue = newSelectedItems && newSelectedItems.length > 0 ? newSelectedItems[0] : null;
+      console.log(`DynamicSearchFilter: ${type} filter changed:`, singleValue);
+      console.log(`DynamicSearchFilter: Calling onChange with ${type} value:`, singleValue);
+      onChange(singleValue);
     } else {
       // For keywords (multiple selection), pass the array as before
       console.log('DynamicSearchFilter: Keywords changed, calling onChange with:', newSelectedItems);
@@ -111,7 +175,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     console.log('DynamicSearchFilter: Clearing selectedItems and calling onChange');
     
     setSelectedItems([]);
-    if (type === 'country') {
+    if (type === 'country' || type === 'language' || type === 'actor') {
       onChange(null);
     } else {
       onChange([]);
@@ -145,7 +209,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
       if (isCompletelyDifferent) {
         console.log('DynamicSearchFilter: Clearing selected items due to completely different input');
         setSelectedItems([]);
-        if (type === 'country') {
+        if (type === 'country' || type === 'language') {
           onChange(null);
         } else {
           onChange([]);

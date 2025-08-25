@@ -7,6 +7,7 @@ import { MovieService } from '../services/movieService';
 import { Filter, X } from 'lucide-react';
 import RangeFilter from '../components/search/filters/RangeFilter';
 import MultiSelectFilter from '../components/search/filters/MultiSelectFilter';
+import SelectFilter from '../components/search/filters/SelectFilter';
 import DynamicSearchFilter from '../components/search/filters/DynamicSearchFilter';
 
 const Search = () => {
@@ -67,8 +68,10 @@ const Search = () => {
     {
       key: 'actor',
       label: 'Actor',
-      type: 'text',
-      placeholder: 'Enter actor name...'
+      type: 'dynamicsearch',
+      searchType: 'actor',
+      placeholder: 'Search for actors',
+      defaultValue: null
     },
     {
       key: 'keyword',
@@ -89,8 +92,10 @@ const Search = () => {
     {
       key: 'language',
       label: 'Language',
-      type: 'text',
-      placeholder: 'Enter language...'
+      type: 'dynamicsearch',
+      searchType: 'language',
+      placeholder: 'Search for languages',
+      defaultValue: null
     },
     {
       key: 'sortBy',
@@ -123,10 +128,10 @@ const Search = () => {
     year: [1950, 2025],
     rating: [0, 10],
     director: '',
-    actor: '',
+    actor: null,
     keyword: [],
     country: null,
-    language: '',
+    language: null,
     sortBy: '',
     sortDescending: true
   });
@@ -155,7 +160,14 @@ const Search = () => {
       const newFilterValues = { ...filterValues };
       
       if (prefillFilters.actor) {
-        newFilterValues.actor = prefillFilters.actor;
+        // Handle both string and array formats for backward compatibility
+        if (Array.isArray(prefillFilters.actor)) {
+          // Take the first actor if it's an array
+          newFilterValues.actor = prefillFilters.actor[0] || null;
+        } else {
+          // Convert string to single actor object format
+          newFilterValues.actor = { id: 'prefilled', name: prefillFilters.actor, description: `Actor: ${prefillFilters.actor}` };
+        }
       }
       if (prefillFilters.director) {
         newFilterValues.director = prefillFilters.director;
@@ -177,6 +189,16 @@ const Search = () => {
         } else {
           // Convert string to single country object format
           newFilterValues.country = { id: 'prefilled', name: prefillFilters.country, description: `Country: ${prefillFilters.country}` };
+        }
+      }
+      if (prefillFilters.language) {
+        // Handle both string and array formats for backward compatibility
+        if (Array.isArray(prefillFilters.language)) {
+          // Take the first language if it's an array
+          newFilterValues.language = prefillFilters.language[0] || null;
+        } else {
+          // Convert string to single language object format
+          newFilterValues.language = { id: 'prefilled', name: prefillFilters.language, description: `Language: ${prefillFilters.language}` };
         }
       }
       if (prefillFilters.genres) {
@@ -224,9 +246,9 @@ const Search = () => {
         }
         return value.length > 0;
       }
-      // Handle country as single object
-      if (key === 'country') {
-        console.log('Checking country filter:', value, 'Is active:', value !== null);
+      // Handle country, language, and actor as single objects
+      if (key === 'country' || key === 'language' || key === 'actor') {
+        console.log(`Checking ${key} filter:`, value, 'Is active:', value !== null);
         return value !== null;
       }
       return value && value !== '';
@@ -261,14 +283,14 @@ const Search = () => {
         pageSize: 28, // Show 28 movies per page
         title: searchQuery.trim() || null,
         genres: filterValues.genres.length > 0 ? filterValues.genres : null,
-        actor: filterValues.actor || null,
+        actor: filterValues.actor ? filterValues.actor.name : null,
         director: filterValues.director || null,
         keyword: filterValues.keyword && filterValues.keyword.length > 0 ? filterValues.keyword.map(k => k.name) : null,
         year: filterValues.year[1] !== 2025 ? filterValues.year[1] : null, // Use max year if not default
         minRating: filterValues.rating[0] !== 0 ? filterValues.rating[0] : null,
         maxRating: filterValues.rating[1] !== 10 ? filterValues.rating[1] : null,
         country: filterValues.country ? filterValues.country.name : null,
-        language: filterValues.language || null,
+        language: filterValues.language ? filterValues.language.name : null,
         sortBy: filterValues.sortBy || null,
         sortDescending: filterValues.sortDescending
       };
@@ -288,6 +310,14 @@ const Search = () => {
       if (searchParams.hasOwnProperty('country')) {
         console.log('Country being sent to API:', searchParams.country, 'Type:', typeof searchParams.country);
         console.log('Original country filter value:', filterValues.country);
+      }
+      if (searchParams.hasOwnProperty('language')) {
+        console.log('Language being sent to API:', searchParams.language, 'Type:', typeof searchParams.language);
+        console.log('Original language filter value:', filterValues.language);
+      }
+      if (searchParams.hasOwnProperty('actor')) {
+        console.log('Actor being sent to API:', searchParams.actor, 'Type:', typeof searchParams.actor);
+        console.log('Original actor filter value:', filterValues.actor);
       }
       if (searchParams.hasOwnProperty('keyword')) {
         console.log('Keywords being sent to API:', searchParams.keyword, 'Type:', typeof searchParams.keyword);
@@ -449,6 +479,22 @@ const Search = () => {
         console.log('Country details:', { id: filters.country.id, name: filters.country.name });
       } else {
         console.log('Country is null/undefined');
+      }
+    }
+    if (filters.hasOwnProperty('language')) {
+      console.log('Language changed to:', filters.language, 'Type:', typeof filters.language);
+      if (filters.language) {
+        console.log('Language details:', { id: filters.language.id, name: filters.language.name });
+      } else {
+        console.log('Language is null/undefined');
+      }
+    }
+    if (filters.hasOwnProperty('actor')) {
+      console.log('Actor changed to:', filters.actor, 'Type:', typeof filters.actor);
+      if (filters.actor) {
+        console.log('Actor details:', { id: filters.actor.id, name: filters.actor.name });
+      } else {
+        console.log('Actor is null/undefined');
       }
     }
     if (filters.hasOwnProperty('keyword')) {
@@ -668,7 +714,7 @@ const Search = () => {
                   if (filter.type === 'select' && filter.defaultValue !== undefined) {
                     value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
                   } else if (filter.type === 'dynamicsearch') {
-                    if (filter.searchType === 'country') {
+                    if (filter.searchType === 'country' || filter.searchType === 'language' || filter.searchType === 'actor') {
                       value = filterValues[filter.key] || filter.defaultValue || null;
                     } else {
                       value = filterValues[filter.key] || filter.defaultValue || [];
@@ -707,24 +753,17 @@ const Search = () => {
                       break;
                     case 'select':
                       filterComponent = (
-                        <div key={filter.key} className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-300">{filter.label}</label>
-                          <select
-                            value={value}
-                            onChange={(e) => {
-                              const newFilterValues = { ...filterValues, [filter.key]: e.target.value };
-                              setFilterValues(newFilterValues);
-                            }}
-                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white"
-                          >
-                            <option value="">{filter.placeholder}</option>
-                            {filter.options.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                        <SelectFilter
+                          key={filter.key}
+                          label={filter.label}
+                          value={value}
+                          onChange={(newValue) => {
+                            const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            setFilterValues(newFilterValues);
+                          }}
+                          options={filter.options}
+                          placeholder={filter.placeholder}
+                        />
                       );
                       break;
                     case 'range':
@@ -791,7 +830,7 @@ const Search = () => {
                         clearedFilters[filter.key] = filter.defaultValue || [];
                         break;
                       case 'dynamicsearch':
-                        if (filter.searchType === 'country') {
+                        if (filter.searchType === 'country' || filter.searchType === 'language' || filter.searchType === 'actor') {
                           clearedFilters[filter.key] = filter.defaultValue || null;
                         } else {
                           clearedFilters[filter.key] = filter.defaultValue || [];
