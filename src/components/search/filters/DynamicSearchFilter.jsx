@@ -4,6 +4,7 @@ import keywordService from '../../../services/keywordService';
 import countryService from '../../../services/countryService';
 import languageService from '../../../services/languageService';
 import personService from '../../../services/personService';
+import productionCompanyService from '../../../services/productionCompanyService';
 import { API_CONFIG } from '../../../constants/index.js';
 
 const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyword' }) => {
@@ -13,8 +14,8 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
   // Update selectedItems when value prop changes
   useEffect(() => {
     console.log('DynamicSearchFilter: value prop changed:', value, 'type:', type);
-    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director') {
-      // For countries, languages, actors, and directors, convert single value to array
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany') {
+      // For countries, languages, actors, directors, and production companies, convert single value to array
       const singleValueArray = value ? [value] : [];
       console.log(`DynamicSearchFilter: Setting selectedItems for ${type} to:`, singleValueArray);
       setSelectedItems(singleValueArray);
@@ -200,6 +201,29 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
          console.error('Crew search error:', error);
          return [];
        }
+     } else if (type === 'productionCompany') {
+       try {
+         const searchResults = await productionCompanyService.searchProductionCompanies({
+           name: query,
+           pageSize: 8
+         });
+         
+         const responseData = await searchResults.json();
+         
+         if (responseData && responseData.data) {
+           return responseData.data.map(company => ({
+             id: company.id,
+             name: company.name,
+             description: `Production Company: ${company.name}`,
+             image: null
+           }));
+         }
+         
+         return [];
+       } catch (error) {
+         console.error('Production Company search error:', error);
+         return [];
+       }
      }
     
     return [];
@@ -212,7 +236,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     setSelectedItems(newSelectedItems);
     
     // For countries, languages, actors, and directors (single selection), pass the first item or null
-    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director') {
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany') {
       const singleValue = newSelectedItems && newSelectedItems.length > 0 ? newSelectedItems[0] : null;
       console.log(`DynamicSearchFilter: ${type} filter changed:`, singleValue);
       console.log(`DynamicSearchFilter: Calling onChange with ${type} value:`, singleValue);
@@ -229,7 +253,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     console.log('DynamicSearchFilter: Clearing selectedItems and calling onChange');
     
     setSelectedItems([]);
-    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director') {
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany') {
       onChange(null);
     } else {
       onChange([]);
@@ -263,7 +287,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
               if (isCompletelyDifferent) {
           console.log('DynamicSearchFilter: Clearing selected items due to completely different input');
           setSelectedItems([]);
-          if (type === 'country' || type === 'language' || type === 'actor' || type === 'director') {
+          if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany') {
             onChange(null);
           } else {
             onChange([]);

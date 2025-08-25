@@ -400,9 +400,19 @@ const MovieDetails = () => {
                           <span className="text-gray-500">Production Companies:</span>
                           <div className="flex flex-wrap gap-2">
                             {productionCompanies.map((company, index) => (
-                              <span key={index} className="bg-gray-700 px-2 py-1 rounded text-xs">
+                              <button
+                                key={index}
+                                onClick={() => navigate('/search', { 
+                                  state: { 
+                                    prefillFilters: { 
+                                      productionCompany: company 
+                                    } 
+                                  } 
+                                })}
+                                className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer"
+                              >
                                 {company}
-                              </span>
+                              </button>
                             ))}
                           </div>
                         </div>
@@ -501,28 +511,19 @@ const MovieDetails = () => {
                         <span className="text-gray-500">{job}:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {names.map((name, index) => (
-                            job === 'Director' ? (
-                              <button
-                                key={index}
-                                onClick={() => navigate('/search', { 
-                                  state: { 
-                                    prefillFilters: { 
-                                      director: name 
-                                    } 
+                            <button
+                              key={index}
+                              onClick={() => navigate('/search', { 
+                                state: { 
+                                  prefillFilters: { 
+                                    director: name 
                                   } 
-                                })}
-                                className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer"
-                              >
-                                {name}
-                              </button>
-                            ) : (
-                              <span
-                                key={index}
-                                className="bg-gray-700 px-2 py-1 rounded text-xs"
-                              >
-                                {name}
-                              </span>
-                            )
+                                } 
+                              })}
+                              className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer"
+                            >
+                              {name}
+                            </button>
                           ))}
                         </div>
                       </div>

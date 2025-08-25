@@ -83,6 +83,14 @@ const Search = () => {
       defaultValue: null
     },
     {
+      key: 'productionCompany',
+      label: 'Production Company',
+      type: 'dynamicsearch',
+      searchType: 'productionCompany',
+      placeholder: 'Search for production company',
+      defaultValue: null
+    },
+    {
       key: 'year',
       label: 'Release Year',
       type: 'range',
@@ -129,11 +137,12 @@ const Search = () => {
     genres: [],
     year: [1950, 2025],
     rating: [0, 10],
-    director: '',
+    director: null,
     actor: null,
     keyword: [],
     country: null,
     language: null,
+    productionCompany: null,
     sortBy: '',
     sortDescending: true
   });
@@ -161,6 +170,16 @@ const Search = () => {
       // Update filter values with pre-filled data
       const newFilterValues = { ...filterValues };
       
+      if (prefillFilters.director) {
+        // Handle both string and array formats for backward compatibility
+        if (Array.isArray(prefillFilters.director)) {
+          // Take the first director if it's an array
+          newFilterValues.director = prefillFilters.director[0] || null;
+        } else {
+          // Convert string to single director object format
+          newFilterValues.director = { id: 'prefilled', name: prefillFilters.director, description: `Director: ${prefillFilters.director}` };
+        }
+      }
       if (prefillFilters.actor) {
         // Handle both string and array formats for backward compatibility
         if (Array.isArray(prefillFilters.actor)) {
@@ -170,9 +189,6 @@ const Search = () => {
           // Convert string to single actor object format
           newFilterValues.actor = { id: 'prefilled', name: prefillFilters.actor, description: `Actor: ${prefillFilters.actor}` };
         }
-      }
-      if (prefillFilters.director) {
-        newFilterValues.director = prefillFilters.director;
       }
       if (prefillFilters.keyword) {
         // Handle both string and array formats for backward compatibility
@@ -213,8 +229,14 @@ const Search = () => {
         newFilterValues.sortDescending = prefillFilters.sortDescending;
       }
       if (prefillFilters.productionCompany) {
-        // For production company, we'll use the search query since it's not a standard filter
-        setSearchQuery(prefillFilters.productionCompany);
+        // Handle both string and array formats for backward compatibility
+        if (Array.isArray(prefillFilters.productionCompany)) {
+          // Take the first production company if it's an array
+          newFilterValues.productionCompany = prefillFilters.productionCompany[0] || null;
+        } else {
+          // Convert string to single production company object format
+          newFilterValues.productionCompany = { id: 'prefilled', name: prefillFilters.productionCompany, description: `Production Company: ${prefillFilters.productionCompany}` };
+        }
       }
       
       setFilterValues(newFilterValues);
@@ -248,8 +270,8 @@ const Search = () => {
         }
         return value.length > 0;
       }
-      // Handle country, language, and actor as single objects
-      if (key === 'country' || key === 'language' || key === 'actor') {
+      // Handle country, language, actor, director, and productionCompany as single objects
+      if (key === 'country' || key === 'language' || key === 'actor' || key === 'director' || key === 'productionCompany') {
         console.log(`Checking ${key} filter:`, value, 'Is active:', value !== null);
         return value !== null;
       }
@@ -293,6 +315,7 @@ const Search = () => {
         maxRating: filterValues.rating[1] !== 10 ? filterValues.rating[1] : null,
         country: filterValues.country ? filterValues.country.name : null,
         language: filterValues.language ? (filterValues.language.englishName || filterValues.language.name) : null,
+        productionCompany: filterValues.productionCompany ? filterValues.productionCompany.name : null,
         sortBy: filterValues.sortBy || null,
         sortDescending: filterValues.sortDescending
       };
@@ -328,6 +351,10 @@ const Search = () => {
       if (searchParams.hasOwnProperty('director')) {
         console.log('Director being sent to API:', searchParams.director, 'Type:', typeof searchParams.director);
         console.log('Original director filter value:', filterValues.director);
+      }
+      if (searchParams.hasOwnProperty('productionCompany')) {
+        console.log('Production Company being sent to API:', searchParams.productionCompany, 'Type:', typeof searchParams.productionCompany);
+        console.log('Original productionCompany filter value:', filterValues.productionCompany);
       }
 
       const response = await MovieService.searchMovies(searchParams);
@@ -720,7 +747,7 @@ const Search = () => {
                   if (filter.type === 'select' && filter.defaultValue !== undefined) {
                     value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
                   } else if (filter.type === 'dynamicsearch') {
-                    if (filter.searchType === 'country' || filter.searchType === 'language' || filter.searchType === 'actor') {
+                    if (filter.searchType === 'country' || filter.searchType === 'language' || filter.searchType === 'actor' || filter.searchType === 'director' || filter.searchType === 'productionCompany') {
                       value = filterValues[filter.key] || filter.defaultValue || null;
                     } else {
                       value = filterValues[filter.key] || filter.defaultValue || [];
@@ -836,7 +863,7 @@ const Search = () => {
                         clearedFilters[filter.key] = filter.defaultValue || [];
                         break;
                       case 'dynamicsearch':
-                        if (filter.searchType === 'country' || filter.searchType === 'language' || filter.searchType === 'actor') {
+                        if (filter.searchType === 'country' || filter.searchType === 'language' || filter.searchType === 'actor' || filter.searchType === 'director' || filter.searchType === 'productionCompany') {
                           clearedFilters[filter.key] = filter.defaultValue || null;
                         } else {
                           clearedFilters[filter.key] = filter.defaultValue || [];
