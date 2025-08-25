@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useStores';
 import { AdminDashboardService } from '../services/adminDashboardService';
-import { Filter, X, Search, Users, Shield, Ban, MicOff } from 'lucide-react';
+import { Filter, X, Search, Users, Shield, Ban, MicOff, FileText } from 'lucide-react';
 import SelectFilter from '../components/search/filters/SelectFilter';
 import RangeFilter from '../components/search/filters/RangeFilter';
 import TextFilter from '../components/search/filters/TextFilter';
@@ -23,7 +23,7 @@ const AdminDashboard = () => {
         { value: null, label: 'All Roles' },
         { value: 1, label: 'User' },
         { value: 0, label: 'Admin' },
-        { value: 2, label: 'Moderator' }
+        { value: 2, label: 'Publisher' }
       ],
       defaultValue: null
     },
@@ -258,33 +258,106 @@ const AdminDashboard = () => {
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      // First remove current role, then assign new role
+      console.log('🔄 Role change requested:', { userId, newRole });
+      
       const currentUser = users.find(u => u.id === userId);
-      if (currentUser && currentUser.role !== newRole) {
+      console.log('👤 Current user:', currentUser);
+      
+      // Normalize role values for comparison (handle both string and numeric)
+      const currentRoleNormalized = getRoleLabel(currentUser.role);
+      const newRoleNormalized = newRole;
+      
+      console.log('📊 Role comparison:', { 
+        currentRole: currentUser.role, 
+        currentRoleNormalized, 
+        newRole, 
+        newRoleNormalized,
+        isDifferent: currentRoleNormalized !== newRoleNormalized
+      });
+      
+      if (currentUser && currentRoleNormalized !== newRoleNormalized) {
         if (window.confirm(`Are you sure you want to change ${currentUser.username}'s role from ${currentUser.role || 'No Role'} to ${newRole || 'No Role'}?`)) {
-          // Remove current role first
-          if (currentUser.role) {
-            await AdminDashboardService.removeRole(userId, currentUser.role);
-          }
-          // Assign new role
+          console.log('✅ User confirmed role change');
+          
+          // Just assign the new role (convert string to numeric)
           if (newRole) {
-            await AdminDashboardService.assignRole(userId, newRole);
+            const newRoleNumeric = getRoleNumericValue(newRole);
+            console.log('➕ Assigning new role:', { 
+              originalRole: newRole, 
+              numericRole: newRoleNumeric 
+            });
+            
+            if (newRoleNumeric !== null) {
+              await AdminDashboardService.assignRole(userId, newRoleNumeric);
+              console.log('✅ New role assigned successfully');
+            }
           }
+          
           // Refresh the current search results
+          console.log('🔄 Refreshing search results...');
           searchUsers(currentPage);
         }
+      } else {
+        console.log('⚠️ No role change needed or user cancelled');
       }
     } catch (error) {
-      console.error('Failed to change user role:', error);
+      console.error('❌ Failed to change user role:', error);
       alert('Failed to update user role');
     }
   };
 
+  // Helper function to convert role string to numeric value
+  const getRoleNumericValue = (roleString) => {
+    console.log('🔢 Converting role string to numeric:', roleString);
+    let result;
+    switch (roleString) {
+      case 'Admin':
+        result = 0;
+        break;
+      case 'User':
+        result = 1;
+        break;
+      case 'Publisher':
+        result = 2;
+        break;
+      default:
+        result = null;
+        break;
+    }
+    console.log('🔢 Conversion result:', result);
+    return result;
+  };
+
+  // Helper function to convert numeric role to string value
+  const getRoleStringValue = (roleNumeric) => {
+    console.log('🔤 Converting numeric role to string:', roleNumeric);
+    let result;
+    switch (roleNumeric) {
+      case 0:
+        result = 'Admin';
+        break;
+      case 1:
+        result = 'User';
+        break;
+      case 2:
+        result = 'Publisher';
+        break;
+      default:
+        result = null;
+        break;
+    }
+    console.log('🔤 Conversion result:', result);
+    return result;
+  };
+
   const getRoleBadgeColor = (role) => {
-    switch (role) {
+    // Normalize role to string for consistent comparison
+    const roleLabel = getRoleLabel(role);
+    
+    switch (roleLabel) {
       case 'Admin':
         return 'bg-red-600 text-white';
-      case 'Moderator':
+      case 'Publisher':
         return 'bg-blue-600 text-white';
       case 'User':
         return 'bg-gray-600 text-white';
@@ -294,7 +367,26 @@ const AdminDashboard = () => {
   };
 
   const getRoleLabel = (role) => {
-    return role || 'No Role';
+    console.log('🏷️ Getting role label for:', { role, type: typeof role });
+    
+    // Handle both string and numeric role values
+    if (role === null || role === undefined || role === '') {
+      console.log('🏷️ No role found, returning "No Role"');
+      return 'No Role';
+    }
+    // If it's already a string, return it
+    if (typeof role === 'string') {
+      console.log('🏷️ Role is already string:', role);
+      return role;
+    }
+    // If it's numeric, convert to string
+    if (typeof role === 'number') {
+      const result = getRoleStringValue(role) || 'Unknown Role';
+      console.log('🏷️ Converted numeric role to string:', { numeric: role, string: result });
+      return result;
+    }
+    console.log('🏷️ Unknown role type, returning "Unknown Role"');
+    return 'Unknown Role';
   };
 
   const getStatusBadge = (user) => {
@@ -342,12 +434,15 @@ const AdminDashboard = () => {
           </div>
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <Shield className="w-8 h-8 text-blue-400" />
+              <FileText className="w-8 h-8 text-blue-400" />
               <div>
                 <div className="text-2xl font-bold text-blue-400">
-                  {users.filter(u => u.role === 'Moderator').length}
+                  {users.filter(u => {
+                    const roleLabel = getRoleLabel(u.role);
+                    return roleLabel === 'Publisher';
+                  }).length}
                 </div>
-                <div className="text-gray-400 text-sm">Moderators</div>
+                <div className="text-gray-400 text-sm">Publishers</div>
               </div>
             </div>
           </div>
@@ -563,13 +658,13 @@ const AdminDashboard = () => {
                         </button>
 
                         <select
-                          value={user.role || ''}
+                          value={getRoleLabel(user.role) || ''}
                           onChange={(e) => handleRoleChange(user.id, e.target.value)}
                           className="px-3 py-1 text-xs font-medium bg-gray-600 border border-gray-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                           <option value="">No Role</option>
                           <option value="User">User</option>
-                          <option value="Moderator">Moderator</option>
+                          <option value="Publisher">Publisher</option>
                           <option value="Admin">Admin</option>
                         </select>
                       </div>

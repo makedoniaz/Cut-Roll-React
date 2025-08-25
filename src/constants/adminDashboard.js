@@ -21,5 +21,5 @@ export const ADMIN_DASHBOARD_DEFAULTS = {
 export const USER_ROLES = {
     ADMIN: 0,
     USER: 1,
-    MODERATOR: 2
+    PUBLISHER: 2
 };

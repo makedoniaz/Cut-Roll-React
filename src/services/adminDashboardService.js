@@ -98,7 +98,7 @@ export class AdminDashboardService {
     }
 
     if (requestBody.role !== null && ![0, 1, 2].includes(requestBody.role)) {
-      throw new Error('Role must be 0 (User), 1 (Admin), or 2 (Moderator)');
+      throw new Error('Role must be 0 (User), 1 (Admin), or 2 (Publisher)');
     }
 
     // Validate date format if provided
@@ -130,7 +130,7 @@ export class AdminDashboardService {
   /**
    * Assign role to a user
    * @param {string} userId - The ID of the user to assign role to
-   * @param {number} role - The role to assign (0=Admin, 1=User, 2=Moderator)
+   * @param {number} role - The role to assign (0=Admin, 1=User, 2=Publisher)
    * @returns {Promise<Object>} Response from the server
    */
   static async assignRole(userId, role) {
@@ -140,7 +140,7 @@ export class AdminDashboardService {
     }
 
     if (typeof role !== 'number' || ![0, 1, 2].includes(role)) {
-      throw new Error('Role must be 0 (Admin), 1 (User), or 2 (Moderator)');
+      throw new Error('Role must be 0 (Admin), 1 (User), or 2 (Publisher)');
     }
 
     const requestBody = {
@@ -156,7 +156,7 @@ export class AdminDashboardService {
         throw new Error(errorMessage || 'Failed to assign role to user');
       }
 
-      const data = await response.json();
+      const data = await response.text();
       return data;
     } catch (error) {
       console.error('Admin dashboard service error:', error);
@@ -167,7 +167,7 @@ export class AdminDashboardService {
   /**
    * Remove role from a user
    * @param {string} userId - The ID of the user to remove role from
-   * @param {number} role - The role to remove (0=Admin, 1=User, 2=Moderator)
+   * @param {number} role - The role to remove (0=Admin, 1=User, 2=Publisher)
    * @returns {Promise<Object>} Response from the server
    */
   static async removeRole(userId, role) {
@@ -177,7 +177,7 @@ export class AdminDashboardService {
     }
 
     if (typeof role !== 'number' || ![0, 1, 2].includes(role)) {
-      throw new Error('Role must be 0 (Admin), 1 (User), or 2 (Moderator)');
+      throw new Error('Role must be 0 (Admin), 1 (User), or 2 (Publisher)');
     }
 
     const requestBody = {

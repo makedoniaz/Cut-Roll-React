@@ -1,10 +1,10 @@
 export const API_ENDPOINTS = {
-    BASE: 'news/',
-    CREATE: 'news/',
-    SEARCH: 'news/search/',
-    COUNT: 'news/count',
-    PAGINATION: 'news/pagination',
-    LIKE: 'news/{newsId}/likes'
+    BASE: 'news/news',
+    CREATE: 'news/news',
+    SEARCH: 'news/news/search/',
+    COUNT: 'news/news/count',
+    PAGINATION: 'news/news/pagination',
+    LIKE: 'news/news/{newsId}/likes'
 };
 
 export const REFERENCE_TYPES = {

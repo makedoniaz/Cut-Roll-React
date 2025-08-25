@@ -14,6 +14,19 @@ const ProfileInfoTab = ({
   handleEmailUpdate,
   cancelEdit
 }) => {
+  // Helper function to convert numeric role to string value
+  const getRoleLabel = (roleNumeric) => {
+    switch (roleNumeric) {
+      case 0:
+        return 'Admin';
+      case 1:
+        return 'User';
+      case 2:
+        return 'Publisher';
+      default:
+        return roleNumeric || 'No Role';
+    }
+  };
   return (
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
@@ -70,7 +83,7 @@ const ProfileInfoTab = ({
             <label className="block text-sm font-medium text-gray-300 mb-1">Role</label>
             <div className="bg-gray-700 p-3 rounded-md border border-gray-600">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                {user.role}
+                {getRoleLabel(user.role)}
               </span>
             </div>
           </div>
