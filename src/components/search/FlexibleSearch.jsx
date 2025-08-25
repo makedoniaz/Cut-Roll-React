@@ -154,7 +154,7 @@ const FlexibleSearch = ({
 
   return (
     <div className="w-full max-w-4xl">
-      {/* Search Input */}
+      {/* Search Input and Search Button */}
       <div className="relative mb-4 flex">
         <input
           type="text"
@@ -172,10 +172,9 @@ const FlexibleSearch = ({
         </button>
       </div>
 
-
-      {/* Filter Toggle and Clear */}
+      {/* Show Filters Button */}
       {showFilters && filters.length > 0 && (
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4">
           <button
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
             className="cursor-pointer flex items-center space-x-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 transition-colors text-white"
@@ -184,16 +183,19 @@ const FlexibleSearch = ({
             <span>Filters</span>
             <ChevronDown className={`w-4 h-4 transition-transform ${isFiltersOpen ? 'rotate-180' : ''}`} />
           </button>
-          
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-              <span>Clear Filters</span>
-            </button>
-          )}
+        </div>
+      )}
+
+      {/* Clear Filters Button */}
+      {showFilters && filters.length > 0 && hasActiveFilters && (
+        <div className="mb-4">
+          <button
+            onClick={clearFilters}
+            className="flex items-center space-x-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          >
+            <X className="w-4 h-4" />
+            <span>Clear Filters</span>
+          </button>
         </div>
       )}
 

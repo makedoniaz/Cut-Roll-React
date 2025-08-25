@@ -3,8 +3,11 @@ import { useLocation } from 'react-router-dom';
 import SearchBar from '../components/search/SearchBar';
 import PaginatedGridContainer from '../components/layout/PaginatedGridContainer';
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
-import SearchTypesList from '../components/search/SearchTypesList';
 import { MovieService } from '../services/movieService';
+import { Filter, X } from 'lucide-react';
+import RangeFilter from '../components/search/filters/RangeFilter';
+import MultiSelectFilter from '../components/search/filters/MultiSelectFilter';
+import DynamicSearchFilter from '../components/search/filters/DynamicSearchFilter';
 
 const Search = () => {
   const location = useLocation();
@@ -138,6 +141,7 @@ const Search = () => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [isManualSearch, setIsManualSearch] = useState(false);
   const [lastSearchSource, setLastSearchSource] = useState(null); // 'manual', 'restore', 'prefill'
+  const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
 
   // Handle pre-filled filters from navigation state
   useEffect(() => {
@@ -254,7 +258,7 @@ const Search = () => {
       // Prepare search parameters for movieService
       const searchParams = {
         page: page,
-        pageSize: 20, // Show 20 movies per page
+        pageSize: 28, // Show 28 movies per page
         title: searchQuery.trim() || null,
         genres: filterValues.genres.length > 0 ? filterValues.genres : null,
         actor: filterValues.actor || null,
@@ -478,131 +482,346 @@ const Search = () => {
     // Navigation is handled by SmallMovieCard component
   };
 
+  // Disable body scroll when sidebar is open
+  useEffect(() => {
+    if (isFiltersSidebarOpen) {
+      // Disable scrolling on the main page
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Re-enable scrolling on the main page
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function to restore scrolling when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isFiltersSidebarOpen]);
+
   return (
-    <div>
+    <div className="relative">
       <h1 className="text-3xl font-bold mb-8">Search Movies</h1>
-      <div className="flex gap-8">
-        {/* Left column - Search and Results */}
-        <div className="flex-1">
-          <SearchBar
-            filters={movieFilters}
-            filterValues={filterValues}
-            handleSearch={handleSearch}
-            handleFiltersChange={handleFiltersChange}
-            onSearchButtonPress={handleSearchButtonPress}
-            searchValue={searchQuery}
-          />
+      
+      {/* Main Content with Dimming Effect */}
+      <div className={`transition-all duration-300 ${isFiltersSidebarOpen ? 'opacity-70' : 'opacity-100'}`}>
+        {/* Search Bar and Filter Button Row */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex-1">
+            <SearchBar
+              filters={[]}
+              filterValues={filterValues}
+              handleSearch={handleSearch}
+              handleFiltersChange={handleFiltersChange}
+              onSearchButtonPress={handleSearchButtonPress}
+              searchValue={searchQuery}
+              showFilters={false}
+            />
+          </div>
+          <button
+            onClick={() => setIsFiltersSidebarOpen(!isFiltersSidebarOpen)}
+            className="cursor-pointer flex items-center space-x-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 transition-colors text-white whitespace-nowrap"
+          >
+            <Filter className="w-4 h-4" />
+            <span>{isFiltersSidebarOpen ? 'Hide' : 'Show'} Filters</span>
+          </button>
+        </div>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="mt-8 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-              <p className="mt-4 text-gray-400">Searching movies...</p>
-            </div>
-          )}
+        {/* Loading State */}
+        {loading && (
+          <div className="mt-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+            <p className="mt-4 text-gray-400">Searching movies...</p>
+          </div>
+        )}
 
-          {/* Error State */}
-          {error && (
-            <div className="mt-8 p-4 bg-red-900 border border-red-700 rounded-lg">
-              <p className="text-red-200">Error: {error}</p>
-            </div>
-          )}
+        {/* Error State */}
+        {error && (
+          <div className="mt-8 p-4 bg-red-900 border border-red-700 rounded-lg">
+            <p className="text-red-200">Error: {error}</p>
+          </div>
+        )}
 
-          {/* Results Container */}
-          {!loading && !error && (
-            <>
-              {/* Results Count - Show when there's a search query or active filters */}
-              {hasSearched && (searchQuery.trim() || hasActiveFilters()) && (
-                <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
-                  <div className="text-gray-300">
-                    {movies.length > 0 ? (
-                      <>
-                        <span className="font-semibold text-green-400">
-                          Found {totalResults} movie{totalResults !== 1 ? 's' : ''}
-                        </span>
-                        {searchQuery.trim() && (
-                          <span className="text-gray-400 ml-2">
-                            for "{searchQuery.trim()}""
-                          </span>
-                        )}
-                        {hasActiveFilters() && (
-                          <span className="text-gray-400 ml-2">
-                            with applied filters
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-gray-400">
-                        No movies found
-                        {searchQuery.trim() && ` for "${searchQuery.trim()}"`}
-                        {hasActiveFilters() && ' with current filters'}
+        {/* Results Container */}
+        {!loading && !error && (
+          <>
+            {/* Results Count - Show when there's a search query or active filters */}
+            {hasSearched && (searchQuery.trim() || hasActiveFilters()) && (
+              <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <div className="text-gray-300">
+                  {movies.length > 0 ? (
+                    <>
+                      <span className="font-semibold text-green-400">
+                        Found {totalResults} movie{totalResults !== 1 ? 's' : ''}
                       </span>
-                    )}
-                  </div>
+                      {searchQuery.trim() && (
+                        <span className="text-gray-400 ml-2">
+                          for "{searchQuery.trim()}""
+                        </span>
+                      )}
+                      {hasActiveFilters() && (
+                        <span className="text-gray-400 ml-2">
+                          with applied filters
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-gray-400">
+                      No movies found
+                      {searchQuery.trim() && ` for "${searchQuery.trim()}"`}
+                      {hasActiveFilters() && ' with current filters'}
+                    </span>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* No Results Message */}
-              {movies.length === 0 && hasSearched && (
-                <div className="mt-8 text-center text-gray-400">
-                  <div className="text-6xl mb-4">🔍</div>
-                  <p className="text-lg mb-2">No movies found matching your criteria</p>
-                  <p className="text-sm text-gray-500">
-                    Try adjusting your search terms or filters
-                  </p>
-                </div>
-              )}
+            {/* No Results Message */}
+            {movies.length === 0 && hasSearched && (
+              <div className="mt-8 text-center text-gray-400">
+                <div className="text-6xl mb-4">🔍</div>
+                <p className="text-lg mb-2">No movies found matching your criteria</p>
+                <p className="text-sm text-gray-500">
+                  Try adjusting your search terms or filters
+                </p>
+              </div>
+            )}
 
-              {/* Movies Grid */}
-              {movies.length > 0 && (
-                <div className="mt-8">
-                  <PaginatedGridContainer
-                    items={movies}
-                    itemsPerRow={5}
-                    rows={4}
-                    renderItem={(movie) => (
-                      <SmallMovieCard 
-                        movie={movie} 
-                        searchContext={{
-                          searchQuery,
-                          filterValues,
-                          currentPage,
-                          totalPages,
-                          totalResults,
-                          hasSearched
-                        }}
-                      />
-                    )}
-                    itemHeight="h-64"
-                    gap="gap-6"
-                    itemWidth="w-40"
-                    useExternalPagination={true}
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
+            {/* Movies Grid */}
+            {movies.length > 0 && (
+              <div className="mt-8">
+                <PaginatedGridContainer
+                  items={movies}
+                  itemsPerRow={7}
+                  rows={4}
+                  renderItem={(movie) => (
+                    <SmallMovieCard 
+                      movie={movie} 
+                      searchContext={{
+                        searchQuery,
+                        filterValues,
+                        currentPage,
+                        totalPages,
+                        totalResults,
+                        hasSearched
+                      }}
+                    />
+                  )}
+                  itemHeight="h-64"
+                  gap="gap-6"
+                  itemWidth="w-40"
+                  useExternalPagination={true}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
 
-              {/* Initial State - No Search Yet */}
-              {movies.length === 0 && !searchQuery.trim() && !hasActiveFilters() && !hasSearched && (
-                <div className="mt-8 text-center text-gray-400">
-                  <div className="text-6xl mb-4">🎬</div>
-                  <p className="text-lg mb-2">Ready to search for movies?</p>
-                  <p className="text-sm text-gray-500">
-                    Enter a search term or use filters, then click Search to find movies
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Right column - Search Types */}
-        <div className="w-1/4">
-          <SearchTypesList onItemSelect={onItemSelect} />
-        </div>
+            {/* Initial State - No Search Yet */}
+            {movies.length === 0 && !searchQuery.trim() && !hasActiveFilters() && !hasSearched && (
+              <div className="mt-8 text-center text-gray-400">
+                <div className="text-6xl mb-4">🎬</div>
+                <p className="text-lg mb-2">Ready to search for movies?</p>
+                <p className="text-sm text-gray-500">
+                  Enter a search term or use filters, then click Search to find movies
+                </p>
+              </div>
+            )}
+          </>
+        )}
       </div>
+
+      {/* Overlay Sidebar */}
+      <>
+        {/* Backdrop */}
+        <div 
+          className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${
+            isFiltersSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={() => setIsFiltersSidebarOpen(false)}
+        />
+        
+        {/* Sidebar */}
+        <div className={`fixed top-0 right-0 h-full w-[500px] bg-gray-900 border-l border-gray-700 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+          isFiltersSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}>
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Filters</h3>
+                <button
+                  onClick={() => setIsFiltersSidebarOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Filters Content - Scrollable */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              {/* Individual Filters */}
+              <div className="space-y-6">
+                {movieFilters.map((filter) => {
+                  let value;
+                  if (filter.type === 'select' && filter.defaultValue !== undefined) {
+                    value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
+                  } else if (filter.type === 'dynamicsearch') {
+                    if (filter.searchType === 'country') {
+                      value = filterValues[filter.key] || filter.defaultValue || null;
+                    } else {
+                      value = filterValues[filter.key] || filter.defaultValue || [];
+                    }
+                  } else {
+                    value = filterValues[filter.key] || filter.defaultValue || (filter.type === 'multiselect' ? [] : filter.type === 'range' ? [filter.min || 0, filter.max || 100] : '');
+                  }
+
+                  const commonProps = {
+                    label: filter.label,
+                    value: value,
+                    onChange: (value) => {
+                      const newFilterValues = { ...filterValues, [filter.key]: value };
+                      setFilterValues(newFilterValues);
+                    }
+                  };
+
+                  let filterComponent;
+                  switch (filter.type) {
+                    case 'text':
+                      filterComponent = (
+                        <div key={filter.key} className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-300">{filter.label}</label>
+                          <input
+                            type="text"
+                            placeholder={filter.placeholder}
+                            value={value}
+                            onChange={(e) => {
+                              const newFilterValues = { ...filterValues, [filter.key]: e.target.value };
+                              setFilterValues(newFilterValues);
+                            }}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white placeholder-gray-400"
+                          />
+                        </div>
+                      );
+                      break;
+                    case 'select':
+                      filterComponent = (
+                        <div key={filter.key} className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-300">{filter.label}</label>
+                          <select
+                            value={value}
+                            onChange={(e) => {
+                              const newFilterValues = { ...filterValues, [filter.key]: e.target.value };
+                              setFilterValues(newFilterValues);
+                            }}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white"
+                          >
+                            <option value="">{filter.placeholder}</option>
+                            {filter.options.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                      break;
+                    case 'range':
+                      filterComponent = (
+                        <RangeFilter
+                          key={filter.key}
+                          label={filter.label}
+                          value={value}
+                          onChange={(newValue) => {
+                            const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            setFilterValues(newFilterValues);
+                          }}
+                          min={filter.min}
+                          max={filter.max}
+                          step={filter.step}
+                        />
+                      );
+                      break;
+                    case 'multiselect':
+                      filterComponent = (
+                        <MultiSelectFilter
+                          key={filter.key}
+                          label={filter.label}
+                          value={value}
+                          onChange={(newValue) => {
+                            const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            setFilterValues(newFilterValues);
+                          }}
+                          options={filter.options}
+                        />
+                      );
+                      break;
+                    case 'dynamicsearch':
+                      filterComponent = (
+                        <DynamicSearchFilter
+                          key={filter.key}
+                          label={filter.label}
+                          value={value}
+                          onChange={(newValue) => {
+                            const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            setFilterValues(newFilterValues);
+                          }}
+                          placeholder={filter.placeholder}
+                          type={filter.searchType}
+                        />
+                      );
+                      break;
+                    default:
+                      filterComponent = null;
+                  }
+                  return filterComponent;
+                })}
+              </div>
+            </div>
+            
+            {/* Footer with Clear Button - Static Position */}
+            <div className="p-6 border-t border-gray-700">
+              <button
+                onClick={() => {
+                  const clearedFilters = {};
+                  movieFilters.forEach(filter => {
+                    switch (filter.type) {
+                      case 'multiselect':
+                        clearedFilters[filter.key] = filter.defaultValue || [];
+                        break;
+                      case 'dynamicsearch':
+                        if (filter.searchType === 'country') {
+                          clearedFilters[filter.key] = filter.defaultValue || null;
+                        } else {
+                          clearedFilters[filter.key] = filter.defaultValue || [];
+                        }
+                        break;
+                      case 'range':
+                        clearedFilters[filter.key] = filter.defaultValue || [filter.min || 0, filter.max || 100];
+                        break;
+                      case 'select':
+                        if (filter.defaultValue !== undefined) {
+                          clearedFilters[filter.key] = filter.defaultValue;
+                        } else {
+                          clearedFilters[filter.key] = '';
+                        }
+                        break;
+                      default:
+                        clearedFilters[filter.key] = filter.defaultValue || '';
+                    }
+                  });
+                  setFilterValues(clearedFilters);
+                }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-gray-300 hover:text-white transition-colors border border-gray-600 rounded-lg hover:border-gray-500 bg-gray-800 hover:bg-gray-700"
+              >
+                <X className="w-4 h-4" />
+                <span>Clear All Filters</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
     </div>
   );
 };

@@ -24,13 +24,6 @@ const SearchTypesList = ({
 
   return (
     <div className={`bg-gray-800 text-white ${className}`}>
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-700">
-        <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-          Show results for
-        </h3>
-      </div>
-
       {/* Menu Items */}
       <div className="py-2">
         {menuItems.map((item) => (
