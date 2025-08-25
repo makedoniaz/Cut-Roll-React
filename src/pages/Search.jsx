@@ -43,23 +43,6 @@ const Search = () => {
       defaultValue: []
     },
     {
-      key: 'year',
-      label: 'Release Year',
-      type: 'range',
-      min: 1950,
-      max: 2025,
-      defaultValue: [1950, 2025]
-    },
-    {
-      key: 'rating',
-      label: 'Rating Range',
-      type: 'range',
-      min: 0,
-      max: 10,
-      step: 0.5,
-      defaultValue: [0, 10]
-    },
-    {
       key: 'director',
       label: 'Director',
       type: 'text',
@@ -96,6 +79,23 @@ const Search = () => {
       searchType: 'language',
       placeholder: 'Search for languages',
       defaultValue: null
+    },
+    {
+      key: 'year',
+      label: 'Release Year',
+      type: 'range',
+      min: 1950,
+      max: 2025,
+      defaultValue: [1950, 2025]
+    },
+    {
+      key: 'rating',
+      label: 'Rating Range',
+      type: 'range',
+      min: 0,
+      max: 10,
+      step: 0.5,
+      defaultValue: [0, 10]
     },
     {
       key: 'sortBy',
@@ -290,7 +290,7 @@ const Search = () => {
         minRating: filterValues.rating[0] !== 0 ? filterValues.rating[0] : null,
         maxRating: filterValues.rating[1] !== 10 ? filterValues.rating[1] : null,
         country: filterValues.country ? filterValues.country.name : null,
-        language: filterValues.language ? filterValues.language.name : null,
+        language: filterValues.language ? (filterValues.language.englishName || filterValues.language.name) : null,
         sortBy: filterValues.sortBy || null,
         sortDescending: filterValues.sortDescending
       };
@@ -484,7 +484,7 @@ const Search = () => {
     if (filters.hasOwnProperty('language')) {
       console.log('Language changed to:', filters.language, 'Type:', typeof filters.language);
       if (filters.language) {
-        console.log('Language details:', { id: filters.language.id, name: filters.language.name });
+        console.log('Language details:', { id: filters.language.id, name: filters.language.englishName || filters.language.name });
       } else {
         console.log('Language is null/undefined');
       }

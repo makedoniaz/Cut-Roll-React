@@ -93,8 +93,8 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
         if (responseData && responseData.data) {
           return responseData.data.map(language => ({
             id: language.id,
-            name: language.name,
-            description: `Language: ${language.name}`,
+            name: language.englishName || language.name, // Use englishName if available, fallback to name
+            description: `Language: ${language.englishName || language.name}`,
             image: null
           }));
         }

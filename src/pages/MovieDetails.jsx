@@ -186,7 +186,7 @@ const MovieDetails = () => {
   };
 
   const getSpokenLanguages = () => {
-    return movie.spokenLanguages?.map(lang => lang.language?.name || lang.languageCode || lang.languageCode) || [];
+    return movie.spokenLanguages?.map(lang => lang.language?.englishName || lang.language?.name || lang.languageCode || lang.languageCode) || [];
   };
 
   const getProductionCompanies = () => {
