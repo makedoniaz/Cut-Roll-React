@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import SearchBar from '../components/search/SearchBar';
+import MovieSearchDropdown from '../components/search/MovieSearchDropdown';
 import PaginatedGridContainer from '../components/layout/PaginatedGridContainer';
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import { MovieService } from '../services/movieService';
@@ -586,14 +586,10 @@ const Search = () => {
         {/* Search Bar and Filter Button Row */}
         <div className="flex items-center gap-4 mb-6">
           <div className="flex-1">
-            <SearchBar
-              filters={[]}
-              filterValues={filterValues}
-              handleSearch={handleSearch}
-              handleFiltersChange={handleFiltersChange}
-              onSearchButtonPress={handleSearchButtonPress}
+            <MovieSearchDropdown
               searchValue={searchQuery}
-              showFilters={false}
+              onSearch={handleSearch}
+              onSearchButtonPress={handleSearchButtonPress}
             />
           </div>
           <button

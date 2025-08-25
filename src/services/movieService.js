@@ -1,6 +1,7 @@
 
 import api from './api.js';
 import { API_ENDPOINTS } from '../constants/movies.js';
+import { API_CONFIG } from '../constants/index.js';
 
 export class MovieService {
     static async searchMovies(searchParams = {}) {
@@ -127,5 +128,47 @@ export class MovieService {
 
         const deletedMovieId = await response.text();
         return parseInt(deletedMovieId, 10);
+    }
+
+    static async searchMoviesByTitle(query, limit = 8) {
+        if (!query || !query.trim()) {
+            return [];
+        }
+
+        try {
+            // Use the existing searchMovies method with minimal parameters for title search
+            const searchParams = {
+                page: 1,
+                pageSize: limit,
+                title: query.trim(),
+                sortBy: 'title',
+                sortDescending: false
+            };
+
+            const response = await this.searchMovies(searchParams);
+            
+            if (response && response.data) {
+                console.log('Raw movie data from API:', response.data[0]); // Debug log
+                return response.data.map(movie => {
+                    // Try different possible ID fields
+                    const movieId = movie.id || movie.movieId || movie.tmdbId || movie.externalId;
+                    console.log('Movie ID found:', movieId, 'for movie:', movie.title); // Debug log
+                    
+                    return {
+                        id: movieId,
+                        name: movie.title,
+                        title: movie.title,
+                        description: movie.overview ? `${movie.title} (${movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A'})` : movie.title,
+                        image: movie.poster?.filePath ? `${API_CONFIG?.TMDB_IMAGE_BASE_URL}/w500${movie.poster.filePath}` : null,
+                        type: 'movie'
+                    };
+                });
+            }
+            
+            return [];
+        } catch (error) {
+            console.error('Movie title search error:', error);
+            return [];
+        }
     }
 }
