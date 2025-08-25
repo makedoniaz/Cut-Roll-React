@@ -5,7 +5,7 @@ import RichTextBox from "./inputs/RichTextEditor";
 import MediaUploader from "./MediaUploader";
 import Modal from "../../layout/Modal";
 import LinkModal from "./LinkModal";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 import { NewsService } from "../../../services/newsService";
 import { useAuthStore } from "../../../stores/authStore";
 import { REFERENCE_TYPES } from "../../../constants/news";
@@ -17,8 +17,6 @@ function NewsForm({ onClose }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
-  const [videoUrl, setVideoUrl] = useState('');
-  const [mediaType, setMediaType] = useState('image');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [references, setReferences] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,63 +35,33 @@ function NewsForm({ onClose }) {
     console.log('Draft saved:', { 
       title, 
       content, 
-      mediaType,
-      image: image?.name,
-      videoUrl 
+      image: image?.name
     });
     alert('Draft saved successfully!');
   };
 
   // Transform references from the current format to the API format
   const transformReferencesForAPI = () => {
-    return references.map(ref => {
-      // Map the reference type string to the corresponding enum value
-      let referenceType;
-      switch (ref.reference.type) {
-        case 'movie':
-          referenceType = REFERENCE_TYPES.MOVIE;
-          break;
-        case 'people':
-          referenceType = REFERENCE_TYPES.PEOPLE;
-          break;
-        case 'genre':
-          referenceType = REFERENCE_TYPES.GENRE;
-          break;
-        case 'production_company':
-          referenceType = REFERENCE_TYPES.PRODUCTION_COMPANY;
-          break;
-        case 'keyword':
-          referenceType = REFERENCE_TYPES.KEYWORD;
-          break;
-        case 'news':
-          referenceType = REFERENCE_TYPES.NEWS;
-          break;
-        default:
-          referenceType = REFERENCE_TYPES.MOVIE; // Default to movie
-      }
-
-      return {
-        referenceType: referenceType,
-        referencedId: ref.reference.id,
-        referenceUrl: null // Not needed, sending null as requested
-      };
-    });
+    return references.map(ref => ({
+      referenceType: REFERENCE_TYPES[ref.reference.type] || 0,
+      referencedId: ref.reference.id,
+      referenceUrl: ref.reference.url || null
+    }));
   };
 
-
-
   const handlePublish = async () => {
-    if (!title.trim()) {
-      setError('Please enter a title');
-      return;
-    }
-    if (!content.trim() || content === '<br>') {
-      setError('Please enter some content');
+    if (!isAuthenticated) {
+      setError('You must be logged in to create a news article.');
       return;
     }
 
-    if (!user?.id) {
-      setError('You must be logged in to create a news article. Please log in and try again.');
+    if (!title.trim()) {
+      setError('Please enter a title for your news article.');
+      return;
+    }
+
+    if (!content.trim()) {
+      setError('Please enter content for your news article.');
       return;
     }
 
@@ -105,6 +73,7 @@ function NewsForm({ onClose }) {
         title: title.trim(),
         content: content.trim(),
         authorId: user.id,
+        photo: image?.file || null,
         references: transformReferencesForAPI()
       };
 
@@ -135,6 +104,20 @@ function NewsForm({ onClose }) {
 
   const handleAddReference = (referenceData) => {
     console.log('Reference added:', referenceData);
+    
+    // Check if reference already exists (same ID and type)
+    const isDuplicate = references.some(existingRef => 
+      existingRef.reference.id === referenceData.reference.id && 
+      existingRef.reference.type === referenceData.reference.type
+    );
+    
+    if (isDuplicate) {
+      console.log('Reference already exists, not adding duplicate');
+      // Close modal without adding duplicate
+      setIsModalOpen(false);
+      return;
+    }
+    
     setReferences(prev => [...prev, referenceData]);
     
     // Close the modal after adding reference
@@ -143,8 +126,6 @@ function NewsForm({ onClose }) {
     // Log the current references state
     console.log('Current references:', references);
   };
-
-
 
   return (
     <div className="w-full">
@@ -174,82 +155,68 @@ function NewsForm({ onClose }) {
             <MediaUploader 
               image={image}
               onImageChange={setImage}
-              videoUrl={videoUrl}
-              onVideoUrlChange={setVideoUrl}
-              mediaType={mediaType}
-              onMediaTypeChange={setMediaType}
               disabled={!isAuthenticated}
             />
 
             {/* Note about image support */}
-            {mediaType === 'image' && (
+            {image && (
               <div className="text-sm text-yellow-400 bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3">
-                <p>⚠️ <strong>Note:</strong> Image uploads are not yet supported by the API. Images will not be saved with your article.</p>
+                <p>⚠️ <strong>Note:</strong> Image uploads are now supported by the API and will be saved with your article.</p>
               </div>
             )}
 
-            {/* Note about video support */}
-            {mediaType === 'video' && (
-              <div className="text-sm text-yellow-400 bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3">
-                <p>⚠️ <strong>Note:</strong> Video URLs are not yet supported by the API. Videos will not be saved with your article.</p>
-              </div>
-            )}
-
-                         <RichTextBox
-               label="Article Content"
-               value={content}
-               onChange={setContent}
-               placeholder="Start writing your news article..."
-               minHeight="20rem"
-               disabled={!isAuthenticated}
-             />
+            <RichTextBox
+              label="Article Content"
+              value={content}
+              onChange={setContent}
+              placeholder="Start writing your news article..."
+              minHeight="20rem"
+              disabled={!isAuthenticated}
+            />
             
-                         <button
-               type="button"
-               onClick={handleOpenModal}
-               disabled={!isAuthenticated}
-               className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                 isAuthenticated
-                   ? 'cursor-pointer bg-blue-600 text-white hover:bg-blue-700' 
-                   : 'bg-gray-500 text-gray-300 cursor-not-allowed'
-               }`}
-             >
+            <button
+              type="button"
+              onClick={handleOpenModal}
+              disabled={!isAuthenticated}
+              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                isAuthenticated
+                  ? 'cursor-pointer bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+              }`}
+            >
               <ExternalLink className="h-4 w-4 mr-2" />
               Add reference
             </button>
 
             {/* References Display */}
             {references.length > 0 && (
-              <div className="bg-gray-700 rounded-lg p-4">
+              <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-white mb-3">Added References ({references.length})</h3>
-                <div className="space-y-2">
-                                     {references.map((ref, index) => (
-                     <div key={index} className="flex items-center justify-between p-2 bg-gray-600 rounded">
-                       <div className="text-white">
-                         <span className="text-gray-300">{ref.reference.name} ({ref.reference.type})</span>
-                       </div>
-                       <button
-                         onClick={() => setReferences(prev => prev.filter((_, i) => i !== index))}
-                         disabled={!isAuthenticated}
-                         className={`text-sm transition-colors ${
-                           isAuthenticated 
-                             ? 'text-red-400 hover:text-red-300' 
-                             : 'text-gray-500 cursor-not-allowed'
-                         }`}
-                       >
-                         Remove
-                       </button>
-                     </div>
-                   ))}
-                </div>
+                {references.map((ref, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                    <div className="text-white">
+                      <span className="text-gray-200">{ref.reference.name}</span>
+                    </div>
+                    <button
+                      onClick={() => setReferences(prev => prev.filter((_, i) => i !== index))}
+                      disabled={!isAuthenticated}
+                      className={`p-1 text-red-400 hover:text-red-300 transition-colors rounded ${
+                        isAuthenticated 
+                          ? 'hover:bg-red-500/20' 
+                          : 'opacity-50 cursor-not-allowed'
+                      }`}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
-                         <div className="flex justify-between">
-               <div className="text-sm text-gray-400">
-                 {mediaType === 'image' && image && `Image: ${image.name}`}
-                 {mediaType === 'video' && videoUrl && ` | Video: ${videoUrl.length > 40 ? videoUrl.substring(0, 40) + '...' : videoUrl}`}
-               </div>
+            <div className="flex justify-between">
+              <div className="text-sm text-gray-400">
+                {image && `Image: ${image.name}`}
+              </div>
               
               <div className="flex space-x-3">
                 <button
@@ -282,12 +249,12 @@ function NewsForm({ onClose }) {
         </div>
       </div>
 
-             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-         <LinkModal 
-           onClose={() => setIsModalOpen(false)}
-           onAddReference={handleAddReference}
-         />
-       </Modal>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <LinkModal 
+          onClose={() => setIsModalOpen(false)}
+          onAddReference={handleAddReference}
+        />
+      </Modal>
     </div>
   );
 }

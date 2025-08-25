@@ -219,8 +219,8 @@ function LinkModal({ onClose, onAddReference = null }) {
     { value: 'news', label: 'News' }
   ];
 
-  const handleReferenceSelect = (item) => {
-    setSelectedReference(item);
+  const handleReferenceSelect = (items) => {
+    setSelectedReference(items.length > 0 ? items[0] : null);
   };
 
   const handleAddReference = () => {
@@ -290,7 +290,7 @@ function LinkModal({ onClose, onAddReference = null }) {
           key={linkType} // Force re-render when linkType changes
           placeholder={`Search for ${linkTypes.find(t => t.value === linkType)?.label.toLowerCase()}...`}
           searchFunction={currentSearchFunction}
-          onSelect={handleReferenceSelect}
+          onSelectedItemsChange={handleReferenceSelect}
           maxResults={8}
           debounceMs={500}
           clearable={true}

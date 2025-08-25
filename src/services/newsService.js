@@ -18,14 +18,29 @@ export class NewsService {
             }
         }
 
-        const newsPayload = {
-            title: newsData.title,
-            content: newsData.content,
-            authorId: newsData.authorId,
-            references: newsData.references || []
-        };
+        // Create FormData for file upload with C# IFormFile
+        const formData = new FormData();
+        
+        // Add text fields
+        formData.append('title', newsData.title);
+        formData.append('content', newsData.content);
+        formData.append('authorId', newsData.authorId);
+        
+        // Add photo file if provided
+        if (newsData.photo && newsData.photo instanceof File) {
+            formData.append('photo', newsData.photo);
+        }
+        
+        // Add references as JSON string since FormData doesn't handle complex objects well
+        if (newsData.references && Array.isArray(newsData.references)) {
+            formData.append('references', JSON.stringify(newsData.references));
+        }
 
-        const response = await api.post(API_ENDPOINTS.CREATE, newsPayload);
+        const response = await api.post(API_ENDPOINTS.CREATE, formData, {
+            headers: {
+                // Don't set Content-Type header - let the browser set it with boundary for FormData
+            }
+        });
         
         if (!response.ok) {
             let errorMessage = await response.text();

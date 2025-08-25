@@ -15,10 +15,14 @@ class ApiService {
     const config = {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
         ...options.headers,
       },
     };
+
+    // Only set Content-Type to application/json if not FormData
+    if (!(options.body instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
 
     // Add auth token if available
     if (token && !options.skipAuth) {
@@ -56,18 +60,20 @@ class ApiService {
   }
 
   post(endpoint, data, options) {
+    const body = data instanceof FormData ? data : JSON.stringify(data);
     return this.request(endpoint, {
       ...options,
       method: 'POST',
-      body: JSON.stringify(data),
+      body,
     });
   }
 
   put(endpoint, data, options) {
+    const body = data instanceof FormData ? data : JSON.stringify(data);
     return this.request(endpoint, {
       ...options,
       method: 'PUT',
-      body: JSON.stringify(data),
+      body,
     });
   }
 
