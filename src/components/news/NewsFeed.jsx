@@ -75,10 +75,25 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
       
       try {
         if (type === 'all') {
-          // Fetch first 10 news articles using pagination
-          console.log('Fetching news with pagination...');
-          const newsData = await NewsService.getNewsByPagination(0, 10);
-          console.log('News data received:', newsData);
+          // Fetch recent news articles using search with date range
+          console.log('Fetching recent news with search...');
+          
+          // Set date range: from August 1st to current date
+          const currentDate = new Date();
+          const augustFirst = new Date(currentDate.getFullYear(), 7, 1); // Month is 0-indexed, so 7 = August
+          
+          const searchParams = {
+            query: null,
+            authorId: null,
+            from: augustFirst.toISOString(),
+            to: currentDate.toISOString(),
+            referenceToSearch: null,
+            page: 1,
+            pageSize: 10
+          };
+          
+          const newsData = await NewsService.searchNews(searchParams);
+          console.log('Recent news data received:', newsData);
           
           // Handle the new API response structure
           let rawArticles = [];
@@ -181,7 +196,21 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
               const fetchNews = async () => {
                 try {
                   if (type === 'all') {
-                    const newsData = await NewsService.getNewsByPagination(0, 10);
+                    // Set date range: from August 1st to current date
+                    const currentDate = new Date();
+                    const augustFirst = new Date(currentDate.getFullYear(), 7, 1);
+                    
+                    const searchParams = {
+                      query: null,
+                      authorId: null,
+                      from: augustFirst.toISOString(),
+                      to: currentDate.toISOString(),
+                      referenceToSearch: null,
+                      page: 1,
+                      pageSize: 10
+                    };
+                    
+                    const newsData = await NewsService.searchNews(searchParams);
                     let articles = [];
                     if (newsData && Array.isArray(newsData.data)) {
                       articles = newsData.data;

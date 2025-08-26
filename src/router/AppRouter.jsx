@@ -19,6 +19,7 @@ import ConfirmEmail from '../pages/ConfirmEmail';
 import NewsPage from '../pages/NewsPage';
 import ArticlePage from '../pages/ArticlePage';
 import NewsCreatePage from '../pages/NewsCreatePage';
+import NewsEditPage from '../pages/NewsEditPage';
 import Lists from '../pages/Lists'
 import ListDetails from '../pages/ListDetails'
 import Reviews from '../pages/Reviews'
@@ -64,6 +65,15 @@ const AppRouter = () => {
                 element={
                   <ProtectedRoute>
                     <NewsCreatePage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="news/edit/:id" 
+                element={
+                  <ProtectedRoute>
+                    <NewsEditPage />
                   </ProtectedRoute>
                 } 
               />
