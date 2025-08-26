@@ -187,7 +187,7 @@ const searchFunctions = {
       }
     },
     news: async (query) => {
-      // Mock news search - replace with NewsService.searchNews() when available
+      // Mock news search - replace with NewsService.filterNews() when available
       return [
         { id: '1', name: 'New Marvel Movie Announced', description: 'Latest superhero news' },
         { id: '2', name: 'Oscar Winners 2024', description: 'Awards coverage' },

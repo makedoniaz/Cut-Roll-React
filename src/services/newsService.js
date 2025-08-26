@@ -77,40 +77,7 @@ export class NewsService {
         return data;
     }
 
-    static async searchNews(searchParams = {}) {
-        const searchData = {
-            page: searchParams.page || 1,
-            pageSize: searchParams.pageSize || 10,
-            sortDescending: searchParams.sortDescending !== undefined ? searchParams.sortDescending : true,
-            title: searchParams.title || null,
-            authorId: searchParams.authorId || null,
-            keyword: searchParams.keyword || null,
-            sortBy: searchParams.sortBy || null
-        };
 
-        // Validate parameters
-        if (searchData.page < 1) {
-            throw new Error('Page must be greater than 0');
-        }
-
-        if (searchData.pageSize < 1 || searchData.pageSize > 100) {
-            throw new Error('Page size must be between 1 and 100');
-        }
-
-        if (searchData.sortBy && !['title', 'createdAt', 'updatedAt'].includes(searchData.sortBy)) {
-            throw new Error('sortBy must be one of: title, createdAt, updatedAt');
-        }
-
-        const response = await api.post(API_ENDPOINTS.SEARCH, searchData, { skipAuth: true });
-        
-        if (!response.ok) {
-            let errorMessage = await response.text();
-            throw new Error(errorMessage || 'News search failed');
-        }
-
-        const data = await response.json();
-        return data;
-    }
 
     static async filterNews(filterParams = {}) {
         const filterData = {
@@ -122,6 +89,42 @@ export class NewsService {
             page: filterParams.page || 0,
             pageSize: filterParams.pageSize || 10
         };
+
+        // Validate and format dates if provided
+        if (filterData.from) {
+            try {
+                // Ensure the date is in ISO format and convert to UTC
+                const fromDate = new Date(filterData.from);
+                if (isNaN(fromDate.getTime())) {
+                    throw new Error('Invalid from date format');
+                }
+                filterData.from = fromDate.toISOString();
+            } catch (error) {
+                throw new Error('Invalid from date format. Please use YYYY-MM-DD format.');
+            }
+        }
+
+        if (filterData.to) {
+            try {
+                // Ensure the date is in ISO format and convert to UTC
+                const toDate = new Date(filterData.to);
+                if (isNaN(toDate.getTime())) {
+                    throw new Error('Invalid to date format');
+                }
+                filterData.to = toDate.toISOString();
+            } catch (error) {
+                throw new Error('Invalid to date format. Please use YYYY-MM-DD format.');
+            }
+        }
+
+        // Validate that from date is before to date if both are provided
+        if (filterData.from && filterData.to) {
+            const fromDate = new Date(filterData.from);
+            const toDate = new Date(filterData.to);
+            if (fromDate >= toDate) {
+                throw new Error('From date must be before to date');
+            }
+        }
 
         // Validate parameters
         if (filterData.page < 0) {

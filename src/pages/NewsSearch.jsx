@@ -8,20 +8,13 @@ import RangeFilter from '../components/search/filters/RangeFilter';
 import MultiSelectFilter from '../components/search/filters/MultiSelectFilter';
 import SelectFilter from '../components/search/filters/SelectFilter';
 import DynamicSearchFilter from '../components/search/filters/DynamicSearchFilter';
+import DateRangeFilter from '../components/search/filters/DateRangeFilter';
 
 const NewsSearch = () => {
   const location = useLocation();
   
-  // News-specific filters that match newsService search parameters
+  // News-specific filters that match newsService filterNews parameters
   const newsFilters = [
-    {
-      key: 'keyword',
-      label: 'Keyword',
-      type: 'dynamicsearch',
-      searchType: 'keyword',
-      placeholder: 'Search for keywords',
-      defaultValue: []
-    },
     {
       key: 'authorId',
       label: 'Author',
@@ -31,35 +24,27 @@ const NewsSearch = () => {
       defaultValue: null
     },
     {
-      key: 'sortBy',
-      label: 'Sort By',
-      type: 'select',
-      placeholder: 'Sort by...',
-      options: [
-        { value: 'title', label: 'Title' },
-        { value: 'createdAt', label: 'Created Date' },
-        { value: 'updatedAt', label: 'Updated Date' }
-      ]
+      key: 'dateRange',
+      label: 'Date Range',
+      type: 'daterangefilter',
+      placeholder: 'Select date range...',
+      defaultValue: { from: null, to: null }
     },
     {
-      key: 'sortDescending',
-      label: 'Sort Order',
-      type: 'select',
-      placeholder: 'Sort order...',
-      options: [
-        { value: true, label: 'Descending (Newest First)' },
-        { value: false, label: 'Ascending (Oldest First)' }
-      ],
-      defaultValue: true
+      key: 'referenceToSearch',
+      label: 'References',
+      type: 'dynamicsearch',
+      searchType: 'mixed',
+      placeholder: 'Search for movies, people, genres...',
+      defaultValue: []
     }
   ];
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState({
-    keyword: [],
     authorId: null,
-    sortBy: '',
-    sortDescending: true
+    dateRange: { from: null, to: null },
+    referenceToSearch: []
   });
 
   const [newsArticles, setNewsArticles] = useState([]);
@@ -85,13 +70,6 @@ const NewsSearch = () => {
       // Update filter values with pre-filled data
       const newFilterValues = { ...filterValues };
       
-      if (prefillFilters.keyword) {
-        if (Array.isArray(prefillFilters.keyword)) {
-          newFilterValues.keyword = prefillFilters.keyword;
-        } else {
-          newFilterValues.keyword = [{ id: 'prefilled', name: prefillFilters.keyword, description: `Keyword: ${prefillFilters.keyword}` }];
-        }
-      }
       if (prefillFilters.authorId) {
         if (Array.isArray(prefillFilters.authorId)) {
           newFilterValues.authorId = prefillFilters.authorId[0] || null;
@@ -99,11 +77,15 @@ const NewsSearch = () => {
           newFilterValues.authorId = { id: 'prefilled', name: prefillFilters.authorId, description: `Author: ${prefillFilters.authorId}` };
         }
       }
-      if (prefillFilters.sortBy) {
-        newFilterValues.sortBy = prefillFilters.sortBy;
+      if (prefillFilters.dateRange) {
+        newFilterValues.dateRange = prefillFilters.dateRange;
       }
-      if (prefillFilters.sortDescending !== undefined) {
-        newFilterValues.sortDescending = prefillFilters.sortDescending;
+      if (prefillFilters.referenceToSearch) {
+        if (Array.isArray(prefillFilters.referenceToSearch)) {
+          newFilterValues.referenceToSearch = prefillFilters.referenceToSearch;
+        } else {
+          newFilterValues.referenceToSearch = [{ id: 'prefilled', name: prefillFilters.referenceToSearch, description: `Reference: ${prefillFilters.referenceToSearch}` }];
+        }
       }
       
       setFilterValues(newFilterValues);
@@ -116,13 +98,12 @@ const NewsSearch = () => {
   // Check if there are any active filters
   const hasActiveFilters = useCallback(() => {
     return Object.entries(filterValues).some(([key, value]) => {
-      if (key === 'sortDescending') {
-        const defaultValue = newsFilters.find(f => f.key === 'sortDescending')?.defaultValue;
-        return value !== defaultValue;
+      if (key === 'dateRange') {
+        return value.from !== null || value.to !== null;
       }
       
-      if (key === 'sortBy') {
-        return value && value !== '';
+      if (key === 'query') {
+        return value && value.trim() !== '';
       }
       
       if (Array.isArray(value)) {
@@ -134,10 +115,10 @@ const NewsSearch = () => {
       }
       
       return value && value !== '';
-    });
-  }, [filterValues, newsFilters]);
+    }) || searchQuery.trim() !== '';
+  }, [filterValues, searchQuery]);
 
-  // Search news using newsService
+  // Search news using newsService filterNews method
   const searchNews = useCallback(async (page = 1, source = 'unknown') => {
     const hasActive = hasActiveFilters();
     console.log('🔍 News search triggered with:', { searchQuery, hasActiveFilters: hasActive, page, isManualSearch, source });
@@ -151,33 +132,68 @@ const NewsSearch = () => {
       return;
     }
 
+    // Validate date range before sending request
+    if (filterValues.dateRange.from && filterValues.dateRange.to) {
+      const fromDate = new Date(filterValues.dateRange.from);
+      const toDate = new Date(filterValues.dateRange.to);
+      if (fromDate >= toDate) {
+        setError('From date must be before to date');
+        setLoading(false);
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Prepare search parameters for newsService
-      const searchParams = {
-        page: page,
+      // Helper function to format dates for API
+      const formatDateForAPI = (dateString) => {
+        if (!dateString) return null;
+        try {
+          // Create a date object and ensure it's in UTC
+          const date = new Date(dateString + 'T00:00:00.000Z');
+          if (isNaN(date.getTime())) {
+            throw new Error('Invalid date format');
+          }
+          return date.toISOString();
+        } catch (error) {
+          console.error('Date formatting error:', error);
+          return null;
+        }
+      };
+
+      // Prepare filter parameters for newsService filterNews method
+      const filterParams = {
+        page: page - 1, // Convert to 0-based indexing for filter API
         pageSize: 20, // Show 20 news articles per page
-        title: searchQuery.trim() || null,
-        keyword: filterValues.keyword && filterValues.keyword.length > 0 ? filterValues.keyword.map(k => k.name) : null,
+        query: searchQuery.trim() || null,
         authorId: filterValues.authorId ? filterValues.authorId.id : null,
-        sortBy: filterValues.sortBy || null,
-        sortDescending: filterValues.sortDescending
+        from: formatDateForAPI(filterValues.dateRange.from),
+        to: filterValues.dateRange.to ? formatDateForAPI(filterValues.dateRange.to).replace('T00:00:00.000Z', 'T23:59:59.999Z') : null,
+        referenceToSearch: filterValues.referenceToSearch && filterValues.referenceToSearch.length > 0 
+          ? filterValues.referenceToSearch.map(ref => ref.id) 
+          : null
       };
 
       // Remove null values
-      Object.keys(searchParams).forEach(key => {
-        if (searchParams[key] === null || searchParams[key] === '') {
-          delete searchParams[key];
+      Object.keys(filterParams).forEach(key => {
+        if (filterParams[key] === null || filterParams[key] === '') {
+          delete filterParams[key];
         }
       });
 
-      console.log('Final news search parameters being sent:', searchParams);
+      console.log('Final news filter parameters being sent:', filterParams);
+      console.log('Date formatting details:', {
+        originalFrom: filterValues.dateRange.from,
+        originalTo: filterValues.dateRange.to,
+        formattedFrom: filterParams.from,
+        formattedTo: filterParams.to
+      });
 
-      const response = await NewsService.searchNews(searchParams);
+      const response = await NewsService.filterNews(filterParams);
       
-      console.log('News search API Response:', response);
+      console.log('News filter API Response:', response);
       
       if (response && response.data) {
         setNewsArticles(response.data);
@@ -193,7 +209,7 @@ const NewsSearch = () => {
         setHasSearched(false);
       }
     } catch (err) {
-      console.error('News search error:', err);
+      console.error('News filter error:', err);
       setError(err.message);
       setNewsArticles([]);
       setTotalResults(0);
@@ -215,7 +231,11 @@ const NewsSearch = () => {
       
       // Restore all search state
       setSearchQuery(restoreData.searchQuery || '');
-      setFilterValues(restoreData.filterValues || filterValues);
+      setFilterValues(restoreData.filterValues || {
+        authorId: null,
+        dateRange: { from: null, to: null },
+        referenceToSearch: []
+      });
       setCurrentPage(restoreData.currentPage || 1);
       setTotalPages(restoreData.totalPages || 1);
       setTotalResults(restoreData.totalResults || 0);
@@ -524,7 +544,7 @@ const NewsSearch = () => {
               <div className="space-y-6">
                 {newsFilters.map((filter) => {
                   let value;
-                  if (filter.type === 'select' && filter.defaultValue !== undefined) {
+                  if (filter.type === 'daterangefilter') {
                     value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
                   } else if (filter.type === 'dynamicsearch') {
                     if (filter.searchType === 'people') {
@@ -538,9 +558,9 @@ const NewsSearch = () => {
 
                   let filterComponent;
                   switch (filter.type) {
-                    case 'select':
+                    case 'daterangefilter':
                       filterComponent = (
-                        <SelectFilter
+                        <DateRangeFilter
                           key={filter.key}
                           label={filter.label}
                           value={value}
@@ -548,7 +568,6 @@ const NewsSearch = () => {
                             const newFilterValues = { ...filterValues, [filter.key]: newValue };
                             setFilterValues(newFilterValues);
                           }}
-                          options={filter.options}
                           placeholder={filter.placeholder}
                         />
                       );
@@ -590,12 +609,8 @@ const NewsSearch = () => {
                           clearedFilters[filter.key] = filter.defaultValue || [];
                         }
                         break;
-                      case 'select':
-                        if (filter.defaultValue !== undefined) {
-                          clearedFilters[filter.key] = filter.defaultValue;
-                        } else {
-                          clearedFilters[filter.key] = '';
-                        }
+                      case 'daterangefilter':
+                        clearedFilters[filter.key] = filter.defaultValue || { from: null, to: null };
                         break;
                       default:
                         clearedFilters[filter.key] = filter.defaultValue || '';
