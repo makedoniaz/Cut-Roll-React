@@ -252,6 +252,11 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
     );
   }
 
+  // Handle article deletion
+  const handleArticleDelete = (deletedArticleId) => {
+    setNews(prevNews => prevNews.filter(article => article.id !== deletedArticleId));
+  };
+
   return (
     <div className="min-h-screen text-white">
       {/* News Grid */}
@@ -262,6 +267,7 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
             article={article}
             showAuthor={type === 'all'}
             showActions={type === 'user'}
+            onDelete={handleArticleDelete}
           />
         ))}
       </div>

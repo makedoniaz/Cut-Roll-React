@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import MovieGrid from "../components/ui/movies/MovieGrid";
-import NewsFeed from "../components/ui/news/NewsFeed";
+import NewsFeed from "../components/news/NewsFeed";
 import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import SectionHeading from "../components/ui/common/SectionHeading";
@@ -16,6 +16,7 @@ const Home = () => {
   const [popularMovies, setPopularMovies] = useState([]);
   const [isLoadingNewReleases, setIsLoadingNewReleases] = useState(false);
   const [isLoadingPopular, setIsLoadingPopular] = useState(false);
+  const [isLoadingNews, setIsLoadingNews] = useState(false);
   const [error, setError] = useState(null);
   
   // Refs for intersection observer
@@ -347,7 +348,30 @@ const Home = () => {
         />
       </div>
       
-      <NewsFeed />
+      {/* Recent News Section */}
+      <div className="mb-12">
+        <div className="py-2">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-center">
+              <h2 className="text-base font-medium text-gray-400 tracking-wider">RECENT NEWS</h2>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => navigate('/news')}
+                  className="cursor-pointer font-medium text-gray-400 hover:text-green-500"
+                >
+                  MORE
+                </button>
+              </div>
+            </div>
+            <hr className="border-t border-gray-700 my-4 mb-8" />
+            <NewsFeed 
+              type="all" 
+              loading={isLoadingNews}
+              setLoading={setIsLoadingNews}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

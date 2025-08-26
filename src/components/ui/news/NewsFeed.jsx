@@ -1,90 +1,102 @@
-import NewsCard from "./NewsCard"
-import SectionHeading from '../common/SectionHeading';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import NewsCard from "./NewsCard";
+import { NewsService } from "../../../services/newsService";
 
 const NewsFeed = () => {
-  // Sample data - replace with your actual data source
-  const newsItems = [
-    {
-      id: 1,
-      image: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=500&h=300&fit=crop",
-      category: "High On Films",
-      categoryIcon: "🎬",
-      title: "10 Movies Like 12 Angry Men That You Should Watch",
-      description: "12 Angry Men is an all-weather film. The classic is one of those rare pieces that can be seen on any day, in any mood, and the result will not be disappointing. Sidney Lumet's legal juggernaut is born out of the jury's deliberations on the question of convicting a minor for murder. Requiring a unanimous decision, one juror's hold out unfurls the dynamism of reasonable doubt in criminal law while exposing American society from the lens of race, class, and social prejudices.",
-      hasVideo: false
-    },
-    {
-      id: 2,
-      image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&h=300&fit=crop",
-      category: "UQ Film Appreciation Society",
-      categoryIcon: "🎭",
-      title: "UQFAS 'Majors as Movies' Review Series: Blade Runner",
-      description: "On the 29th of July, UQFAS kicked off our Semester 2 theme, 'Majors as Movies', with a screening of Ridley Scott's seminal 1982 sci-fi noir film, Blade Runner. Inspired by UQ's Bachelors of IT and Computer Science. The film itself has had an enormous legacy, positive and negative, spanning in scope from technical advancements to inspiring a whole new genre of science fiction, and our post film discussion touched upon many of these aspects, including several of Blade Runner's more controversial elements.",
-      hasVideo: false
-    },
-    {
-      id: 3,
-      image: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=500&h=300&fit=crop",
-      category: "Grosvenor Picture Theatre",
-      categoryIcon: "🏛️",
-      title: "The Legend of Ochi: A Return to Handcrafted Cinema",
-      description: "In an era dominated by CGI, a new fantasy film from A24, 'The Legend of Ochi,' is making a powerful case for a return to handcrafted filmmaking. Directed by Isaiah Saxon, this family-friendly adventure film is a visual feast that uses practical effects, puppetry, and animatronics to create a world that feels both magical and real. While many modern blockbusters rely on computer-generated imagery to create fantastical creatures and environments, 'The Legend of Ochi' stands out by prioritizing tangible, on-set magic.",
-      hasVideo: false
-    },
-    {
-      id: 4,
-      image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&h=300&fit=crop",
-      category: "Golden Age Cinema and Bar",
-      categoryIcon: "🎞️",
-      title: "Michael Haneke: Depicting Our Worst Impulses",
-      description: "Michael Haneke's films are not for the faint of heart. The Austrian director has built a career on unflinching examinations of violence, cruelty, and the darker aspects of human nature. His work challenges audiences to confront uncomfortable truths about themselves and society at large.",
-      hasVideo: false
-    },
-    {
-      id: 5,
-      image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=500&h=300&fit=crop",
-      category: "UoA Film Society",
-      categoryIcon: "😊",
-      title: "Finding Joy in Cinema: A Celebration of Feel-Good Films",
-      description: "In a world that often feels heavy with bad news, sometimes we need cinema that lifts our spirits and reminds us of life's simple pleasures. This week, the UoA Film Society explores the power of feel-good films and their importance in the cinematic landscape.",
-      hasVideo: false
-    },
-    {
-      id: 6,
-      image: "https://images.unsplash.com/photo-1524712245354-2c4e5e7121c0?w=500&h=300&fit=crop",
-      category: "Drexel Theatre",
-      categoryIcon: "🎭",
-      title: "Beyond the Laughter: The Art of Dark Comedy",
-      description: "Dark comedy walks a tightrope between humor and horror, finding laughter in life's most uncomfortable moments. The Drexel Theatre's latest retrospective examines how filmmakers use this genre to explore serious themes while keeping audiences engaged through humor.",
-      hasVideo: true
-    }
-  ];
+  const navigate = useNavigate();
+  const [newsItems, setNewsItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleReadMore = (id) => {
-    console.log(`Reading more about story ${id}`);
-    // Implement your navigation logic here
+  useEffect(() => {
+    const fetchRecentNews = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch recent news using pagination with 6 items
+        const newsData = await NewsService.getNewsByPagination(0, 6);
+        setNewsItems(newsData.data || []);
+      } catch (err) {
+        console.error('Error fetching recent news:', err);
+        setError('Failed to load recent news');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecentNews();
+  }, []);
+
+  const handleReadMore = (newsId) => {
+    navigate(`/news/${newsId}`);
   };
 
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="animate-pulse">
+            <div className="bg-gray-700 rounded-lg overflow-hidden h-full">
+              <div className="aspect-video bg-gray-600"></div>
+              <div className="p-5 space-y-3">
+                <div className="h-4 bg-gray-600 rounded w-24"></div>
+                <div className="h-6 bg-gray-600 rounded w-full"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-600 rounded w-full"></div>
+                  <div className="h-4 bg-gray-600 rounded w-3/4"></div>
+                </div>
+                <div className="h-4 bg-gray-600 rounded w-20"></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-400 text-lg mb-4">{error}</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  // No news available
+  if (newsItems.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-gray-400 text-lg">No recent news available</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen text-white">
-      {/* Header */}
-      <div className="mx-auto py-8">
-        <SectionHeading heading="RECENT STORIES"/>
-        {/* News Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {newsItems.map((item) => (
-            <NewsCard
-              key={item.id}
-              image={item.image}
-              category={item.category}
-              categoryIcon={item.categoryIcon}
-              title={item.title}
-              description={item.description}
-              hasVideo={item.hasVideo}
-              onReadMore={() => handleReadMore(item.id)}
-            />
-          ))}
-        </div>
+    <div className="text-white">
+      {/* News Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {newsItems.map((item) => (
+          <NewsCard
+            key={item.id}
+            image={item.photoUrl || item.photo || "/news-placeholder.jpg"}
+            category={item.authorName || "News"}
+            categoryIcon="📰"
+            title={item.title}
+            description={item.content}
+            hasVideo={false}
+            onReadMore={() => handleReadMore(item.id)}
+          />
+        ))}
       </div>
     </div>
   );
