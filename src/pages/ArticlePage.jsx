@@ -33,7 +33,7 @@ function ArticlePage() {
                 
                 // Parse content with references
                 if (articleData.content) {
-                    const parsed = parseContentWithReferences(articleData.content, articleData.references || []);
+                    const parsed = parseContentWithReferences(articleData.content, articleData.newsReferences || []);
                     setParsedContent(parsed);
                     console.log('Parsed content:', parsed);
                 }
@@ -59,6 +59,18 @@ function ArticlePage() {
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const getReferenceTypeName = (referenceType) => {
+        switch (referenceType) {
+            case 0: return 'Movie';
+            case 1: return 'People';
+            case 2: return 'Genre';
+            case 3: return 'Production Company';
+            case 4: return 'Keyword';
+            case 5: return 'News';
+            default: return 'Unknown';
+        }
     };
 
         const handleShare = () => {
@@ -245,7 +257,17 @@ function ArticlePage() {
 
             {/* Article metadata */}
             <div className="flex items-center gap-4 mb-6 text-sm text-gray-400">
-                <span>User ID: {article.authorId}</span>
+                {/* Author info with avatar */}
+                {article.author && (
+                    <div className="flex items-center gap-3">
+                        <img
+                            src={article.author.avatarPath || '/poster-placeholder.png'}
+                            alt={article.author.userName}
+                            className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <span className="text-white font-medium">{article.author.userName}</span>
+                    </div>
+                )}
                 <span>•</span>
                 <span>{formatDate(article.createdAt)}</span>
                 {article.updatedAt && article.updatedAt !== article.createdAt && (
@@ -258,7 +280,7 @@ function ArticlePage() {
 
             {/* Article image */}
             <img
-                src="/poster-placeholder.png"
+                src={article.photoPath || '/poster-placeholder.png'}
                 alt={article.title}
                 className="w-full rounded-lg mb-6 object-cover max-h-96"
             />
@@ -277,20 +299,16 @@ function ArticlePage() {
             </div>
 
             {/* References section */}
-            {parsedContent.references && parsedContent.references.length > 0 && (
-                <div className="mt-8 pt-6 border-t border-gray-700">
-                    <h3 className="text-lg font-semibold text-white mb-4">References</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {parsedContent.references.map((ref, index) => (
-                            <div key={index} className="bg-gray-800 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-blue-400 capitalize">{ref.type}</span>
-                                    <span className="text-xs text-gray-400">ID: {ref.referencedId}</span>
-                                </div>
-                                <div className="text-sm text-gray-300">
-                                    Reference Type: {ref.referenceType}
-                                </div>
-                            </div>
+            {article.newsReferences && article.newsReferences.length > 0 && (
+                <div className="mt-6">
+                    <div className="flex flex-wrap gap-2">
+                        {article.newsReferences.map((ref, index) => (
+                            <span
+                                key={index}
+                                className="inline-block px-3 py-1 bg-green-600/20 text-green-300 text-sm rounded border border-green-600/30"
+                            >
+                                {ref.referencedUrl || 'Unknown Reference'}
+                            </span>
                         ))}
                     </div>
                 </div>

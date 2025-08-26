@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Share2, Edit, Trash2, Eye, Calendar, Clock } from 'lucide-react';
+import { Heart, Share2, Edit, Trash2, Eye, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../ui/users/Avatar';
 
@@ -52,14 +52,16 @@ const NewsCard = ({ article, showAuthor = true, showActions = false }) => {
   };
 
   const handleShare = () => {
+    const articleUrl = `${window.location.origin}/news/${article.id}`;
+    
     if (navigator.share) {
       navigator.share({
         title: article.title,
         text: article.excerpt,
-        url: window.location.href
+        url: articleUrl
       });
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(articleUrl);
       // You could add a toast notification here
     }
   };
@@ -79,96 +81,85 @@ const NewsCard = ({ article, showAuthor = true, showActions = false }) => {
     navigate(`/news/${article.id}`);
   };
 
-  return (
-    <article className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-colors duration-200">
-      {/* Image */}
-      <div className="relative h-48 sm:h-64 overflow-hidden">
-        <img
-          src={article.imageUrl || '/news-placeholder.jpg'}
+    return (
+    <div
+      className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden transition-transform transition-colors duration-300 hover:scale-105 h-full flex flex-col"
+    >
+      {/* Image Container */}
+      <div className="relative aspect-video overflow-hidden bg-gray-800 cursor-pointer" onClick={handleViewArticle}>
+        <img 
+          src={article.imageUrl || '/news-placeholder.jpg'} 
           alt={article.title}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover"
         />
-        <div className="absolute top-4 right-4 flex items-center gap-2 text-white text-sm">
-          <Clock className="w-4 h-4" />
-          <span>{article.readTime}</span>
-        </div>
       </div>
-
-      {/* Content */}
-      <div className="p-6">
-        {/* Title and Excerpt */}
-        <div className="mb-4">
-          <h2 
-            className="text-xl font-bold text-white mb-3 hover:text-green-400 transition-colors cursor-pointer"
-            onClick={handleViewArticle}
-          >
-            {article.title}
-          </h2>
-          <p className="text-gray-300 leading-relaxed">
-            {article.excerpt}
-          </p>
-        </div>
-
-        {/* Metadata */}
-        <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-gray-400">
+      
+      {/* Content Container */}
+      <div className="p-5 flex-1 flex flex-col">
+        {/* Author and Date */}
+        <div className="flex items-center justify-between mb-3">
           {showAuthor && (
             <div className="flex items-center gap-2">
-              <Avatar user={article.author} size="sm" />
-              <span>User ID: {article.authorId}</span>
+              <Avatar 
+                src={article.author.avatar} 
+                alt={article.author.name} 
+                size="sm" 
+              />
+              <span className="text-sm text-gray-300">{article.author.name}</span>
             </div>
           )}
           
-          <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
+          <div className="flex items-center gap-1 text-xs text-gray-400">
+            <Calendar className="w-3 h-3" />
             <span>{formatTimeAgo(article.createdAt)}</span>
           </div>
         </div>
-
+        
+        {/* Title */}
+        <h3 
+          className="text-xl font-bold text-white mb-3 leading-tight cursor-pointer hover:text-green-400 transition-colors"
+          onClick={handleViewArticle}
+        >
+          {article.title}
+        </h3>
+        
+        {/* Excerpt */}
+        <p className="text-gray-400 text-sm leading-relaxed mb-4 flex-1">
+          {article.excerpt}
+        </p>
+        
         {/* Actions */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-
-            {/* Share */}
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-2 px-3 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors duration-200"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>Share</span>
-            </button>
-          </div>
-
+        <div className="flex items-center justify-between mt-auto">
+          <button 
+            onClick={handleViewArticle}
+            className="text-sm font-medium hover:text-green-400 transition-colors self-start cursor-pointer text-green-500"
+          >
+            READ MORE
+          </button>
+          
           {/* User Actions (only for user's own articles) */}
           {showActions && (
             <div className="flex items-center gap-2">
               <button
-                onClick={handleViewArticle}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-              >
-                <Eye className="w-4 h-4" />
-                <span>View</span>
-              </button>
-              
-              <button
                 onClick={handleEdit}
-                className="flex items-center gap-2 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors duration-200"
+                className="p-1 text-yellow-400 hover:text-yellow-300 transition-colors rounded hover:bg-yellow-500/20"
+                title="Edit"
               >
                 <Edit className="w-4 h-4" />
-                <span>Edit</span>
               </button>
               
-              <button
-                onClick={handleDelete}
-                className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Delete</span>
-              </button>
+                              <button
+                  onClick={handleDelete}
+                  className="p-1 text-red-400 hover:text-red-300 transition-colors rounded hover:bg-red-500/20"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
             </div>
           )}
         </div>
       </div>
-    </article>
+    </div>
   );
 };
 

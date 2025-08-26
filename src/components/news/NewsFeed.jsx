@@ -37,18 +37,28 @@ const transformNewsData = (apiData) => {
       likesCount: article.likesCount || 0,
       comments: 0, // Not provided by API yet
       category: 'News', // Default category since not provided by API
-      imageUrl: '/poster-placeholder.png', // Default image since not provided by API
+      imageUrl: article.photoPath || '/news-placeholder.jpg', // Use photoPath from API
       readTime: `${readTimeMinutes} min read`,
       publishedAt: article.createdAt || new Date().toISOString(),
       createdAt: article.createdAt || new Date().toISOString(),
       updatedAt: article.updatedAt,
       authorId: article.authorId || 'unknown',
       author: {
-        id: article.authorId || 'unknown',
-        name: 'Anonymous User', // Default since author info not provided by API
-        avatar: null
-      }
+        id: article.author?.id || article.authorId || 'unknown',
+        name: article.author?.userName || 'Anonymous User',
+        avatar: article.author?.avatarPath || null
+      },
+      // Add references data from the new API format
+      references: article.newsReferences || []
     };
+    
+    // Log the transformed article for debugging
+    console.log('Transformed article:', {
+      id: article.id,
+      title: article.title,
+      photoPath: article.photoPath,
+      references: article.newsReferences
+    });
   }).filter(Boolean); // Remove any null entries
 };
 
@@ -70,16 +80,14 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
           const newsData = await NewsService.getNewsByPagination(0, 10);
           console.log('News data received:', newsData);
           
-          // Handle different possible response structures
+          // Handle the new API response structure
           let rawArticles = [];
-          if (Array.isArray(newsData)) {
-            rawArticles = newsData;
-          } else if (newsData && Array.isArray(newsData.data)) {
+          if (newsData && Array.isArray(newsData.data)) {
             rawArticles = newsData.data;
-          } else if (newsData && Array.isArray(newsData.articles)) {
-            rawArticles = newsData.articles;
-          } else if (newsData && Array.isArray(newsData.items)) {
-            rawArticles = newsData.items;
+            console.log('Using newsData.data structure, found', rawArticles.length, 'articles');
+          } else if (Array.isArray(newsData)) {
+            rawArticles = newsData;
+            console.log('Using direct array structure, found', rawArticles.length, 'articles');
           } else {
             console.warn('Unexpected news data structure:', newsData);
             rawArticles = [];
@@ -87,6 +95,7 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
           
           // Transform the data to match NewsCard expectations
           const transformedArticles = transformNewsData(rawArticles);
+          console.log('Transformed articles:', transformedArticles);
           setNews(transformedArticles);
           setSuccess(true);
         } else if (type === 'user' && userId) {
@@ -95,16 +104,14 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
           const userNews = await NewsService.getUserNews(userId, 1, 10);
           console.log('User news data received:', userNews);
           
-          // Handle different possible response structures
+          // Handle the new API response structure
           let rawArticles = [];
-          if (Array.isArray(userNews)) {
-            rawArticles = userNews;
-          } else if (userNews && Array.isArray(userNews.data)) {
+          if (userNews && Array.isArray(userNews.data)) {
             rawArticles = userNews.data;
-          } else if (userNews && Array.isArray(userNews.articles)) {
-            rawArticles = userNews.articles;
-          } else if (userNews && Array.isArray(userNews.items)) {
-            rawArticles = userNews.items;
+            console.log('Using userNews.data structure, found', rawArticles.length, 'articles');
+          } else if (Array.isArray(userNews)) {
+            rawArticles = userNews;
+            console.log('Using direct array structure, found', rawArticles.length, 'articles');
           } else {
             console.warn('Unexpected user news data structure:', userNews);
             rawArticles = [];
@@ -112,6 +119,7 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
           
           // Transform the data to match NewsCard expectations
           const transformedArticles = transformNewsData(rawArticles);
+          console.log('Transformed user articles:', transformedArticles);
           setNews(transformedArticles);
           setSuccess(true);
         } else {
@@ -175,27 +183,19 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
                   if (type === 'all') {
                     const newsData = await NewsService.getNewsByPagination(0, 10);
                     let articles = [];
-                    if (Array.isArray(newsData)) {
-                      articles = newsData;
-                    } else if (newsData && Array.isArray(newsData.data)) {
+                    if (newsData && Array.isArray(newsData.data)) {
                       articles = newsData.data;
-                    } else if (newsData && Array.isArray(newsData.articles)) {
-                      articles = newsData.articles;
-                    } else if (newsData && Array.isArray(newsData.items)) {
-                      articles = newsData.items;
+                    } else if (Array.isArray(newsData)) {
+                      articles = newsData;
                     }
                     setNews(articles);
                   } else if (type === 'user' && userId) {
                     const userNews = await NewsService.getUserNews(userId, 1, 10);
                     let articles = [];
-                    if (Array.isArray(userNews)) {
-                      articles = userNews;
-                    } else if (userNews && Array.isArray(userNews.data)) {
+                    if (userNews && Array.isArray(userNews.data)) {
                       articles = userNews.data;
-                    } else if (userNews && Array.isArray(userNews.articles)) {
-                      articles = userNews.articles;
-                    } else if (userNews && Array.isArray(userNews.items)) {
-                      articles = userNews.items;
+                    } else if (Array.isArray(userNews)) {
+                      articles = userNews;
                     }
                     setNews(articles);
                   }
@@ -247,17 +247,18 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
   }
 
   return (
-    <div className="space-y-6">
-      
-
-      {news.map((article) => (
-        <NewsCard
-          key={article.id}
-          article={article}
-          showAuthor={type === 'all'}
-          showActions={type === 'user'}
-        />
-      ))}
+    <div className="min-h-screen text-white">
+      {/* News Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {news.map((article) => (
+          <NewsCard
+            key={article.id}
+            article={article}
+            showAuthor={type === 'all'}
+            showActions={type === 'user'}
+          />
+        ))}
+      </div>
     </div>
   );
 };

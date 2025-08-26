@@ -42,11 +42,51 @@ function NewsForm({ onClose }) {
 
   // Transform references from the current format to the API format
   const transformReferencesForAPI = () => {
-    return references.map(ref => ({
-      referenceType: REFERENCE_TYPES[ref.reference.type] || 0,
-      referencedId: ref.reference.id,
-      referenceUrl: ref.reference.url || null
-    }));
+    const transformed = references.map(ref => {
+      // Convert the type to match REFERENCE_TYPES keys
+      let refTypeKey;
+      switch (ref.reference.type) {
+        case 'movie':
+          refTypeKey = 'MOVIE';
+          break;
+        case 'people':
+          refTypeKey = 'PEOPLE';
+          break;
+        case 'genre':
+          refTypeKey = 'GENRE';
+          break;
+        case 'production_company':
+          refTypeKey = 'PRODUCTION_COMPANY';
+          break;
+        case 'keyword':
+          refTypeKey = 'KEYWORD';
+          break;
+        case 'news':
+          refTypeKey = 'NEWS';
+          break;
+        default:
+          refTypeKey = 'MOVIE'; // Default fallback
+          console.warn('Unknown reference type:', ref.reference.type, 'falling back to MOVIE');
+      }
+      
+      const refTypeValue = REFERENCE_TYPES[refTypeKey];
+      
+      console.log('Reference transformation:', {
+        originalType: ref.reference.type,
+        refTypeKey: refTypeKey,
+        refTypeValue: refTypeValue,
+        REFERENCE_TYPES: REFERENCE_TYPES
+      });
+      
+      return {
+        referenceType: refTypeValue,
+        referencedId: ref.reference.id,
+        referenceName: ref.reference.name || null
+      };
+    });
+    
+    console.log('Final transformed references:', transformed);
+    return transformed;
   };
 
   const handlePublish = async () => {
@@ -104,6 +144,7 @@ function NewsForm({ onClose }) {
 
   const handleAddReference = (referenceData) => {
     console.log('Reference added:', referenceData);
+    console.log('Reference type:', referenceData.reference.type);
     
     // Check if reference already exists (same ID and type)
     const isDuplicate = references.some(existingRef => 

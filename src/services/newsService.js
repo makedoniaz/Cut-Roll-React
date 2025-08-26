@@ -13,7 +13,7 @@ export class NewsService {
                 if (typeof reference.referenceType !== 'number' || 
                     !reference.referencedId || 
                     typeof reference.referencedId !== 'string') {
-                    throw new Error('Invalid reference format. Each reference must have referenceType (number), referencedId (string), and optional referenceUrl (string)');
+                    throw new Error('Invalid reference format. Each reference must have referenceType (number), referencedId (string), and optional referenceName (string)');
                 }
             }
         }
@@ -33,7 +33,13 @@ export class NewsService {
         
         // Add references as JSON string since FormData doesn't handle complex objects well
         if (newsData.references && Array.isArray(newsData.references)) {
-            formData.append('references', JSON.stringify(newsData.references));
+            // Transform references to the new format with capitalized properties and name in ReferenceUrl
+            const transformedReferences = newsData.references.map(ref => ({
+                ReferenceType: ref.referenceType,
+                ReferencedId: ref.referencedId,
+                ReferenceUrl: ref.referenceName || null
+            }));
+            formData.append('referencesJson', JSON.stringify(transformedReferences));
         }
 
         const response = await api.post(API_ENDPOINTS.CREATE, formData, {
@@ -156,7 +162,11 @@ export class NewsService {
             id: newsId,
             title: newsData.title || null,
             content: newsData.content || null,
-            references: newsData.references || null
+            referencesJson: newsData.references ? JSON.stringify(newsData.references.map(ref => ({
+                ReferenceType: ref.referenceType,
+                ReferencedId: ref.referencedId,
+                ReferenceUrl: ref.referenceName || null
+            }))) : null
         };
 
         const response = await api.put(API_ENDPOINTS.BASE + newsId, newsPayload);
