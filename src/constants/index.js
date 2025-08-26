@@ -26,6 +26,7 @@ export const ROUTES = {
   LISTS: '/lists',
   REVIEWS: '/reviews',
   SEARCH: '/search',
+  NEWS_SEARCH: '/search/news',
   LOGIN: '/login',
   REGISTER: '/register',
   NEWS: '/news',

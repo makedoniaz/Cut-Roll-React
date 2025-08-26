@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Newspaper, User } from 'lucide-react';
+import { Plus, Newspaper, User, Search } from 'lucide-react';
 import NewsFeed from '../components/news/NewsFeed';
 import TabNav from '../components/ui/common/TabNav';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
+import { useNavigation } from '../hooks/useNavigation';
 
 const NewsPage = () => {
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
+  const { goToNewsSearch } = useNavigation();
   
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(false);
@@ -46,16 +48,27 @@ const NewsPage = () => {
           </p>
         </div>
         
-        {/* Create Article Button - Only for authenticated users */}
-        {isAuthenticated && (
+        {/* Action Buttons */}
+        <div className="mt-4 sm:mt-0 flex items-center gap-3">
           <button
-            onClick={handleCreateArticle}
-            className="mt-4 sm:mt-0 flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
+            onClick={() => goToNewsSearch('')}
+            className="flex items-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200"
           >
-            <Plus className="w-5 h-5" />
-            Create Article
+            <Search className="w-5 h-5" />
+            Search News
           </button>
-        )}
+          
+          {/* Create Article Button - Only for authenticated users */}
+          {isAuthenticated && (
+            <button
+              onClick={handleCreateArticle}
+              className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
+            >
+              <Plus className="w-5 h-5" />
+              Create Article
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab Navigation */}

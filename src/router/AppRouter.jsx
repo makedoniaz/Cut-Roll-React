@@ -4,6 +4,7 @@ import Home from '../pages/Home';
 import Movies from '../pages/Movies';
 import Profile from '../pages/Profile';
 import Search from '../pages/Search';
+import NewsSearch from '../pages/NewsSearch';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import NotFound from '../pages/NotFound';
@@ -48,6 +49,7 @@ const AppRouter = () => {
             <Route path="movie/:id" element={<MovieDetails />} />
             <Route path="reviews" element={<Reviews />} />
             <Route path="search" element={<Search />} />
+            <Route path="search/news" element={<NewsSearch />} />
             <Route path="test-filter" element={<DynamicSearchFilterExample />} />
             <Route path="auth/callback" element={<AuthCallback />} />
 

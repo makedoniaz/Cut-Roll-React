@@ -11,6 +11,7 @@ export const useNavigation = () => {
   const goToLists = () => navigate(ROUTES.LISTS);
   const goToReviews = () => navigate(ROUTES.REVIEWS);
   const goToSearch = (query) => navigate(`${ROUTES.SEARCH}?q=${query}`);
+  const goToNewsSearch = (query) => navigate(`${ROUTES.NEWS_SEARCH}?q=${query}`);
   const goToLogin = () => navigate(ROUTES.LOGIN);
   const goToRegister = () => navigate(ROUTES.REGISTER);
   const goBack = () => navigate(-1);
@@ -24,6 +25,7 @@ export const useNavigation = () => {
     goToLists,
     goToReviews,
     goToSearch,
+    goToNewsSearch,
     goToLogin,
     goToRegister,
     goBack,
