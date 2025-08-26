@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Heart, Share2, Edit, Trash2, Eye, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../ui/users/Avatar';
-import { NewsService } from '../../services/newsService';
 
-const NewsCard = ({ article, showAuthor = true, showActions = false, onNewsDeleted = () => {} }) => {
+const NewsCard = ({ article, showAuthor = true, showActions = false }) => {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(article.likes);
   const navigate = useNavigate();
@@ -71,16 +70,10 @@ const NewsCard = ({ article, showAuthor = true, showActions = false, onNewsDelet
     navigate(`/news/edit/${article.id}`);
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
-      try {
-        await NewsService.deleteNewsArticle(article.id);
-        // Call the callback to refresh the news list
-        onNewsDeleted();
-      } catch (error) {
-        console.error('Error deleting article:', error);
-        alert('Failed to delete article: ' + error.message);
-      }
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this article?')) {
+      // Handle delete logic here
+      console.log('Deleting article:', article.id);
     }
   };
 

@@ -79,51 +79,26 @@ export class NewsService {
 
     static async searchNews(searchParams = {}) {
         const searchData = {
-            query: searchParams.query || null,
+            page: searchParams.page || 1,
+            pageSize: searchParams.pageSize || 10,
+            sortDescending: searchParams.sortDescending !== undefined ? searchParams.sortDescending : true,
+            title: searchParams.title || null,
             authorId: searchParams.authorId || null,
-            from: searchParams.from || null,
-            to: searchParams.to || null,
-            referenceToSearch: searchParams.referenceToSearch || null,
-            page: searchParams.page || 0,
-            pageSize: searchParams.pageSize || 10
+            keyword: searchParams.keyword || null,
+            sortBy: searchParams.sortBy || null
         };
 
         // Validate parameters
-        if (searchData.page < 0) {
-            throw new Error('Page must be 0 or greater');
+        if (searchData.page < 1) {
+            throw new Error('Page must be greater than 0');
         }
 
         if (searchData.pageSize < 1 || searchData.pageSize > 100) {
             throw new Error('Page size must be between 1 and 100');
         }
 
-        // Validate date format if provided
-        if (searchData.from && !(searchData.from instanceof Date) && typeof searchData.from !== 'string') {
-            throw new Error('from must be a Date object or ISO string');
-        }
-
-        if (searchData.to && !(searchData.to instanceof Date) && typeof searchData.to !== 'string') {
-            throw new Error('to must be a Date object or ISO string');
-        }
-
-        // Convert Date objects to ISO strings if needed
-        if (searchData.from instanceof Date) {
-            searchData.from = searchData.from.toISOString();
-        }
-
-        if (searchData.to instanceof Date) {
-            searchData.to = searchData.to.toISOString();
-        }
-
-        // Validate referenceToSearch structure if provided
-        if (searchData.referenceToSearch && Array.isArray(searchData.referenceToSearch)) {
-            for (const reference of searchData.referenceToSearch) {
-                if (typeof reference.referenceType !== 'number' || 
-                    !reference.referencedId || 
-                    typeof reference.referencedId !== 'string') {
-                    throw new Error('Invalid reference format. Each reference must have referenceType (number) and referencedId (string)');
-                }
-            }
+        if (searchData.sortBy && !['title', 'createdAt', 'updatedAt'].includes(searchData.sortBy)) {
+            throw new Error('sortBy must be one of: title, createdAt, updatedAt');
         }
 
         const response = await api.post(API_ENDPOINTS.SEARCH, searchData, { skipAuth: true });
@@ -184,8 +159,14 @@ export class NewsService {
         }
 
         const newsPayload = {
-            newTitle: newsData.title || null,
-            newContent: newsData.content || null
+            id: newsId,
+            title: newsData.title || null,
+            content: newsData.content || null,
+            referencesJson: newsData.references ? JSON.stringify(newsData.references.map(ref => ({
+                ReferenceType: ref.referenceType,
+                ReferencedId: ref.referencedId,
+                ReferenceUrl: ref.referenceName || null
+            }))) : null
         };
 
         const response = await api.put(API_ENDPOINTS.BASE + newsId, newsPayload);

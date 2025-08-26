@@ -8,24 +8,19 @@ import SectionHeading from "../components/ui/common/SectionHeading";
 import PaginatedGridContainer from "../components/layout/PaginatedGridContainer";
 import { useAuthStore } from "../stores/authStore";
 import { MovieService } from "../services/movieService";
-import { NewsService } from "../services/newsService";
-import NewsCard from "../components/news/NewsCard";
 
 const Home = () => {
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const [newReleases, setNewReleases] = useState([]);
   const [popularMovies, setPopularMovies] = useState([]);
-  const [recentNews, setRecentNews] = useState([]);
   const [isLoadingNewReleases, setIsLoadingNewReleases] = useState(false);
   const [isLoadingPopular, setIsLoadingPopular] = useState(false);
-  const [isLoadingRecentNews, setIsLoadingRecentNews] = useState(false);
   const [error, setError] = useState(null);
   
   // Refs for intersection observer
   const newReleasesRef = useRef(null);
   const popularMoviesRef = useRef(null);
-  const recentNewsRef = useRef(null);
 
   // Lazy load new releases
   const loadNewReleases = useCallback(async () => {
@@ -75,68 +70,6 @@ const Home = () => {
     }
   }, [isLoadingPopular, popularMovies.length]);
 
-  // Lazy load recent news
-  const loadRecentNews = useCallback(async () => {
-    if (isLoadingRecentNews || recentNews.length > 0) return;
-    
-    try {
-      setIsLoadingRecentNews(true);
-      setError(null);
-
-      // Fetch recent news (August 1st to current date)
-      const currentDate = new Date();
-      const augustFirst = new Date(currentDate.getFullYear(), 7, 1); // Month is 0-indexed, so 7 = August
-      
-      const searchParams = {
-        query: null,
-        authorId: null,
-        from: augustFirst.toISOString(),
-        to: currentDate.toISOString(),
-        referenceToSearch: null,
-        page: 1,
-        pageSize: 6
-      };
-
-      const recentNewsData = await NewsService.searchNews(searchParams);
-      const newsData = recentNewsData.data || recentNewsData || [];
-      
-      // Transform the news data to match NewsCard expected format
-      const transformedNews = newsData.map(article => ({
-        id: article.id,
-        title: article.title || 'Untitled Article',
-        content: article.content || '',
-        excerpt: article.content 
-          ? article.content.length > 200 
-            ? article.content.substring(0, 200).trim() + '...' 
-            : article.content.trim()
-          : 'No content available',
-        likes: article.likesCount || 0,
-        likesCount: article.likesCount || 0,
-        comments: 0,
-        category: 'News',
-        imageUrl: article.photoPath || '/news-placeholder.jpg',
-        readTime: '5 min read',
-        publishedAt: article.createdAt || new Date().toISOString(),
-        createdAt: article.createdAt || new Date().toISOString(),
-        updatedAt: article.updatedAt,
-        authorId: article.authorId || 'unknown',
-        author: {
-          id: article.author?.id || article.authorId || 'unknown',
-          name: article.author?.userName || 'Anonymous User',
-          avatar: article.author?.avatarPath || null
-        },
-        references: article.newsReferences || []
-      }));
-
-      setRecentNews(transformedNews);
-    } catch (err) {
-      console.error('Error fetching recent news:', err);
-      setError('Failed to load recent news. Please try again later.');
-    } finally {
-      setIsLoadingRecentNews(false);
-    }
-  }, [isLoadingRecentNews, recentNews.length]);
-
   // Intersection observer for lazy loading
   useEffect(() => {
     const observerOptions = {
@@ -163,15 +96,6 @@ const Home = () => {
       });
     }, observerOptions);
 
-    const recentNewsObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          loadRecentNews();
-          recentNewsObserver.unobserve(entry.target);
-        }
-      });
-    }, observerOptions);
-
     if (newReleasesRef.current) {
       newReleasesObserver.observe(newReleasesRef.current);
     }
@@ -180,16 +104,11 @@ const Home = () => {
       popularMoviesObserver.observe(popularMoviesRef.current);
     }
 
-    if (recentNewsRef.current) {
-      recentNewsObserver.observe(recentNewsRef.current);
-    }
-
     return () => {
       newReleasesObserver.disconnect();
       popularMoviesObserver.disconnect();
-      recentNewsObserver.disconnect();
     };
-      }, [loadNewReleases, loadPopularMovies, loadRecentNews]);
+  }, [loadNewReleases, loadPopularMovies]);
 
   const movieLists = [
   {
@@ -412,54 +331,6 @@ const Home = () => {
               ) : (
                 <div className="text-gray-400 text-center py-8">
                   No popular movies available
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Recent News Section */}
-      <div ref={recentNewsRef} className="mb-12">
-        <div className="py-2">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
-              <h2 className="text-base font-medium text-gray-400 tracking-wider">RECENT NEWS</h2>
-              <div className="flex items-center gap-3">
-                {isLoadingRecentNews && (
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
-                    <span>Loading...</span>
-                  </div>
-                  )}
-                <button 
-                  onClick={() => navigate('/news')}
-                  className="cursor-pointer font-medium text-gray-400 hover:text-green-500"
-                >
-                  MORE
-                </button>
-              </div>
-            </div>
-            <hr className="border-t border-gray-700 my-4 mb-8" />
-            <div>
-              {isLoadingRecentNews ? (
-                <LoadingSkeleton count={6} />
-              ) : recentNews.length > 0 ? (
-                <div className="animate-fade-in">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {recentNews.slice(0, 6).map((article) => (
-                      <NewsCard
-                        key={article.id}
-                        article={article}
-                        showAuthor={true}
-                        showActions={false}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-gray-400 text-center py-8">
-                  No recent news available
                 </div>
               )}
             </div>
