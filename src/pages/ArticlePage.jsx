@@ -11,6 +11,7 @@ function ArticlePage() {
     const [error, setError] = useState(null);
     const [parsedContent, setParsedContent] = useState({ text: '', references: [] });
     const [isLiking, setIsLiking] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { id } = useParams();
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
@@ -101,6 +102,29 @@ function ArticlePage() {
         }
     };
 
+    const handleDelete = async () => {
+        if (!article || !isAuthenticated || user?.id !== article.authorId) return;
+        
+        // Show confirmation dialog
+        const isConfirmed = window.confirm('Are you sure you want to delete this article? This action cannot be undone.');
+        if (!isConfirmed) return;
+        
+        setIsDeleting(true);
+        try {
+            // Delete the article
+            await NewsService.deleteNewsArticle(article.id);
+            
+            // Show success message and redirect to news page
+            alert('Article deleted successfully!');
+            navigate('/news');
+        } catch (error) {
+            console.error('Error deleting article:', error);
+            alert(`Failed to delete article: ${error.message}`);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     // Loading state
     if (loading) {
         return (
@@ -185,6 +209,66 @@ function ArticlePage() {
             <div className="flex items-start justify-between mb-6">
                 <h1 className="text-3xl font-bold flex-1 mr-4">{article.title}</h1>
                 <div className="flex items-center space-x-3">
+                    {/* Edit and Delete buttons - Only show for authenticated users who are the author */}
+                    {isAuthenticated && user?.id === article.authorId && (
+                        <>
+                            {/* Edit Button */}
+                            <button
+                                onClick={() => navigate(`/news/edit/${article.id}`)}
+                                className="cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 bg-blue-600 hover:bg-blue-700"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 transition-transform duration-200 text-white"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
+                                </svg>
+                                <span className="font-medium">Edit</span>
+                            </button>
+
+                            {/* Delete Button */}
+                            <button
+                                onClick={handleDelete}
+                                disabled={isDeleting}
+                                className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
+                                    isDeleting 
+                                        ? 'bg-red-700 cursor-not-allowed' 
+                                        : 'bg-red-600 hover:bg-red-700'
+                                }`}
+                            >
+                                {isDeleting ? (
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                ) : (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5 transition-transform duration-200 text-white"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                    </svg>
+                                )}
+                                <span className="font-medium">
+                                    {isDeleting ? 'Deleting...' : 'Delete'}
+                                </span>
+                            </button>
+                        </>
+                    )}
+
                     {/* Like Button - Only show for authenticated users */}
                     {isAuthenticated && (
                         <button

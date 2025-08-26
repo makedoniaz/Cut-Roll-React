@@ -75,10 +75,13 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
       
       try {
         if (type === 'all') {
-          // Fetch first 10 news articles using pagination
-          console.log('Fetching news with pagination...');
-          const newsData = await NewsService.getNewsByPagination(0, 10);
-          console.log('News data received:', newsData);
+          // Fetch first 10 news articles using filter
+          console.log('Fetching recent news with filter...');
+          const newsData = await NewsService.filterNews({
+            page: 0,
+            pageSize: 10
+          });
+          console.log('Recent news data received:', newsData);
           
           // Handle the new API response structure
           let rawArticles = [];
@@ -181,12 +184,15 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
               const fetchNews = async () => {
                 try {
                   if (type === 'all') {
-                    const newsData = await NewsService.getNewsByPagination(0, 10);
+                    const newsData = await NewsService.filterNews({
+                      page: 0,
+                      pageSize: 10
+                    });
                     let articles = [];
                     if (newsData && Array.isArray(newsData.data)) {
                       articles = newsData.data;
                     } else if (Array.isArray(newsData)) {
-                      articles = newsData;
+                      articles = newsData.data;
                     }
                     setNews(articles);
                   } else if (type === 'user' && userId) {
@@ -195,7 +201,7 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
                     if (userNews && Array.isArray(userNews.data)) {
                       articles = userNews.data;
                     } else if (Array.isArray(userNews)) {
-                      articles = userNews;
+                      articles = userNews.data;
                     }
                     setNews(articles);
                   }

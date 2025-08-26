@@ -112,6 +112,44 @@ export class NewsService {
         return data;
     }
 
+    static async filterNews(filterParams = {}) {
+        const filterData = {
+            query: filterParams.query || null,
+            authorId: filterParams.authorId || null,
+            from: filterParams.from || null,
+            to: filterParams.to || null,
+            referenceToSearch: filterParams.referenceToSearch || [],
+            page: filterParams.page || 0,
+            pageSize: filterParams.pageSize || 10
+        };
+
+        // Validate parameters
+        if (filterData.page < 0) {
+            throw new Error('Page must be 0 or greater');
+        }
+
+        if (filterData.pageSize < 1 || filterData.pageSize > 100) {
+            throw new Error('Page size must be between 1 and 100');
+        }
+
+        // Remove null values to avoid sending them in the request
+        Object.keys(filterData).forEach(key => {
+            if (filterData[key] === null) {
+                delete filterData[key];
+            }
+        });
+
+        const response = await api.post(API_ENDPOINTS.FILTER, filterData, { skipAuth: true });
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'News filter failed');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
     static async getNewsCount() {
         const response = await api.get(API_ENDPOINTS.COUNT, { skipAuth: true });
         
@@ -154,20 +192,21 @@ export class NewsService {
             throw new Error('News ID is required');
         }
 
-        if (!newsData.title && !newsData.content && !newsData.references) {
-            throw new Error('At least one field (title, content, or references) must be provided for update');
+        if (!newsData.newTitle && !newsData.newContent) {
+            throw new Error('At least one field (newTitle or newContent) must be provided for update');
         }
 
         const newsPayload = {
-            id: newsId,
-            title: newsData.title || null,
-            content: newsData.content || null,
-            referencesJson: newsData.references ? JSON.stringify(newsData.references.map(ref => ({
-                ReferenceType: ref.referenceType,
-                ReferencedId: ref.referencedId,
-                ReferenceUrl: ref.referenceName || null
-            }))) : null
+            newTitle: newsData.newTitle || null,
+            newContent: newsData.newContent || null
         };
+
+        // Remove null values to avoid sending them in the request
+        Object.keys(newsPayload).forEach(key => {
+            if (newsPayload[key] === null) {
+                delete newsPayload[key];
+            }
+        });
 
         const response = await api.put(API_ENDPOINTS.BASE + newsId, newsPayload);
         
@@ -205,12 +244,10 @@ export class NewsService {
             throw new Error('User ID is required');
         }
 
-        return this.searchNews({
+        return this.filterNews({
             authorId: userId,
-            page,
-            pageSize,
-            sortBy: 'createdAt',
-            sortDescending: true
+            page: page - 1, // Convert to 0-based indexing for filter API
+            pageSize
         });
     }
 

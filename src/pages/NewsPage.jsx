@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Newspaper, User, Search } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Search } from 'lucide-react';
 import NewsFeed from '../components/news/NewsFeed';
-import TabNav from '../components/ui/common/TabNav';
+import NewsSectionHeading from '../components/news/NewsSectionHeading';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useNavigation } from '../hooks/useNavigation';
@@ -11,29 +11,18 @@ const NewsPage = () => {
   const navigate = useNavigate();
   const { goToNewsSearch } = useNavigation();
   
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('recent');
   const [loading, setLoading] = useState(false);
-
-  const tabs = [
-    {
-      id: 'all',
-      label: 'All News',
-      icon: <Newspaper className="w-4 h-4" />,
-      count: null
-    },
-    ...(isAuthenticated ? [{
-      id: 'my-news',
-      label: 'My News',
-      icon: <User className="w-4 h-4" />,
-      count: null
-    }] : [])
-  ];
 
   const handleCreateArticle = () => {
     navigate('/news/create');
   };
 
   const handleTabChange = (tabId) => {
+    // For non-authenticated users, only allow 'recent' tab
+    if (!isAuthenticated && (tabId === 'my' || tabId === 'liked')) {
+      return;
+    }
     setActiveTab(tabId);
   };
 
@@ -71,19 +60,17 @@ const NewsPage = () => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="mb-8">
-        <TabNav
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          className="bg-gray-900 border border-gray-700 rounded-lg p-1"
-        />
-      </div>
+      {/* News Section Heading with Tabs */}
+      <NewsSectionHeading
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        onMoreClick={() => goToNewsSearch('')}
+        isAuthenticated={isAuthenticated}
+      />
 
       {/* Content based on active tab */}
       <div className="min-h-96">
-        {activeTab === 'all' && (
+        {activeTab === 'recent' && (
           <NewsFeed 
             type="all"
             loading={loading}
@@ -91,13 +78,25 @@ const NewsPage = () => {
           />
         )}
         
-        {activeTab === 'my-news' && isAuthenticated && (
+        {activeTab === 'my' && isAuthenticated && (
           <NewsFeed 
             type="user"
             userId={user?.id}
             loading={loading}
             setLoading={setLoading}
           />
+        )}
+
+        {activeTab === 'liked' && isAuthenticated && (
+          <div className="text-center p-8 bg-gray-900 border border-gray-700 rounded-lg">
+            <div className="text-6xl mb-4">❤️</div>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              Liked News
+            </h3>
+            <p className="text-gray-400 mb-4">
+              Articles you've liked will appear here. Start liking news articles to see them in this tab.
+            </p>
+          </div>
         )}
       </div>
 

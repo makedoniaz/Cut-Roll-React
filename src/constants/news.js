@@ -2,6 +2,7 @@ export const API_ENDPOINTS = {
     BASE: 'news/news/',
     CREATE: 'news/news/',
     SEARCH: 'news/news/search/',
+    FILTER: 'news/news/filter/',
     COUNT: 'news/news/count/',
     PAGINATION: 'news/news/pagination/',
     LIKE: 'news/news/{newsId}/likes/'
