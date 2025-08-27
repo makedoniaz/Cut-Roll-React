@@ -105,7 +105,24 @@ const NewsPage = () => {
       <NewsSectionHeading
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        onMoreClick={() => goToNewsSearch('')}
+        onMoreClick={() => {
+          if (activeTab === 'recent') {
+            // For recent tab, pass date range filters (current date to week ago)
+            const today = new Date();
+            const weekAgo = new Date();
+            weekAgo.setDate(today.getDate() - 7);
+            
+            const dateRange = {
+              from: weekAgo.toISOString().split('T')[0], // Format as YYYY-MM-DD
+              to: today.toISOString().split('T')[0]      // Format as YYYY-MM-DD
+            };
+            
+            goToNewsSearch('', { dateRange });
+          } else {
+            // For other tabs, just go to search without filters
+            goToNewsSearch('');
+          }
+        }}
         isAuthenticated={isAuthenticated}
         hasAdminOrPublisherRole={hasAdminOrPublisherRole()}
       />
