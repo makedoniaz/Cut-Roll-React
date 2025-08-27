@@ -274,6 +274,27 @@ export class NewsService {
         return data;
     }
 
+    static async getIsLikedArticle(newsId) {
+        if (!newsId) {
+            throw new Error('News ID is required');
+        }
+
+        // Replace the placeholder with actual newsId
+        const endpoint = API_ENDPOINTS.LIKE.replace('{newsId}', newsId);
+        console.log('Checking if article is liked:', endpoint);
+        
+        const response = await api.get(endpoint);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to check if article is liked');
+        }
+
+        // The endpoint returns true/false directly, not in JSON format
+        const isLiked = await response.text();
+        return isLiked === 'true';
+    }
+
     static async searchMovieReference(searchParams = {}) {
         const searchData = {
             page: searchParams.page || 1,

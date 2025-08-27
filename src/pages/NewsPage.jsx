@@ -5,6 +5,7 @@ import NewsSectionHeading from '../components/news/NewsSectionHeading';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useNavigation } from '../hooks/useNavigation';
+import { USER_ROLES } from '../constants/adminDashboard';
 
 const NewsPage = () => {
   const { isAuthenticated, user } = useAuthStore();
@@ -14,6 +15,42 @@ const NewsPage = () => {
   const [activeTab, setActiveTab] = useState('recent');
   const [loading, setLoading] = useState(false);
 
+  // Check if user has Admin or Publisher role
+  const hasAdminOrPublisherRole = () => {
+    if (!isAuthenticated || !user) return false;
+    
+    // Handle both string and numeric role values
+    const userRole = user.role;
+    
+    // Debug logging
+    console.log('🔍 Role check:', {
+      isAuthenticated,
+      userRole,
+      userRoleType: typeof userRole,
+      USER_ROLES_ADMIN: USER_ROLES.ADMIN,
+      USER_ROLES_PUBLISHER: USER_ROLES.PUBLISHER,
+      isNumericAdmin: userRole === USER_ROLES.ADMIN,
+      isNumericPublisher: userRole === USER_ROLES.PUBLISHER,
+      isStringAdmin: userRole === 'Admin',
+      isStringPublisher: userRole === 'Publisher'
+    });
+    
+    // Check numeric values
+    if (userRole === USER_ROLES.ADMIN || userRole === USER_ROLES.PUBLISHER) {
+      console.log('✅ Role check passed (numeric)');
+      return true;
+    }
+    
+    // Check string values
+    if (userRole === 'Admin' || userRole === 'Publisher') {
+      console.log('✅ Role check passed (string)');
+      return true;
+    }
+    
+    console.log('❌ Role check failed');
+    return false;
+  };
+
   const handleCreateArticle = () => {
     navigate('/news/create');
   };
@@ -21,6 +58,10 @@ const NewsPage = () => {
   const handleTabChange = (tabId) => {
     // For non-authenticated users, only allow 'recent' tab
     if (!isAuthenticated && (tabId === 'my' || tabId === 'liked')) {
+      return;
+    }
+    // For authenticated users without Admin/Publisher role, don't allow 'my' tab
+    if (isAuthenticated && !hasAdminOrPublisherRole() && tabId === 'my') {
       return;
     }
     setActiveTab(tabId);
@@ -47,8 +88,8 @@ const NewsPage = () => {
             Search News
           </button>
           
-          {/* Create Article Button - Only for authenticated users */}
-          {isAuthenticated && (
+          {/* Create Article Button - Only for Admin and Publisher roles */}
+          {hasAdminOrPublisherRole() && (
             <button
               onClick={handleCreateArticle}
               className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
@@ -66,6 +107,7 @@ const NewsPage = () => {
         onTabChange={handleTabChange}
         onMoreClick={() => goToNewsSearch('')}
         isAuthenticated={isAuthenticated}
+        hasAdminOrPublisherRole={hasAdminOrPublisherRole()}
       />
 
       {/* Content based on active tab */}
@@ -78,7 +120,7 @@ const NewsPage = () => {
           />
         )}
         
-        {activeTab === 'my' && isAuthenticated && (
+        {activeTab === 'my' && hasAdminOrPublisherRole() && (
           <NewsFeed 
             type="user"
             userId={user?.id}
@@ -108,7 +150,7 @@ const NewsPage = () => {
             Want to share your thoughts?
           </h3>
           <p className="text-gray-400 mb-4">
-            Sign in to create your own news articles and share your movie insights with the community.
+            Sign in to access news features. Admin and Publisher users can create articles and view their own news.
           </p>
           <button
             onClick={() => navigate('/login')}
@@ -116,6 +158,19 @@ const NewsPage = () => {
           >
             Sign In
           </button>
+        </div>
+      )}
+
+      {/* Message for authenticated users without Admin/Publisher role */}
+      {isAuthenticated && !hasAdminOrPublisherRole() && (
+        <div className="mt-12 text-center p-8 bg-gray-900 border border-gray-700 rounded-lg">
+          <div className="text-6xl mb-4">📰</div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Want to create news articles?
+          </h3>
+          <p className="text-gray-400 mb-4">
+            Only Admin and Publisher users can create news articles. Contact an administrator to request publisher privileges.
+          </p>
         </div>
       )}
     </div>
