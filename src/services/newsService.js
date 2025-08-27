@@ -273,4 +273,133 @@ export class NewsService {
         const data = await response.json();
         return data;
     }
+
+    static async searchMovieReference(searchParams = {}) {
+        const searchData = {
+            page: searchParams.page || 1,
+            pageSize: searchParams.pageSize || 10,
+            sortDescending: searchParams.sortDescending !== undefined ? searchParams.sortDescending : true,
+            title: searchParams.title || null,
+            genres: searchParams.genres || null,
+            actor: searchParams.actor || null,
+            director: searchParams.director || null,
+            keywords: searchParams.keyword || null,
+            year: searchParams.year || null,
+            minRating: searchParams.minRating || null,
+            maxRating: searchParams.maxRating || null,
+            country: searchParams.country || null,
+            language: searchParams.language || null,
+            productionCompany: searchParams.productionCompany || null,
+            sortBy: searchParams.sortBy || null
+        };
+
+        // Validation parameters
+        if (searchData.year && (searchData.year < 1950 || searchData.year > 2025)) {
+            throw new Error('Year must be between 1950 and 2025');
+        }
+        
+        if (searchData.minRating && (searchData.minRating < 0 || searchData.minRating > 10)) {
+            throw new Error('minRating must be between 0 and 5');
+        }
+        
+        if (searchData.maxRating && (searchData.maxRating < 0 || searchData.maxRating > 10)) {
+            throw new Error('maxRating must be between 0 and 5');
+        }
+
+        if (searchData.sortBy && !['title', 'rating', 'releasedate', 'revenue'].includes(searchData.sortBy)) {
+            throw new Error('sortBy must be one of: title, rating, releasedate, revenue');
+        }
+
+        const response = await api.post(API_ENDPOINTS.REFERENCE_MOVIE, searchData, { skipAuth: true });
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Movie search failed');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
+    static async searchPeopleReference(searchParams = {}) {
+        const { name, role, pageNumber, pageSize } = searchParams;
+        
+        const requestBody = {
+            name: name || '',
+            role: role !== undefined ? role : 0, // Default to cast (0) if not specified
+            pageNumber: pageNumber || 0,
+            pageSize: pageSize || 20
+        };
+
+        const response = await api.post(API_ENDPOINTS.REFERENCE_PEOPLE, requestBody);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'People search failed');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
+    static async searchGenreReference(searchParams = {}) {
+        const { name, pageNumber, pageSize } = searchParams;
+        
+        const requestBody = {
+            name: name || '',
+            pageNumber: pageNumber || 0,
+            pageSize: pageSize || 20
+        };
+
+        const response = await api.post(API_ENDPOINTS.REFERENCE_GENRE, requestBody);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Genre search failed');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
+    static async searchProductionCompanyReference(searchParams = {}) {
+        const { name, countryCode, pageNumber, pageSize } = searchParams;
+        
+        const requestBody = {
+            name: name || '',
+            countryCode: null, // Always set to null for name-only search
+            pageNumber: pageNumber || 1,
+            pageSize: pageSize || 20
+        };
+
+        const response = await api.post(API_ENDPOINTS.REFERENCE_PRODUCTION_COMPANY, requestBody);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Production company search failed');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
+    static async searchKeywordReference(searchParams = {}) {
+        const { name, pageNumber, pageSize } = searchParams;
+        
+        const requestBody = {
+            name: name || '',
+            pageNumber: pageNumber || 0,
+            pageSize: pageSize || 20
+        };
+
+        const response = await api.post(API_ENDPOINTS.REFERENCE_KEYWORD, requestBody);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Keyword search failed');
+        }
+
+        const data = await response.json();
+        return data;
+    }
 }

@@ -9,6 +9,7 @@ import MultiSelectFilter from '../components/search/filters/MultiSelectFilter';
 import SelectFilter from '../components/search/filters/SelectFilter';
 import DynamicSearchFilter from '../components/search/filters/DynamicSearchFilter';
 import DateRangeFilter from '../components/search/filters/DateRangeFilter';
+import ReferenceTypeFilter from '../components/search/filters/ReferenceTypeFilter';
 
 const NewsSearch = () => {
   const location = useLocation();
@@ -33,9 +34,8 @@ const NewsSearch = () => {
     {
       key: 'referenceToSearch',
       label: 'References',
-      type: 'dynamicsearch',
-      searchType: 'mixed',
-      placeholder: 'Search for movies, people, genres...',
+      type: 'referencetypefilter',
+      placeholder: 'Select reference type and search...',
       defaultValue: []
     }
   ];
@@ -584,6 +584,20 @@ const NewsSearch = () => {
                           }}
                           placeholder={filter.placeholder}
                           type={filter.searchType}
+                        />
+                      );
+                      break;
+                    case 'referencetypefilter':
+                      filterComponent = (
+                        <ReferenceTypeFilter
+                          key={filter.key}
+                          label={filter.label}
+                          value={value}
+                          onChange={(newValue) => {
+                            const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            setFilterValues(newFilterValues);
+                          }}
+                          placeholder={filter.placeholder}
                         />
                       );
                       break;
