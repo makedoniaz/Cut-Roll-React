@@ -7,7 +7,7 @@ export const API_ENDPOINTS = {
     PAGINATION: 'news/news/pagination/',
     LIKE: 'news/news/{newsId}/likes/',
     REFERENCE_MOVIE: 'news/Movie/search/',
-    REFERENCE_PEOPLE: 'news/People/search/',
+    REFERENCE_PERSON: 'news/Person/search/',
     REFERENCE_GENRE: 'news/Genre/search/',
     REFERENCE_PRODUCTION_COMPANY: 'news/ProductionCompany/search/',
     REFERENCE_KEYWORD: 'news/Keyword/search/',

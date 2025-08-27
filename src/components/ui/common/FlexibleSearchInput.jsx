@@ -130,15 +130,24 @@ const FlexibleSearchInput = ({
 
   // Clear all
   const clearAll = () => {
+    console.log('🧹 FlexibleSearchInput clearAll called');
+    console.log('🧹 Current localSelectedItems:', localSelectedItems);
+    console.log('🧹 Current inputValue:', inputValue);
+    
+    // Only clear the input value and search results, NOT the selected items
     setInputValue('');
-    setLocalSelectedItems([]);
-    onSelectedItemsChange?.([]);
     setSearchResults([]);
+    
+    // Don't clear selected items - this allows multiple references to be maintained
+    // setLocalSelectedItems([]);
+    // onSelectedItemsChange?.([]);
+    
     // Don't close dropdown when clearing - keep it open for new input
     if (onChange) onChange('');
     
     // Call parent's onClear function if provided
     if (onClear) {
+      console.log('🧹 Calling parent onClear function');
       onClear();
     }
   };
@@ -235,7 +244,7 @@ const FlexibleSearchInput = ({
         />
         
         {/* Clear Button */}
-        {clearable && (inputValue || (multiple && localSelectedItems.length > 0)) && (
+        {clearable && inputValue && (
           <button
             type="button"
             onClick={clearAll}

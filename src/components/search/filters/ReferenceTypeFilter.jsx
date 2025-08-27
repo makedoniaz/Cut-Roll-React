@@ -2,11 +2,6 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { ChevronDown, Check, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import FlexibleSearchInput from '../../ui/common/FlexibleSearchInput';
-import { MovieService } from '../../../services/movieService';
-import personService from '../../../services/personService';
-import genreService from '../../../services/genreService';
-import productionCompanyService from '../../../services/productionCompanyService';
-import keywordService from '../../../services/keywordService';
 import { NewsService } from '../../../services/newsService';
 import { REFERENCE_TYPES } from '../../../constants/news';
 
@@ -30,12 +25,22 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
 
   // Update selectedReferences when value prop changes
   useEffect(() => {
+    console.log('🔄 useEffect triggered - value prop changed:', value);
     if (value && Array.isArray(value)) {
+      console.log('🔄 Setting selectedReferences from value prop:', value);
       setSelectedReferences(value);
     } else {
+      console.log('🔄 Clearing selectedReferences (value is falsy or not array)');
       setSelectedReferences([]);
     }
-  }, [value]);
+    
+    // Only reset the selected reference type if we had a previous value and it's now cleared
+    // This prevents the effect from clearing the reference type on initial render
+    if (selectedReferences.length > 0 && (!value || (Array.isArray(value) && value.length === 0))) {
+      console.log('🔄 Resetting selectedReferenceType to null');
+      setSelectedReferenceType(null);
+    }
+  }, [value, selectedReferences.length]);
 
   // Close type dropdown when clicking outside
   useEffect(() => {
@@ -66,21 +71,29 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
 
   // Create search function based on selected reference type
   const searchFunction = useCallback(async (query) => {
-    if (!selectedReferenceType) return [];
+    console.log('🔍 ReferenceTypeFilter searchFunction called with:', { query, selectedReferenceType });
+    
+    if (selectedReferenceType === null) {
+      console.log('❌ No reference type selected, returning empty array');
+      return [];
+    }
 
     try {
       let searchResults;
 
       switch (selectedReferenceType) {
         case REFERENCE_TYPES.MOVIE:
-          searchResults = await MovieService.searchMovies({
+          console.log('🎬 Searching for movies with query:', query);
+          searchResults = await NewsService.searchMovieReference({
             title: query,
             page: 1,
             pageSize: 8
           });
+          console.log('🎬 Movie search results:', searchResults);
           if (searchResults && searchResults.data) {
+            console.log('🎬 First movie data structure:', searchResults.data[0]);
             return searchResults.data.map(movie => ({
-              id: movie.id,
+              id: movie.movieId || movie.id, // Use movieId if available, fallback to id
               name: movie.title,
               description: `Movie: ${movie.title} (${movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A'})`,
               image: movie.posterPath ? `https://image.tmdb.org/t/p/w185${movie.posterPath}` : null
@@ -89,11 +102,13 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
           break;
 
         case REFERENCE_TYPES.PEOPLE:
-          searchResults = await personService.searchPeople({
+          console.log('👥 Searching for people with query:', query);
+          searchResults = await NewsService.searchPersonReference({
             name: query,
             pageNumber: 1,
             pageSize: 8
           });
+          console.log('👥 People search results:', searchResults);
           if (searchResults && searchResults.data) {
             return searchResults.data.map(person => ({
               id: person.id,
@@ -105,11 +120,13 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
           break;
 
         case REFERENCE_TYPES.GENRE:
-          searchResults = await genreService.searchGenres({
+          console.log('🎭 Searching for genres with query:', query);
+          searchResults = await NewsService.searchGenreReference({
             name: query,
             pageNumber: 0,
             pageSize: 8
           });
+          console.log('🎭 Genre search results:', searchResults);
           if (searchResults && searchResults.data) {
             return searchResults.data.map(genre => ({
               id: genre.id,
@@ -121,11 +138,13 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
           break;
 
         case REFERENCE_TYPES.PRODUCTION_COMPANY:
-          searchResults = await productionCompanyService.searchProductionCompanies({
+          console.log('🏢 Searching for production companies with query:', query);
+          searchResults = await NewsService.searchProductionCompanyReference({
             name: query,
             pageNumber: 1,
             pageSize: 8
           });
+          console.log('🏢 Production company search results:', searchResults);
           if (searchResults && searchResults.data) {
             return searchResults.data.map(company => ({
               id: company.id,
@@ -137,11 +156,13 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
           break;
 
         case REFERENCE_TYPES.KEYWORD:
-          searchResults = await keywordService.searchKeywords({
+          console.log('🔑 Searching for keywords with query:', query);
+          searchResults = await NewsService.searchKeywordReference({
             name: query,
             pageNumber: 0,
             pageSize: 8
           });
+          console.log('🔑 Keyword search results:', searchResults);
           if (searchResults && searchResults.data) {
             return searchResults.data.map(keyword => ({
               id: keyword.id,
@@ -153,12 +174,14 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
           break;
 
         case REFERENCE_TYPES.NEWS:
+          console.log('📰 Searching for news with query:', query);
           // Use filterNews method instead of searchNews
           searchResults = await NewsService.filterNews({
             query: query,
             page: 0,
             pageSize: 8
           });
+          console.log('📰 News search results:', searchResults);
           if (searchResults && searchResults.data) {
             return searchResults.data.map(news => ({
               id: news.id,
@@ -170,33 +193,67 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
           break;
 
         default:
+          console.log('❓ Unknown reference type:', selectedReferenceType);
           return [];
       }
     } catch (error) {
-      console.error('Reference search error:', error);
+      console.error('❌ Reference search error:', error);
       return [];
     }
 
+    console.log('⚠️ No results found for reference type:', selectedReferenceType);
     return [];
   }, [selectedReferenceType]);
 
   const handleReferenceTypeSelect = (typeValue) => {
+    console.log('🔄 handleReferenceTypeSelect called with:', typeValue);
+    console.log('🔄 REFERENCE_TYPES.MOVIE value:', REFERENCE_TYPES.MOVIE);
+    console.log('🔄 REFERENCE_TYPES.PEOPLE value:', REFERENCE_TYPES.PEOPLE);
+    console.log('🔄 Is typeValue === REFERENCE_TYPES.MOVIE?', typeValue === REFERENCE_TYPES.MOVIE);
+    console.log('🔄 Current selectedReferences before change:', selectedReferences);
+    
     setSelectedReferenceType(typeValue);
-    setSelectedReferences([]);
+    // Don't clear selected references when changing reference type
+    // setSelectedReferences([]);
     setIsTypeDropdownOpen(false);
-    // Clear the parent filter value when reference type changes
-    onChange([]);
+    // Don't clear the parent filter value when reference type changes
+    // onChange([]);
+    
+    console.log('🔄 Reference type changed, selectedReferences preserved:', selectedReferences);
   };
 
   const handleReferencesChange = (newReferences) => {
+    console.log('🔄 handleReferencesChange called with:', newReferences);
+    console.log('🔄 Current selectedReferences state:', selectedReferences);
+    console.log('🔄 Length comparison - new:', newReferences.length, 'current:', selectedReferences.length);
+    console.log('🔄 JSON comparison - are they equal?', JSON.stringify(newReferences) === JSON.stringify(selectedReferences));
+    
     setSelectedReferences(newReferences);
     onChange(newReferences);
+    
+    console.log('🔄 State updated, new selectedReferences:', newReferences);
   };
 
   const handleClear = () => {
+    console.log('🔄 handleClear called');
+    console.log('🔄 Current selectedReferences before clear:', selectedReferences);
+    
     setSelectedReferenceType(null);
     setSelectedReferences([]);
     onChange([]);
+    
+    console.log('🔄 All references cleared');
+  };
+
+  const removeSelectedReference = (referenceToRemove) => {
+    console.log('🔄 removeSelectedReference called with:', referenceToRemove);
+    console.log('🔄 Current selectedReferences before removal:', selectedReferences);
+    
+    const newReferences = selectedReferences.filter(ref => ref.id !== referenceToRemove.id);
+    console.log('🔄 New references after removal:', newReferences);
+    
+    setSelectedReferences(newReferences);
+    onChange(newReferences);
   };
 
   const selectedTypeOption = referenceTypeOptions.find(opt => opt.value === selectedReferenceType);
@@ -268,7 +325,11 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
       {selectedReferenceType !== null && (
         <div className="flex flex-col space-y-1">
           <label className="text-xs text-gray-400">Search References</label>
+          {console.log('🔍 Rendering FlexibleSearchInput with selectedReferenceType:', selectedReferenceType)}
+          {console.log('🔍 searchFunction:', searchFunction)}
+          {console.log('🔍 selectedReferences being passed to FlexibleSearchInput:', selectedReferences)}
           <FlexibleSearchInput
+            key={`reference-search-${selectedReferenceType}`}
             placeholder={`Search for ${selectedTypeOption?.label.toLowerCase()}...`}
             searchFunction={searchFunction}
             onSelectedItemsChange={handleReferencesChange}
@@ -280,9 +341,33 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
             clearable={true}
             multiple={true}
             autoOpen={false}
-            showSelectedItemsAsTags={true}
+            showSelectedItemsAsTags={false} // Disable tags display in FlexibleSearchInput
             onClear={() => handleReferencesChange([])}
           />
+        </div>
+      )}
+
+      {/* Selected References Display - Moved above Clear References button */}
+      {selectedReferences.length > 0 && (
+        <div className="flex flex-col space-y-2">
+          <label className="text-xs text-gray-400">Selected References</label>
+          <div className="flex flex-wrap gap-2">
+            {selectedReferences.map((reference) => (
+              <div
+                key={reference.id}
+                className="flex items-center gap-2 px-3 py-1 bg-green-600 text-white rounded-full text-sm"
+              >
+                <span>{reference.name || reference.title || reference.label}</span>
+                <button
+                  type="button"
+                  onClick={() => removeSelectedReference(reference)}
+                  className="hover:bg-green-700 rounded-full p-1 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

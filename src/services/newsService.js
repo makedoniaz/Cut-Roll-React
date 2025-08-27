@@ -321,7 +321,7 @@ export class NewsService {
         return data;
     }
 
-    static async searchPeopleReference(searchParams = {}) {
+    static async searchPersonReference(searchParams = {}) {
         const { name, role, pageNumber, pageSize } = searchParams;
         
         const requestBody = {
@@ -331,11 +331,11 @@ export class NewsService {
             pageSize: pageSize || 20
         };
 
-        const response = await api.post(API_ENDPOINTS.REFERENCE_PEOPLE, requestBody);
+        const response = await api.post(API_ENDPOINTS.REFERENCE_PERSON, requestBody);
         
         if (!response.ok) {
             let errorMessage = await response.text();
-            throw new Error(errorMessage || 'People search failed');
+            throw new Error(errorMessage || 'Person search failed');
         }
 
         const data = await response.json();

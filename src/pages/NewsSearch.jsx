@@ -58,6 +58,7 @@ const NewsSearch = () => {
   const [isManualSearch, setIsManualSearch] = useState(false);
   const [lastSearchSource, setLastSearchSource] = useState(null);
   const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
+  const [filterResetKey, setFilterResetKey] = useState(0);
 
   // Handle pre-filled filters from navigation state
   useEffect(() => {
@@ -590,7 +591,7 @@ const NewsSearch = () => {
                     case 'referencetypefilter':
                       filterComponent = (
                         <ReferenceTypeFilter
-                          key={filter.key}
+                          key={`${filter.key}-${filterResetKey}`}
                           label={filter.label}
                           value={value}
                           onChange={(newValue) => {
@@ -626,11 +627,15 @@ const NewsSearch = () => {
                       case 'daterangefilter':
                         clearedFilters[filter.key] = filter.defaultValue || { from: null, to: null };
                         break;
+                      case 'referencetypefilter':
+                        clearedFilters[filter.key] = filter.defaultValue || [];
+                        break;
                       default:
                         clearedFilters[filter.key] = filter.defaultValue || '';
                     }
                   });
                   setFilterValues(clearedFilters);
+                  setFilterResetKey(prev => prev + 1);
                 }}
                 className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-gray-300 hover:text-white transition-colors border border-gray-600 rounded-lg hover:border-gray-500 bg-gray-800 hover:bg-gray-700"
               >
