@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import PaginatedGridContainer from '../components/layout/PaginatedGridContainer';
-import NewsCard from '../components/ui/news/NewsCard';
+import NewsCard from '../components/news/NewsCard';
 import { NewsService } from '../services/newsService';
-import { Filter, X, Search as SearchIcon, Newspaper } from 'lucide-react';
+import { Filter, X, Search as SearchIcon } from 'lucide-react';
 import RangeFilter from '../components/search/filters/RangeFilter';
 import MultiSelectFilter from '../components/search/filters/MultiSelectFilter';
 import SelectFilter from '../components/search/filters/SelectFilter';
@@ -173,7 +173,10 @@ const NewsSearch = () => {
         from: formatDateForAPI(filterValues.dateRange.from),
         to: filterValues.dateRange.to ? formatDateForAPI(filterValues.dateRange.to).replace('T00:00:00.000Z', 'T23:59:59.999Z') : null,
         referenceToSearch: filterValues.referenceToSearch && filterValues.referenceToSearch.length > 0 
-          ? filterValues.referenceToSearch.map(ref => ref.id) 
+          ? filterValues.referenceToSearch.map(ref => ({
+            referenceType: ref.referenceType || 0, // Default to 0 if not specified
+            referencedId: ref.id
+          }))
           : null
       };
 
@@ -471,21 +474,48 @@ const NewsSearch = () => {
                   items={newsArticles}
                   itemsPerRow={4}
                   rows={5}
-                  renderItem={(article) => (
-                    <NewsCard 
-                      key={article.id}
-                      image={article.photoUrl || '/news-placeholder.jpg'}
-                      category="News"
-                      categoryIcon={<Newspaper className="w-4 h-4" />}
-                      title={article.title}
-                      description={article.content}
-                      hasVideo={false}
-                      onReadMore={() => {
-                        // Navigate to article details
-                        window.location.href = `/news/${article.id}`;
-                      }}
-                    />
-                  )}
+                  renderItem={(article) => {
+                    // Transform the API response to match NewsCard expectations
+                    const transformedArticle = {
+                      id: article.id,
+                      title: article.title || 'Untitled Article',
+                      content: article.content || '',
+                      excerpt: article.content 
+                        ? (() => {
+                            // Create a simple excerpt from content (first 200 characters)
+                            const plainText = article.content.replace(/<[^>]*>/g, ''); // Remove HTML tags
+                            return plainText.length > 200 
+                              ? plainText.substring(0, 200).trim() + '...' 
+                              : plainText.trim();
+                          })()
+                        : 'No content available',
+                      likes: article.likesCount || 0,
+                      likesCount: article.likesCount || 0,
+                      comments: 0, // Not provided by API yet
+                      category: 'News',
+                      imageUrl: article.photoPath || '/news-placeholder.jpg',
+                      readTime: '5 min read', // Default read time
+                      publishedAt: article.createdAt || new Date().toISOString(),
+                      createdAt: article.createdAt || new Date().toISOString(),
+                      updatedAt: article.updatedAt,
+                      authorId: article.authorId || 'unknown',
+                      author: {
+                        id: article.author?.id || article.authorId || 'unknown',
+                        name: article.author?.userName || article.author?.name || 'Anonymous User',
+                        avatar: article.author?.avatarPath || null
+                      },
+                      references: article.newsReferences || []
+                    };
+
+                    return (
+                      <NewsCard 
+                        key={article.id}
+                        article={transformedArticle}
+                        showAuthor={true}
+                        showActions={false}
+                      />
+                    );
+                  }}
                   itemHeight="h-80"
                   gap="gap-6"
                   itemWidth="w-80"

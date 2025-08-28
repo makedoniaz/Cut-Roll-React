@@ -3,13 +3,13 @@ import { useAuth } from '../hooks/useStores';
 import { AdminDashboardService } from '../services/adminDashboardService';
 import { Filter, X, Search, Users, Shield, Ban, MicOff, FileText } from 'lucide-react';
 import SelectFilter from '../components/search/filters/SelectFilter';
-import RangeFilter from '../components/search/filters/RangeFilter';
+import DateRangeFilter from '../components/search/filters/DateRangeFilter';
 import TextFilter from '../components/search/filters/TextFilter';
 import CheckboxFilter from '../components/search/filters/CheckboxFilter';
 import { USER_ROLES } from '../constants/adminDashboard';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth(); // Renamed to avoid unused variable warning
   
   // Filter configuration for admin dashboard
   // Note: searchTerm is handled separately in the main search input above
@@ -42,13 +42,8 @@ const AdminDashboard = () => {
     {
       key: 'registrationDateRange',
       label: 'Registration Date Range',
-      type: 'range',
-      min: new Date('2025-08-01').getTime(),
-      max: new Date().getTime(),
-      defaultValue: [new Date('2025-08-01').getTime(), new Date().getTime()],
-      step: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-      startDate: '2025-08-01',
-      endDate: new Date().toISOString().split('T')[0]
+      type: 'dateRange',
+      defaultValue: { from: '2025-08-01', to: new Date().toISOString().split('T')[0] }
     }
   ];
 
@@ -57,12 +52,12 @@ const AdminDashboard = () => {
     role: null,
     showBannedOnly: false,
     showMutedOnly: false,
-    registrationDateRange: [new Date('2025-08-01').getTime(), new Date().getTime()]
+    registrationDateRange: { from: '2025-08-01', to: new Date().toISOString().split('T')[0] }
   });
 
   // Define default date range for comparison
-  const defaultStartDate = new Date('2025-08-01').getTime();
-  const defaultEndDate = new Date().getTime();
+  const defaultStartDate = '2025-08-01';
+  const defaultEndDate = new Date().toISOString().split('T')[0];
   
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -120,7 +115,7 @@ const AdminDashboard = () => {
         return value !== false; // Simple checkbox is active when not false
       }
       if (key === 'registrationDateRange') {
-        return value && value.length === 2 && value[0] !== defaultStartDate && value[1] !== defaultEndDate;
+        return value && value.from !== defaultStartDate && value.to !== defaultEndDate;
       }
       return false;
     });
@@ -150,8 +145,8 @@ const AdminDashboard = () => {
         role: filterValues.role,
         isBanned: filterValues.showBannedOnly ? true : null, // Use showBannedOnly to filter banned
         isMuted: filterValues.showMutedOnly ? true : null, // Use showMutedOnly to filter muted
-        registeredAfter: filterValues.registrationDateRange[0] ? `${new Date(filterValues.registrationDateRange[0]).toISOString().slice(0, 10)}T00:00:00.000Z` : null,
-        registeredBefore: filterValues.registrationDateRange[1] ? `${new Date(filterValues.registrationDateRange[1]).toISOString().slice(0, 10)}T23:59:59.999Z` : null,
+        registeredAfter: filterValues.registrationDateRange.from ? `${filterValues.registrationDateRange.from}T00:00:00.000Z` : null,
+        registeredBefore: filterValues.registrationDateRange.to ? `${filterValues.registrationDateRange.to}T23:59:59.999Z` : null,
         pageNumber: page,
         pageSize: 10
       };
@@ -213,14 +208,7 @@ const AdminDashboard = () => {
     setHasSearched(false);
   };
 
-  // Handle filter changes
-  const handleFiltersChange = (filters) => {
-    console.log('Filter values changed:', filters);
-    console.log('Role filter value:', filters.role);
-    setFilterValues(filters);
-    setCurrentPage(1);
-    setHasSearched(false);
-  };
+  // Handle filter changes - removed as it's not being used
 
   // Handle explicit search button press
   const handleSearchButtonPress = () => {
@@ -747,11 +735,11 @@ const AdminDashboard = () => {
                   {adminFilters.map((filter) => {
                     let value;
                     if (filter.type === 'select' && filter.defaultValue !== undefined) {
-                      value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
+                      value = Object.prototype.hasOwnProperty.call(filterValues, filter.key) ? filterValues[filter.key] : filter.defaultValue;
                     } else if (filter.type === 'simpleCheckbox') {
-                      value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
-                    } else if (filter.type === 'range') {
-                      value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
+                      value = Object.prototype.hasOwnProperty.call(filterValues, filter.key) ? filterValues[filter.key] : filter.defaultValue;
+                    } else if (filter.type === 'dateRange') {
+                      value = Object.prototype.hasOwnProperty.call(filterValues, filter.key) ? filterValues[filter.key] : filter.defaultValue;
                     } else {
                       value = filterValues[filter.key] || filter.defaultValue || '';
                     }
@@ -811,23 +799,18 @@ const AdminDashboard = () => {
                           />
                         );
                         break;
-                      case 'range':
+                      case 'dateRange':
                         filterComponent = (
-                          <div key={filter.key} className="space-y-2">
-                            <RangeFilter
-                              label={filter.label}
-                              value={value}
-                              onChange={(newValue) => {
-                                const newFilterValues = { ...filterValues, [filter.key]: newValue };
-                                setFilterValues(newFilterValues);
-                              }}
-                              min={filter.min}
-                              max={filter.max}
-                              step={filter.step}
-                              defaultValue={filter.defaultValue}
-                              labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                            />
-                          </div>
+                          <DateRangeFilter
+                            key={filter.key}
+                            label={filter.label}
+                            value={value}
+                            onChange={(newValue) => {
+                              const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                              setFilterValues(newFilterValues);
+                            }}
+                            placeholder="Select registration date range"
+                          />
                         );
                         break;
                       default:
@@ -848,8 +831,8 @@ const AdminDashboard = () => {
                         clearedFilters[filter.key] = filter.defaultValue;
                       } else if (filter.type === 'simpleCheckbox') {
                         clearedFilters[filter.key] = false; // Clear simple checkbox values
-                      } else if (filter.type === 'range') {
-                        clearedFilters[filter.key] = [defaultStartDate, defaultEndDate];
+                      } else if (filter.type === 'dateRange') {
+                        clearedFilters[filter.key] = { from: defaultStartDate, to: defaultEndDate };
                       } else {
                         clearedFilters[filter.key] = '';
                       }

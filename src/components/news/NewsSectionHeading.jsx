@@ -5,12 +5,13 @@ const NewsSectionHeading = ({
     onTabChange,
     showMoreButton = true,
     onMoreClick,
-    isAuthenticated = false
+    isAuthenticated = false,
+    hasAdminOrPublisherRole = false
 }) => {
     const tabs = [
         { id: "recent", label: "Recent News" },
         ...(isAuthenticated ? [
-            { id: "my", label: "My News" },
+            ...(hasAdminOrPublisherRole ? [{ id: "my", label: "My News" }] : []),
             { id: "liked", label: "Liked News" }
         ] : [])
     ];

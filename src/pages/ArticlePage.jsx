@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { NewsService } from "../services/newsService";
-import { parseContentWithReferences, convertToHTMLWithReferences } from "../utils/contentParser";
+import { parseContentWithReferences } from "../utils/contentParser";
 import { useAuthStore } from "../stores/authStore";
 
 function ArticlePage() {
@@ -12,6 +12,7 @@ function ArticlePage() {
     const [parsedContent, setParsedContent] = useState({ text: '', references: [] });
     const [isLiking, setIsLiking] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
     const { id } = useParams();
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
@@ -38,6 +39,18 @@ function ArticlePage() {
                     setParsedContent(parsed);
                     console.log('Parsed content:', parsed);
                 }
+
+                // Check if the article is liked by the current user
+                if (isAuthenticated) {
+                    try {
+                        const likedStatus = await NewsService.getIsLikedArticle(id);
+                        setIsLiked(likedStatus);
+                        console.log('Article like status:', likedStatus);
+                    } catch (err) {
+                        console.error('Error checking like status:', err);
+                        // Don't set error for like status check, just log it
+                    }
+                }
             } catch (err) {
                 console.error('Error fetching article:', err);
                 setError(err.message || 'Failed to fetch article');
@@ -47,7 +60,7 @@ function ArticlePage() {
         };
 
         fetchArticle();
-    }, [id]);
+    }, [id, isAuthenticated]);
 
     const formatDate = (dateString) => {
         if (!dateString) return 'Unknown date';
@@ -62,17 +75,7 @@ function ArticlePage() {
         });
     };
 
-    const getReferenceTypeName = (referenceType) => {
-        switch (referenceType) {
-            case 0: return 'Movie';
-            case 1: return 'People';
-            case 2: return 'Genre';
-            case 3: return 'Production Company';
-            case 4: return 'Keyword';
-            case 5: return 'News';
-            default: return 'Unknown';
-        }
-    };
+    // getReferenceTypeName function removed as it's not being used
 
         const handleShare = () => {
         const url = window.location.href;
@@ -83,19 +86,26 @@ function ArticlePage() {
 };
 
     const handleLike = async () => {
-        if (!article || isLiking || article.isLiked) return;
+        if (!article || isLiking) return;
         
         setIsLiking(true);
         try {
-            // Like the article
+            // Like/unlike the article (the API handles toggling)
             await NewsService.likeNewsArticle(article.id);
+            
+            // Toggle the like state
+            const newLikedState = !isLiked;
+            setIsLiked(newLikedState);
+            
+            // Update the likes count
             setArticle(prev => ({
                 ...prev,
-                isLiked: true,
-                likesCount: (prev.likesCount || 0) + 1
+                likesCount: newLikedState 
+                    ? (prev.likesCount || 0) + 1 
+                    : Math.max(0, (prev.likesCount || 0) - 1)
             }));
         } catch (error) {
-            console.error('Error liking article:', error);
+            console.error('Error toggling article like:', error);
             // You could show a toast notification here
         } finally {
             setIsLiking(false);
@@ -273,17 +283,19 @@ function ArticlePage() {
                     {isAuthenticated && (
                         <button
                             onClick={handleLike}
-                            disabled={isLiking || article.isLiked}
+                            disabled={isLiking}
                             className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
-                                isLiking || article.isLiked
-                                    ? 'bg-red-600 cursor-not-allowed' 
-                                    : 'bg-gray-700 hover:bg-gray-600'
+                                isLiking
+                                    ? 'bg-gray-600 cursor-not-allowed' 
+                                    : isLiked
+                                        ? 'bg-red-600 hover:bg-red-700'
+                                        : 'bg-gray-700 hover:bg-gray-600'
                             }`}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 className="h-5 w-5 transition-transform duration-200 text-white"
-                                fill="currentColor"
+                                fill={isLiked ? "currentColor" : "none"}
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                             >
@@ -295,7 +307,7 @@ function ArticlePage() {
                                 />
                             </svg>
                             <span className="font-medium">
-                                {isLiking ? 'Liking...' : (article.isLiked ? 'Liked' : 'Like')}
+                                {isLiking ? 'Processing...' : (isLiked ? 'Unlike' : 'Like')}
                             </span>
                         </button>
                     )}

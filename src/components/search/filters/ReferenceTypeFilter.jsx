@@ -29,6 +29,12 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
     if (value && Array.isArray(value)) {
       console.log('🔄 Setting selectedReferences from value prop:', value);
       setSelectedReferences(value);
+      
+      // Extract reference type from the first reference if available
+      if (value.length > 0 && value[0].referenceType !== undefined) {
+        console.log('🔄 Setting selectedReferenceType from value prop:', value[0].referenceType);
+        setSelectedReferenceType(value[0].referenceType);
+      }
     } else {
       console.log('🔄 Clearing selectedReferences (value is falsy or not array)');
       setSelectedReferences([]);
@@ -95,8 +101,8 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
             return searchResults.data.map(movie => ({
               id: movie.movieId || movie.id, // Use movieId if available, fallback to id
               name: movie.title,
-              description: `Movie: ${movie.title} (${movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A'})`,
-              image: movie.posterPath ? `https://image.tmdb.org/t/p/w185${movie.posterPath}` : null
+              description: `Movie: ${movie.title}`,
+              image: movie.poster?.filePath ? `https://image.tmdb.org/t/p/w185${movie.poster.filePath}` : null
             }));
           }
           break;
@@ -228,10 +234,16 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
     console.log('🔄 Length comparison - new:', newReferences.length, 'current:', selectedReferences.length);
     console.log('🔄 JSON comparison - are they equal?', JSON.stringify(newReferences) === JSON.stringify(selectedReferences));
     
-    setSelectedReferences(newReferences);
-    onChange(newReferences);
+    // Add referenceType to each reference object
+    const referencesWithType = newReferences.map(ref => ({
+      ...ref,
+      referenceType: selectedReferenceType
+    }));
     
-    console.log('🔄 State updated, new selectedReferences:', newReferences);
+    setSelectedReferences(referencesWithType);
+    onChange(referencesWithType);
+    
+    console.log('🔄 State updated, new selectedReferences with type:', referencesWithType);
   };
 
   const handleClear = () => {
@@ -252,8 +264,14 @@ const ReferenceTypeFilter = ({ label, value, onChange, placeholder }) => {
     const newReferences = selectedReferences.filter(ref => ref.id !== referenceToRemove.id);
     console.log('🔄 New references after removal:', newReferences);
     
-    setSelectedReferences(newReferences);
-    onChange(newReferences);
+    // Ensure referenceType is preserved in remaining references
+    const referencesWithType = newReferences.map(ref => ({
+      ...ref,
+      referenceType: ref.referenceType || selectedReferenceType
+    }));
+    
+    setSelectedReferences(referencesWithType);
+    onChange(referencesWithType);
   };
 
   const selectedTypeOption = referenceTypeOptions.find(opt => opt.value === selectedReferenceType);
