@@ -1,11 +1,20 @@
+import { useNavigate } from 'react-router-dom';
 import AuthorInfo from "./AuthorInfo";
 import ListStats from "./ListStats";
 import MovieListPoster from "./MovieListPoster";
 
-
 const MovieListCard = ({ list }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/lists/${list.id}`);
+  };
+
   return (
-    <div className="group cursor-pointer flex flex-col h-full">
+    <div 
+      className="group cursor-pointer flex flex-col h-full"
+      onClick={handleClick}
+    >
       <div className="">
         <MovieListPoster images={list.coverImages} title={list.title} />
       </div>
@@ -27,4 +36,4 @@ const MovieListCard = ({ list }) => {
   );
 };
 
-export default MovieListCard
+export default MovieListCard;

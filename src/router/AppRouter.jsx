@@ -23,6 +23,7 @@ import NewsCreatePage from '../pages/NewsCreatePage';
 import NewsEditPage from '../pages/NewsEditPage';
 import Lists from '../pages/Lists'
 import ListDetails from '../pages/ListDetails'
+import ListCreate from '../pages/ListCreate'
 import Reviews from '../pages/Reviews'
 import AdminDashboard from '../pages/AdminDashboard'
 import DynamicSearchFilterExample from '../components/examples/DynamicSearchFilterExample'
@@ -59,7 +60,12 @@ const AppRouter = () => {
             <Route path="news/:id" element={<ArticlePage />} />
 
             <Route path="lists" element={<Lists />} />
-            <Route path="lists/test" element={<ListDetails />} />
+            <Route path="lists/create" element={
+              <ProtectedRoute>
+                <ListCreate />
+              </ProtectedRoute>
+            } />
+            <Route path="lists/:id" element={<ListDetails />} />
 
             
               <Route 

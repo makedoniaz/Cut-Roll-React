@@ -10,18 +10,21 @@ import { MovieService } from '../services/movieService';
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { WatchService } from '../services/watchService';
 
 const MovieDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [userRating, setUserRating] = useState(0);
   const [activeTab, setActiveTab] = useState('CAST');
   const [showAllCast, setShowAllCast] = useState(false);
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isInWantToWatch, setIsInWantToWatch] = useState(false);
+  const [watchLoading, setWatchLoading] = useState(false);
   
   // Fetch movie data
   useEffect(() => {
@@ -43,6 +46,59 @@ const MovieDetails = () => {
 
     fetchMovie();
   }, [id]);
+
+  // Fetch watch status when movie and user are available
+  useEffect(() => {
+    const fetchWatchData = async () => {
+      if (!movie || !isAuthenticated || !user?.id) return;
+      
+      try {
+        // Check if movie is in want to watch list
+        const watchStatus = await WatchService.isInWantToWatch(user.id, movie.id);
+        console.log('Watch status response:', watchStatus); // Debug log
+        console.log('Setting isInWantToWatch to:', watchStatus); // Debug log
+        setIsInWantToWatch(watchStatus);
+      } catch (err) {
+        console.error('Error fetching watch data:', err);
+        // Don't set error state for watch data, just log it
+      }
+    };
+
+    fetchWatchData();
+  }, [movie, isAuthenticated, user?.id]);
+
+  // Handle watch button click
+  const handleWatchClick = async () => {
+    if (!isAuthenticated || !user?.id || !movie?.id) {
+      // Redirect to login if not authenticated
+      navigate('/login');
+      return;
+    }
+
+    setWatchLoading(true);
+    try {
+      if (isInWantToWatch) {
+        // Remove from want to watch
+        await WatchService.removeFromWantToWatch({
+          userId: user.id,
+          movieId: movie.id
+        });
+        setIsInWantToWatch(false);
+      } else {
+        // Add to want to watch
+        await WatchService.addToWantToWatch({
+          userId: user.id,
+          movieId: movie.id
+        });
+        setIsInWantToWatch(true);
+      }
+    } catch (err) {
+      console.error('Error updating watch status:', err);
+      // You could add a toast notification here
+    } finally {
+      setWatchLoading(false);
+    }
+  };
 
   // Loading state
   if (loading) {
@@ -651,8 +707,8 @@ const MovieDetails = () => {
             {isAuthenticated && (
               <div className="bg-gray-800 rounded-lg p-4">
                 <h3 className="text-sm font-semibold text-gray-400 mb-3">ACTIONS</h3>
-                <div className="flex justify-center gap-3">
-                  <button className="flex flex-col items-center gap-2 px-4 py-3 hover:bg-gray-700 rounded-lg transition-colors">
+                                 <div className="flex justify-center gap-3">
+                                     <button className="flex flex-col items-center gap-2 px-4 py-3 hover:bg-gray-700 rounded-lg transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -665,13 +721,27 @@ const MovieDetails = () => {
                     </svg>
                     <span className="text-sm">Like</span>
                   </button>
-                  <button className="flex flex-col items-center gap-2 px-4 py-3 hover:bg-gray-700 rounded-lg transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button 
+                    onClick={handleWatchClick}
+                    disabled={watchLoading}
+                    className={`flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-colors hover:bg-gray-700 ${
+                      watchLoading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                   {watchLoading ? (
+                     <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                   ) : (
+                     <svg className={`w-5 h-5 ${isInWantToWatch ? 'text-green-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                    </svg>
-                    <span className="text-sm">Watchlist</span>
-                  </button>
+                     </svg>
+                   )}
+                                                             <span className={`text-sm ${isInWantToWatch ? 'text-green-500' : ''}`}>
+                       Watchlist
+                     </span>
+                 </button>
                 </div>
+                
+
               </div>
             )}
             

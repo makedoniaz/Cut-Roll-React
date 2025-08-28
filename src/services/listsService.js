@@ -22,8 +22,8 @@ export class ListsService {
             throw new Error(errorMessage || 'Failed to create list');
         }
 
-        const createdListId = await response.text();
-        return createdListId;
+        const data = await response.json();
+        return data.id || data.createdListId || data;
     }
 
     /**
