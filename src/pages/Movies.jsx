@@ -1,6 +1,7 @@
 import MovieGrid from "../components/ui/movies/MovieGrid";
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import { WatchService } from '../services/watchService';
+import { MovieLikeService } from '../services/movieLikeService';
 import { useAuthStore } from '../stores/authStore';
 import { useState, useEffect } from 'react';
 
@@ -38,22 +39,34 @@ const Movies = () => {
 
       setLoadingLiked(true);
       try {
-        const response = await WatchService.getWantToWatchByUser({
+        const response = await MovieLikeService.getLikedByUser({
           userId: user.id,
-          page: 0, // pageNumber = 1 (0-indexed)
+          page: 0,
           pageSize: 6
         });
         
-        // Transform the response to match the expected movie format
-        const likedMovies = response.data?.map(movie => ({
-          id: movie.movieId,
-          title: movie.title,
-          year: 'TBA', // API doesn't provide release date in this response
-          poster: movie.poster || null, // Pass the poster object directly
-          rating: 0 // API doesn't provide rating in this response
-        })) || [];
+        // Handle different possible response formats
+        let likedMovies = [];
+        if (response && typeof response === 'object') {
+          if (Array.isArray(response)) {
+            likedMovies = response;
+          } else if (response.movies && Array.isArray(response.movies)) {
+            likedMovies = response.movies;
+          } else if (response.data && Array.isArray(response.data)) {
+            likedMovies = response.data;
+          }
+        }
+        
+                 // Transform the response to match the expected movie format
+         const transformedMovies = likedMovies.map(movie => ({
+           id: movie.movieId || movie.id,
+           title: movie.title,
+           year: movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'TBA',
+           poster: movie.poster || null, // API provides poster directly
+           rating: 0 // API doesn't provide rating in this response
+         }));
 
-        setRecentlyLiked(likedMovies);
+        setRecentlyLiked(transformedMovies);
       } catch (error) {
         console.error('Error fetching recently liked movies:', error);
         setRecentlyLiked([]);
@@ -77,20 +90,30 @@ const Movies = () => {
       try {
         const response = await WatchService.getWantToWatchByUser({
           userId: user.id,
-          page: 0, // pageNumber = 1 (0-indexed)
+          page: 0,
           pageSize: 6
         });
         
-        // Transform the response to match the expected movie format
-        const watchedMovies = response.data?.map(movie => ({
-          id: movie.movieId,
-          title: movie.title,
-          year: 'TBA', // API doesn't provide release date in this response
-          poster: movie.poster || null, // Pass the poster object directly
-          rating: 0 // API doesn't provide rating in this response
-        })) || [];
+        // Handle different possible response formats
+        let watchedMovies = [];
+        if (response && typeof response === 'object') {
+          if (Array.isArray(response)) {
+            watchedMovies = response;
+          } else if (response.data && Array.isArray(response.data)) {
+            watchedMovies = response.data;
+          }
+        }
+        
+                 // Transform the response to match the expected movie format
+         const transformedMovies = watchedMovies.map(movie => ({
+           id: movie.movieId || movie.id,
+           title: movie.title,
+           year: movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'TBA',
+           poster: movie.poster || null, // API provides poster directly
+           rating: 0 // API doesn't provide rating in this response
+         }));
 
-        setRecentlyWatched(watchedMovies);
+        setRecentlyWatched(transformedMovies);
       } catch (error) {
         console.error('Error fetching recently watched movies:', error);
         setRecentlyWatched([]);
@@ -109,7 +132,7 @@ const Movies = () => {
         <MovieGrid 
           heading={"WANT TO WATCH"} 
           rows={1} 
-          itmesPerRow={6} 
+          itemsPerRow={6} 
           movies={recentlyWatched} 
           CardComponent={SmallMovieCard}
           loading={loadingWatched}
@@ -117,7 +140,7 @@ const Movies = () => {
         <MovieGrid 
           heading={"RECENTLY LIKED"} 
           rows={1} 
-          itmesPerRow={6} 
+          itemsPerRow={6} 
           movies={recentlyLiked} 
           CardComponent={SmallMovieCard}
           loading={loadingLiked}
@@ -126,9 +149,9 @@ const Movies = () => {
           <div className="py-2">
             <div className="max-w-7xl mx-auto">
               <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">🎬</div>
-                <p>No recently watched movies yet</p>
-                <p className="text-sm text-gray-600 mt-1">Start watching movies to see them here!</p>
+                <div className="text-4xl mb-2">📋</div>
+                <p>No movies in your watchlist yet</p>
+                <p className="text-sm text-gray-600 mt-1">Add movies to your watchlist to see them here!</p>
               </div>
             </div>
           </div>
@@ -137,9 +160,9 @@ const Movies = () => {
           <div className="py-2">
             <div className="max-w-7xl mx-auto">
               <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">🎬</div>
-                <p>No movies in your watchlist yet</p>
-                <p className="text-sm text-gray-600 mt-1">Start adding movies to see them here!</p>
+                <div className="text-4xl mb-2">💚</div>
+                <p>No liked movies yet</p>
+                <p className="text-sm text-gray-600 mt-1">Like some movies to see them here!</p>
               </div>
             </div>
           </div>

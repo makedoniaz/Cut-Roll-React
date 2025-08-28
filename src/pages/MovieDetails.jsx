@@ -11,6 +11,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { WatchService } from '../services/watchService';
+import { MovieLikeService } from '../services/movieLikeService';
+import { WatchedService } from '../services/watchedService';
 
 const MovieDetails = () => {
   const { id } = useParams();
@@ -25,6 +27,10 @@ const MovieDetails = () => {
   const [error, setError] = useState(null);
   const [isInWantToWatch, setIsInWantToWatch] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [isWatched, setIsWatched] = useState(false);
+  const [watchedLoading, setWatchedLoading] = useState(false);
   
   // Fetch movie data
   useEffect(() => {
@@ -67,6 +73,46 @@ const MovieDetails = () => {
     fetchWatchData();
   }, [movie, isAuthenticated, user?.id]);
 
+  // Fetch like status when movie and user are available
+  useEffect(() => {
+    const fetchLikeData = async () => {
+      if (!movie || !isAuthenticated || !user?.id) return;
+      
+      try {
+        // Check if movie is liked by user
+        const likeStatus = await MovieLikeService.isLiked(user.id, movie.id);
+        console.log('Like status response:', likeStatus); // Debug log
+        console.log('Setting isLiked to:', likeStatus); // Debug log
+        setIsLiked(likeStatus);
+      } catch (err) {
+        console.error('Error fetching like data:', err);
+        // Don't set error state for like data, just log it
+      }
+    };
+
+    fetchLikeData();
+  }, [movie, isAuthenticated, user?.id]);
+
+  // Fetch watched status when movie and user are available
+  useEffect(() => {
+    const fetchWatchedData = async () => {
+      if (!movie || !isAuthenticated || !user?.id) return;
+      
+      try {
+        // Check if movie is watched by user
+        const watchedStatus = await WatchedService.isWatched(user.id, movie.id);
+        console.log('Watched status response:', watchedStatus); // Debug log
+        console.log('Setting isWatched to:', watchedStatus); // Debug log
+        setIsWatched(watchedStatus);
+      } catch (err) {
+        console.error('Error fetching watched data:', err);
+        // Don't set error state for watched data, just log it
+      }
+    };
+
+    fetchWatchedData();
+  }, [movie, isAuthenticated, user?.id]);
+
   // Handle watch button click
   const handleWatchClick = async () => {
     if (!isAuthenticated || !user?.id || !movie?.id) {
@@ -97,6 +143,74 @@ const MovieDetails = () => {
       // You could add a toast notification here
     } finally {
       setWatchLoading(false);
+    }
+  };
+
+  // Handle like button click
+  const handleLikeClick = async () => {
+    if (!isAuthenticated || !user?.id || !movie?.id) {
+      // Redirect to login if not authenticated
+      navigate('/login');
+      return;
+    }
+
+    setLikeLoading(true);
+    try {
+      if (isLiked) {
+        // Unlike the movie
+        await MovieLikeService.unlikeMovie({
+          userId: user.id,
+          movieId: movie.id
+        });
+        setIsLiked(false);
+      } else {
+        // Like the movie
+        await MovieLikeService.likeMovie({
+          userId: user.id,
+          movieId: movie.id
+        });
+        setIsLiked(true);
+      }
+      
+
+    } catch (err) {
+      console.error('Error updating like status:', err);
+      // You could add a toast notification here
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  // Handle watched button click
+  const handleWatchedClick = async () => {
+    if (!isAuthenticated || !user?.id || !movie?.id) {
+      // Redirect to login if not authenticated
+      navigate('/login');
+      return;
+    }
+
+    setWatchedLoading(true);
+    try {
+      if (isWatched) {
+        // Remove from watched
+        await WatchedService.removeFromWatched({
+          userId: user.id,
+          movieId: movie.id
+        });
+        setIsWatched(false);
+      } else {
+        // Mark as watched
+        await WatchedService.markAsWatched({
+          userId: user.id,
+          movieId: movie.id
+        });
+        setIsWatched(true);
+      }
+    } catch (err) {
+      console.error('Error updating watched status:', err);
+      // You could add a toast notification here
+    } finally {
+      setWatchedLoading(false);
     }
   };
 
@@ -697,8 +811,8 @@ const MovieDetails = () => {
 
             </div>
             
-            <MovieReviews heading={"RECENT REVIEWS"} />
-            <MovieReviews heading={"POPULAR REVIEWS"} />
+                                      <MovieReviews heading={"RECENT REVIEWS"} />
+             <MovieReviews heading={"POPULAR REVIEWS"} />
           </div>
           
           {/* Right Column - Actions & Rating (3 cols) */}
@@ -708,18 +822,42 @@ const MovieDetails = () => {
               <div className="bg-gray-800 rounded-lg p-4">
                 <h3 className="text-sm font-semibold text-gray-400 mb-3">ACTIONS</h3>
                                  <div className="flex justify-center gap-3">
-                                     <button className="flex flex-col items-center gap-2 px-4 py-3 hover:bg-gray-700 rounded-lg transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <span className="text-sm">Watch</span>
+                                     <button 
+                    onClick={handleWatchedClick}
+                    disabled={watchedLoading}
+                    className={`flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-colors hover:bg-gray-700 ${
+                      watchedLoading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {watchedLoading ? (
+                      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <svg className={`w-5 h-5 ${isWatched ? 'text-green-500 fill-current' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                    <span className={`text-sm ${isWatched ? 'text-green-500' : ''}`}>
+                      {isWatched ? 'Watched' : 'Watch'}
+                    </span>
                   </button>
-                  <button className="flex flex-col items-center gap-2 px-4 py-3 hover:bg-gray-700 rounded-lg transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    <span className="text-sm">Like</span>
+                  <button 
+                    onClick={handleLikeClick}
+                    disabled={likeLoading}
+                    className={`flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-colors hover:bg-gray-700 ${
+                      likeLoading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                                         {likeLoading ? (
+                       <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                     ) : (
+                       <svg className={`w-5 h-5 ${isLiked ? 'text-green-500 fill-current' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                       </svg>
+                     )}
+                     <span className={`text-sm ${isLiked ? 'text-green-500' : ''}`}>
+                       {isLiked ? 'Liked' : 'Like'}
+                     </span>
                   </button>
                   <button 
                     onClick={handleWatchClick}
