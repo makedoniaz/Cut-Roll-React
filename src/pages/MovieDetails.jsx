@@ -1,4 +1,3 @@
-import StarRating from '../components/ui/movies/StarRating';
 import ActionButton from '../components/ui/buttons/ActionButton';
 import CastGrid from '../components/ui/movies/CastGrid';
 
@@ -891,7 +890,10 @@ const MovieDetails = () => {
                       <p>No reviews yet for this movie</p>
                       <p className="text-sm mt-2">Be the first to share your thoughts!</p>
                       {isAuthenticated && (
-                        <button className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors">
+                        <button 
+                          onClick={() => navigate(`/movie/${movie.id}/review/create`)}
+                          className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+                        >
                           Write a Review
                         </button>
                       )}
@@ -1040,7 +1042,7 @@ const MovieDetails = () => {
                          {/* User Rating - Only for logged in users */}
              {isAuthenticated && (
                <div className="bg-gray-800 rounded-lg p-4">
-                 <h3 className="text-sm font-semibold text-gray-400 mb-3">Rate</h3>
+                 <h3 className="text-sm font-semibold text-gray-400 mb-3">RATING</h3>
 
                   
                    
@@ -1101,10 +1103,13 @@ const MovieDetails = () => {
                 <div className="text-xs text-gray-500 mt-1">Rate this movie to join!</div>
               )}
             </div>
-            <button className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
-                    Write a Review
-                  </button>
-                  <button className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
+            <button 
+              onClick={() => navigate(`/movie/${movie.id}/review/create`)}
+              className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm"
+            >
+              Write a Review
+            </button>
+                  <button className="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
                     Add to lists...
                   </button>
                 <button 
