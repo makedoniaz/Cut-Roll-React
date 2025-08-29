@@ -8,12 +8,14 @@ const MovieGrid = ({
     movies, 
     heading, 
     CardComponent = MovieCard,  // Default to MovieCard if not provided
-    loading = false
+    loading = false,
+    onMoreClick,
+    showMore = true
 }) => {
     return ( 
         <div className="py-2">
             <div className="max-w-7xl mx-auto">
-                <SectionHeading heading={heading}/>
+                <SectionHeading heading={heading} onMoreClick={onMoreClick} showMore={showMore}/>
                 <div>
                     {loading ? (
                         <div className="grid grid-cols-6 gap-6">
