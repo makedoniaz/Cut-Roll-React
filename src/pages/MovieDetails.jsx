@@ -4,7 +4,6 @@ import CastGrid from '../components/ui/movies/CastGrid';
 
 import TabNav from '../components/ui/common/TabNav';
 import MovieDetailsPoster from '../components/ui/movies/MovieDetailsPoster';
-import MovieReviews from "../components/ui/reviews/MovieReviews"
 import { MovieService } from '../services/movieService';
 
 import { useState, useEffect } from 'react'
@@ -13,6 +12,7 @@ import { useAuthStore } from '../stores/authStore';
 import { WatchService } from '../services/watchService';
 import { MovieLikeService } from '../services/movieLikeService';
 import { WatchedService } from '../services/watchedService';
+import { ReviewService } from '../services/reviewService';
 
 const MovieDetails = () => {
   const { id } = useParams();
@@ -31,6 +31,12 @@ const MovieDetails = () => {
   const [likeLoading, setLikeLoading] = useState(false);
   const [isWatched, setIsWatched] = useState(false);
   const [watchedLoading, setWatchedLoading] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState(null);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [averageRatingLoading, setAverageRatingLoading] = useState(false);
   
   // Fetch movie data
   useEffect(() => {
@@ -112,6 +118,56 @@ const MovieDetails = () => {
 
     fetchWatchedData();
   }, [movie, isAuthenticated, user?.id]);
+
+  // Fetch reviews when movie is available
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!movie?.id) return;
+      
+      try {
+        setReviewsLoading(true);
+        setReviewsError(null);
+        const reviewsData = await ReviewService.getReviewsByMovie({
+          movieId: movie.id,
+          page: 0,
+          pageSize: 8
+        });
+        console.log('Reviews API response:', reviewsData); // Debug log
+        // Handle different possible response structures
+        const reviewsArray = reviewsData.content || reviewsData.reviews || reviewsData.data || reviewsData || [];
+        setReviews(Array.isArray(reviewsArray) ? reviewsArray : []);
+        // Set total count if available
+        setTotalReviews(reviewsData.totalElements || reviewsData.total || reviewsData.totalCount || reviewsArray.length);
+      } catch (err) {
+        console.error('Error fetching reviews:', err);
+        setReviewsError(err.message);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [movie?.id]);
+
+  // Fetch average rating when movie is available
+  useEffect(() => {
+    const fetchAverageRating = async () => {
+      if (!movie?.id) return;
+      
+      try {
+        setAverageRatingLoading(true);
+        const avgRating = await ReviewService.getAverageRating(movie.id);
+        setAverageRating(avgRating);
+      } catch (err) {
+        console.error('Error fetching average rating:', err);
+        setAverageRating(0);
+      } finally {
+        setAverageRatingLoading(false);
+      }
+    };
+
+    fetchAverageRating();
+  }, [movie?.id]);
 
   // Handle watch button click
   const handleWatchClick = async () => {
@@ -811,8 +867,106 @@ const MovieDetails = () => {
 
             </div>
             
-                                      <MovieReviews heading={"RECENT REVIEWS"} />
-             <MovieReviews heading={"POPULAR REVIEWS"} />
+            {/* Reviews Section */}
+            <div className="bg-gray-900 mb-12">
+              <div className="max-w-4xl mx-auto">
+                <div className="px-6 py-8">
+                  <h2 className="text-2xl font-bold text-white mb-6">
+                    REVIEWS {totalReviews > 0 && `(${reviews.length} of ${totalReviews})`}
+                  </h2>
+                  
+                  {reviewsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="w-8 h-8 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-gray-400">Loading reviews...</p>
+                    </div>
+                  ) : reviewsError ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-4xl mb-2">⚠️</div>
+                      <p>Failed to load reviews: {reviewsError}</p>
+                    </div>
+                  ) : reviews.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-4xl mb-2">💬</div>
+                      <p>No reviews yet for this movie</p>
+                      <p className="text-sm mt-2">Be the first to share your thoughts!</p>
+                      {isAuthenticated && (
+                        <button className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors">
+                          Write a Review
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg">
+                      {reviews.map((review, index) => (
+                        <div key={review.id} className={`flex gap-4 ${index === 0 ? 'pt-0 pb-6' : index === reviews.length - 1 ? 'pt-6 pb-0' : 'py-6'} border-b border-gray-800 last:border-b-0`}>
+                          <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            {(review.userName || review.username || review.authorName || review.author) ? 
+                              (review.userName || review.username || review.authorName || review.author).charAt(0).toUpperCase() : 'U'}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-3">
+                              <span className="text-gray-400 text-sm">
+                                Review by <span className="text-white font-medium">
+                                  {review.userName || review.username || review.authorName || review.author || 'Anonymous'}
+                                </span>
+                              </span>
+                                                             {(review.rating !== undefined && review.rating !== null) && (
+                                 <div className="flex items-center gap-2">
+                                   <div className="flex items-center gap-1">
+                                     {[...Array(10)].map((_, i) => {
+                                       const starValue = i + 1;
+                                       const isHalfStar = review.rating >= starValue - 0.5 && review.rating < starValue;
+                                       const isFullStar = review.rating >= starValue;
+                                       
+                                       return (
+                                         <div key={i} className="relative">
+                                           {isHalfStar ? (
+                                             // Half star - show gray star with green overlay
+                                             <>
+                                               <svg className="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                               </svg>
+                                               <div className="absolute inset-0 overflow-hidden">
+                                                 <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20" style={{ clipPath: 'inset(0 50% 0 0)' }}>
+                                                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                 </svg>
+                                               </div>
+                                             </>
+                                           ) : (
+                                             // Regular star (full or empty)
+                                             <svg className={`w-3 h-3 ${isFullStar ? 'text-green-500 fill-current' : 'text-gray-600'}`} viewBox="0 0 20 20">
+                                               <path d="M9.048 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                             </svg>
+                                           )}
+                                         </div>
+                                       );
+                                     })}
+                                   </div>
+                                   <span className="text-sm text-green-500 font-medium">
+                                     {review.rating.toFixed(1)}
+                                   </span>
+                                 </div>
+                               )}
+                            </div>
+                            
+                            <p className="text-white text-base leading-relaxed mb-4">
+                              {review.text || review.content || review.reviewText || 'No review text available'}
+                            </p>
+                            
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span>{new Date(review.createdAt || review.createdDate || review.dateCreated || review.date || Date.now()).toLocaleDateString()}</span>
+                              {(review.likes || review.likeCount) && <span>{review.likes || review.likeCount} likes</span>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* Right Column - Actions & Rating (3 cols) */}
@@ -883,19 +1037,76 @@ const MovieDetails = () => {
               </div>
             )}
             
-            {/* User Rating - Only for logged in users */}
-            {isAuthenticated && (
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-gray-400 mb-3">Rate</h3>
-                <StarRating rating={userRating} onRate={setUserRating} />
-                <div className="mt-4 space-y-2">
-                  <button className="text-cyan-500 text-sm hover:text-cyan-400 transition-colors block">
-                    Review or log...
+                         {/* User Rating - Only for logged in users */}
+             {isAuthenticated && (
+               <div className="bg-gray-800 rounded-lg p-4">
+                 <h3 className="text-sm font-semibold text-gray-400 mb-3">Rate</h3>
+
+                  
+                   
+                   {/* IMDb Ratings Summary */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-3xl font-bold text-green-500">
+                  {movie.voteAverage !== undefined && movie.voteAverage !== null && movie.voteAverage > 0 ? movie.voteAverage.toFixed(1) : 'N/A'}
+                </span>
+                {movie.voteAverage !== undefined && movie.voteAverage !== null && movie.voteAverage > 0 && (
+                  <div className="flex gap-0.5">
+                    {(() => {
+                      // Helper function to round to nearest 0.5
+                      const roundToHalf = (num) => {
+                        return Math.round(num * 2) / 2;
+                      };
+                      
+                      const roundedRating = roundToHalf(movie.voteAverage);
+                      
+                      return [1,2,3,4,5,6,7,8,9,10].map(star => {
+                        let starClass = 'text-gray-600'; // Default gray
+                        let isHalfStar = false;
+                        
+                        if (star <= Math.floor(roundedRating)) {
+                          starClass = 'text-green-500'; // Full star
+                        } else if (star === Math.ceil(roundedRating) && roundedRating % 1 === 0.5) {
+                          isHalfStar = true; // Mark as half star
+                        }
+                        
+                        return (
+                          <div key={star} className="relative">
+                            {isHalfStar ? (
+                              // Half star - show gray star with green overlay
+                              <>
+                                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <div className="absolute inset-0 overflow-hidden">
+                                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20" style={{ clipPath: 'inset(0 50% 0 0)' }}>
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                </div>
+                              </>
+                            ) : (
+                              // Regular star (full or empty)
+                              <svg className={`w-4 h-4 ${starClass}`} fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                )}
+              </div>
+              {movie.voteCount !== undefined && movie.voteCount !== null && movie.voteCount > 0 && (
+                <div className="text-xs text-gray-500 mt-1">Rate this movie to join!</div>
+              )}
+            </div>
+            <button className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
+                    Write a Review
                   </button>
-                </div>
-                <button className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
-                  Add to lists...
-                </button>
+                  <button className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
+                    Add to lists...
+                  </button>
                 <button 
                   onClick={() => {
                     if (navigator.share) {
