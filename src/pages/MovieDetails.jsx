@@ -1044,13 +1044,13 @@ const MovieDetails = () => {
 
                   
                    
-                   {/* IMDb Ratings Summary */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
+                   {/* Average Rating Summary */}
+            <div className="bg-gray-800 rounded-lg ">
+              <div className="flex items-center gap-2">
                 <span className="text-3xl font-bold text-green-500">
-                  {movie.voteAverage !== undefined && movie.voteAverage !== null && movie.voteAverage > 0 ? movie.voteAverage.toFixed(1) : 'N/A'}
+                  {averageRatingLoading ? '...' : (averageRating !== undefined && averageRating !== null && averageRating > 0 ? averageRating.toFixed(1) : 'N/A')}
                 </span>
-                {movie.voteAverage !== undefined && movie.voteAverage !== null && movie.voteAverage > 0 && (
+                {!averageRatingLoading && averageRating !== undefined && averageRating !== null && averageRating > 0 && (
                   <div className="flex gap-0.5">
                     {(() => {
                       // Helper function to round to nearest 0.5
@@ -1058,7 +1058,7 @@ const MovieDetails = () => {
                         return Math.round(num * 2) / 2;
                       };
                       
-                      const roundedRating = roundToHalf(movie.voteAverage);
+                      const roundedRating = roundToHalf(averageRating);
                       
                       return [1,2,3,4,5,6,7,8,9,10].map(star => {
                         let starClass = 'text-gray-600'; // Default gray
@@ -1097,7 +1097,7 @@ const MovieDetails = () => {
                   </div>
                 )}
               </div>
-              {movie.voteCount !== undefined && movie.voteCount !== null && movie.voteCount > 0 && (
+              {!averageRatingLoading && averageRating !== undefined && averageRating !== null && averageRating > 0 && (
                 <div className="text-xs text-gray-500 mt-1">Rate this movie to join!</div>
               )}
             </div>
