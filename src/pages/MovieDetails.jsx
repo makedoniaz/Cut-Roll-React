@@ -36,6 +36,7 @@ const MovieDetails = () => {
   const [totalReviews, setTotalReviews] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [averageRatingLoading, setAverageRatingLoading] = useState(false);
+  const [activeReviewTab, setActiveReviewTab] = useState('OTHER');
   
   // Fetch movie data
   useEffect(() => {
@@ -372,6 +373,24 @@ const MovieDetails = () => {
     return '/poster-placeholder.png';
   };
 
+  const getBackdropUrl = (images) => {
+    const backdrop = images?.find(img => {
+      const t = (img?.type || '').toString().toLowerCase();
+      return t === 'backdrop' || t.includes('backdrop');
+    });
+
+
+    const candidate = backdrop
+      || images?.find(img => (img?.type || '').toString().toLowerCase() !== 'poster')
+      || images?.[0];
+
+
+    if (candidate?.filePath) {
+      return `https://image.tmdb.org/t/p/w1280${candidate.filePath}`;
+    }
+    return null;
+  };
+
   const getDirector = () => {
     const director = movie.crew?.find(member => member.job === 'Director');
     return director?.person?.name || 'Unknown Director';
@@ -414,6 +433,23 @@ const MovieDetails = () => {
     return movie.spokenLanguages?.map(lang => lang.language?.englishName || lang.language?.name || lang.languageCode || lang.languageCode) || [];
   };
 
+  const toEnglishLanguageName = (lang) => {
+    if (!lang) return 'Unknown';
+    const value = String(lang);
+    if (/^[A-Za-z-]{2,5}$/.test(value)) {
+      try {
+        const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
+        const name = displayNames.of(value.toLowerCase());
+        if (name) {
+          return name.charAt(0).toUpperCase() + name.slice(1);
+        }
+      } catch (e) {
+        // Fallback to original value if Intl.DisplayNames is not supported
+      }
+    }
+    return value;
+  };
+
   const getProductionCompanies = () => {
     return movie.productionCompanies?.map(company => company.company?.name || company.companyId || 'Unknown Company') || [];
   };
@@ -430,7 +466,29 @@ const MovieDetails = () => {
     return movie.images || [];
   };
 
+  const getReviewUserId = (review) => {
+    return review.userId || review.user?.id || review.userSimplified?.id || review.userSimplified?.userId || null;
+  };
 
+  const getReviewUserName = (review) => {
+    return review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author || null;
+  };
+
+  const getCurrentUserName = () => {
+    return user?.userName || user?.username || user?.name || user?.email || null;
+  };
+
+  const isMyReview = (review) => {
+    if (!isAuthenticated || !user) return false;
+    const reviewUserId = getReviewUserId(review);
+    if (reviewUserId && String(reviewUserId) === String(user.id)) return true;
+    const reviewUserName = getReviewUserName(review);
+    const currentUserName = getCurrentUserName();
+    if (reviewUserName && currentUserName) {
+      return String(reviewUserName).toLowerCase() === String(currentUserName).toLowerCase();
+    }
+    return false;
+  };
 
   const formatCurrency = (amount) => {
     if (!amount || amount === 0) return 'N/A';
@@ -451,10 +509,35 @@ const MovieDetails = () => {
   const keywords = getKeywords();
   const videos = getVideos();
   const images = getImages();
+  const backdropUrl = getBackdropUrl(movie.images);
+  const myReviews = reviews.filter(isMyReview);
+  const otherReviews = reviews.filter(r => !isMyReview(r));
 
+
+  console.log("backdropUrl", backdropUrl);
   
   return (
-    <div className="min-h-screen from-gray-900 via-gray-900 to-black text-white">
+    <div className="relative min-h-screen from-gray-900 via-gray-900 to-black text-white">
+      {backdropUrl && (
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="relative w-full h-64 md:h-80 lg:h-96 mb-6 rounded-b-lg overflow-hidden -mt-8">
+            <img
+              src={backdropUrl}
+              alt={`${movie.title} backdrop`}
+              className="absolute inset-0 w-full h-full object-cover object-top"
+            />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to bottom, rgba(17, 24, 39, 0.2) 0%, rgba(17, 24, 39, 0) 15%, rgba(17, 24, 39, 0) 50%, rgba(17, 24, 39, 0.4) 90%, rgba(17, 24, 39, 0.9) 100%),
+                  linear-gradient(to right, rgba(17, 24, 39, 0.8) 0%, rgba(17, 24, 39, 0.2) 15%, rgba(17, 24, 39, 0) 25%, rgba(17, 24, 39, 0) 75%, rgba(17, 24, 39, 0.2) 85%, rgba(17, 24, 39, 0.8) 100%)
+                `
+              }}
+            />
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Back Button */}
         <div className="mb-6 flex gap-4">
@@ -527,7 +610,7 @@ const MovieDetails = () => {
             
             
             {/* Tabs Section - Now in Center Column */}
-            <div className="space-y-6 mt-12 mb-12">
+            <div className="space-y-6 mt-12 mb-24">
                              <TabNav 
                  tabs={['CAST', 'CREW', 'DETAILS', 'GENRES', 'VIDEOS', 'PHOTOS']}
                  activeTab={activeTab}
@@ -617,7 +700,23 @@ const MovieDetails = () => {
                       {spokenLanguages && spokenLanguages.length > 0 && (
                         <div className="flex gap-4">
                           <span className="text-gray-500">Spoken Languages:</span>
-                          <span>{spokenLanguages.join(', ')}</span>
+                          <div className="flex flex-wrap gap-2">
+                            {spokenLanguages.map((lang, index) => (
+                              <button
+                                key={index}
+                                onClick={() => navigate('/search', {
+                                  state: {
+                                    prefillFilters: {
+                                      language: toEnglishLanguageName(lang)
+                                    }
+                                  }
+                                })}
+                                className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer text-white"
+                              >
+                                {toEnglishLanguageName(lang)}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                       {productionCompanies && productionCompanies.length > 0 && (
@@ -634,7 +733,7 @@ const MovieDetails = () => {
                                     } 
                                   } 
                                 })}
-                                className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer"
+                                className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer text-white"
                               >
                                 {company}
                               </button>
@@ -683,7 +782,7 @@ const MovieDetails = () => {
                                   } 
                                 } 
                               })}
-                              className="bg-blue-600 text-white px-3 py-2 rounded-full text-sm hover:bg-blue-700 transition-colors cursor-pointer"
+                              className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer text-white"
                             >
                               {keyword.keyword?.name || keyword.keywordId || keyword || 'Unknown Keyword'}
                             </button>
@@ -714,7 +813,7 @@ const MovieDetails = () => {
                              } 
                            } 
                          })}
-                         className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-full transition-colors cursor-pointer"
+                         className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer text-white"
                        >
                          {genre}
                        </button>
@@ -745,7 +844,7 @@ const MovieDetails = () => {
                                   } 
                                 } 
                               })}
-                              className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer"
+                              className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs transition-colors cursor-pointer text-white"
                             >
                               {name}
                             </button>
@@ -869,10 +968,12 @@ const MovieDetails = () => {
             {/* Reviews Section */}
             <div className="bg-gray-900 mb-12">
               <div className="max-w-4xl mx-auto">
-                <div className="px-6 py-8">
-                  <h2 className="text-2xl font-bold text-white mb-6">
-                    REVIEWS {totalReviews > 0 && `(${reviews.length} of ${totalReviews})`}
-                  </h2>
+                <div>
+                  <TabNav 
+                    tabs={[ 'MY REVIEW', 'OTHER' ]}
+                    activeTab={activeReviewTab}
+                    onTabChange={setActiveReviewTab}
+                  />
                   
                   {reviewsLoading ? (
                     <div className="text-center py-8">
@@ -884,12 +985,18 @@ const MovieDetails = () => {
                       <div className="text-4xl mb-2">⚠️</div>
                       <p>Failed to load reviews: {reviewsError}</p>
                     </div>
-                  ) : reviews.length === 0 ? (
+                  ) : (activeReviewTab === 'MY REVIEW' ? myReviews.length === 0 : otherReviews.length === 0) ? (
                     <div className="text-center py-8 text-gray-500">
                       <div className="text-4xl mb-2">💬</div>
-                      <p>No reviews yet for this movie</p>
-                      <p className="text-sm mt-2">Be the first to share your thoughts!</p>
-                      {isAuthenticated && (
+                      {activeReviewTab === 'MY REVIEW' ? (
+                        <>
+                          <p>You haven't written a review for this movie yet.</p>
+                          <p className="text-sm mt-2">Be the first to share your thoughts!</p>
+                        </>
+                      ) : (
+                        <p>No reviews from other users yet</p>
+                      )}
+                      {isAuthenticated && activeReviewTab === 'MY REVIEW' && (
                         <button 
                           onClick={() => navigate(`/movie/${movie.id}/review/create`)}
                           className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
@@ -900,18 +1007,18 @@ const MovieDetails = () => {
                     </div>
                   ) : (
                     <div className="rounded-lg">
-                      {reviews.map((review, index) => (
-                        <div key={review.id} className={`flex gap-4 ${index === 0 ? 'pt-0 pb-6' : index === reviews.length - 1 ? 'pt-6 pb-0' : 'py-6'} border-b border-gray-800 last:border-b-0`}>
+                      {(activeReviewTab === 'MY REVIEW' ? myReviews : otherReviews).map((review, index) => (
+                        <div key={review.id} className={`flex gap-4 ${index === 0 ? 'pt-0 pb-6' : index === (activeReviewTab === 'MY REVIEW' ? myReviews : otherReviews).length - 1 ? 'pt-6 pb-0' : 'py-6'} border-b border-gray-800 last:border-b-0`}>
                           <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                            {(review.userName || review.username || review.authorName || review.author) ? 
-                              (review.userName || review.username || review.authorName || review.author).charAt(0).toUpperCase() : 'U'}
+                            {(review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author) ? 
+                              (review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author).charAt(0).toUpperCase() : 'U'}
                           </div>
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-3">
                               <span className="text-gray-400 text-sm">
                                 Review by <span className="text-white font-medium">
-                                  {review.userName || review.username || review.authorName || review.author || 'Anonymous'}
+                                  {review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author || 'Anonymous'}
                                 </span>
                               </span>
                                                              {(review.rating !== undefined && review.rating !== null) && (
@@ -959,7 +1066,7 @@ const MovieDetails = () => {
                             
                             <div className="flex items-center gap-4 text-sm text-gray-500">
                               <span>{new Date(review.createdAt || review.createdDate || review.dateCreated || review.date || Date.now()).toLocaleDateString()}</span>
-                              {(review.likes || review.likeCount) && <span>{review.likes || review.likeCount} likes</span>}
+                              {(review.likes || review.likeCount || review.likesCount) && <span>{review.likes || review.likeCount || review.likesCount} likes</span>}
                             </div>
                           </div>
                         </div>
@@ -1042,7 +1149,7 @@ const MovieDetails = () => {
                          {/* User Rating - Only for logged in users */}
              {isAuthenticated && (
                <div className="bg-gray-800 rounded-lg p-4">
-                 <h3 className="text-sm font-semibold text-gray-400 mb-3">RATING</h3>
+                 <h3 className="text-sm font-semibold text-gray-400 mb-3">AVERAGE RATING</h3>
 
                   
                    
