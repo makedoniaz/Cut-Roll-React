@@ -36,7 +36,8 @@ const MovieDetails = () => {
   const [totalReviews, setTotalReviews] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [averageRatingLoading, setAverageRatingLoading] = useState(false);
-  const [activeReviewTab, setActiveReviewTab] = useState('OTHER');
+  const [activeReviewTab, setActiveReviewTab] = useState('MY REVIEW');
+  const [deletingReviewId, setDeletingReviewId] = useState(null);
   
   // Fetch movie data
   useEffect(() => {
@@ -490,6 +491,32 @@ const MovieDetails = () => {
     return false;
   };
 
+  const handleDeleteReview = async (reviewId) => {
+    if (!isAuthenticated || !user?.id) {
+      navigate('/login');
+      return;
+    }
+    if (!reviewId) return;
+
+    const confirmed = window.confirm('Delete your review? This cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      setDeletingReviewId(reviewId);
+      await ReviewService.deleteReview(reviewId);
+      // Remove from local state
+      setReviews(prev => prev.filter(r => r.id !== reviewId));
+      // Optionally update totals
+      setTotalReviews(t => Math.max(0, (t || 1) - 1));
+      alert('Review deleted.');
+    } catch (e) {
+      console.error('Failed to delete review:', e);
+      alert(e.message || 'Failed to delete review.');
+    } finally {
+      setDeletingReviewId(null);
+    }
+  };
+
   const formatCurrency = (amount) => {
     if (!amount || amount === 0) return 'N/A';
     return new Intl.NumberFormat('en-US', {
@@ -509,35 +536,14 @@ const MovieDetails = () => {
   const keywords = getKeywords();
   const videos = getVideos();
   const images = getImages();
-  const backdropUrl = getBackdropUrl(movie.images);
   const myReviews = reviews.filter(isMyReview);
   const otherReviews = reviews.filter(r => !isMyReview(r));
 
-
-  console.log("backdropUrl", backdropUrl);
+  
   
   return (
     <div className="relative min-h-screen from-gray-900 via-gray-900 to-black text-white">
-      {backdropUrl && (
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="relative w-full h-64 md:h-80 lg:h-96 mb-6 rounded-b-lg overflow-hidden -mt-8">
-            <img
-              src={backdropUrl}
-              alt={`${movie.title} backdrop`}
-              className="absolute inset-0 w-full h-full object-cover object-top"
-            />
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage: `
-                  linear-gradient(to bottom, rgba(17, 24, 39, 0.2) 0%, rgba(17, 24, 39, 0) 15%, rgba(17, 24, 39, 0) 50%, rgba(17, 24, 39, 0.4) 90%, rgba(17, 24, 39, 0.9) 100%),
-                  linear-gradient(to right, rgba(17, 24, 39, 0.8) 0%, rgba(17, 24, 39, 0.2) 15%, rgba(17, 24, 39, 0) 25%, rgba(17, 24, 39, 0) 75%, rgba(17, 24, 39, 0.2) 85%, rgba(17, 24, 39, 0.8) 100%)
-                `
-              }}
-            />
-          </div>
-        </div>
-      )}
+      
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Back Button */}
         <div className="mb-6 flex gap-4">
@@ -1058,6 +1064,29 @@ const MovieDetails = () => {
                                    </span>
                                  </div>
                                )}
+                              {(isAuthenticated && isMyReview(review)) && (
+                                <div className="ml-auto flex items-center gap-2">
+                                  <button
+                                    onClick={() => navigate(`/movie/${movie.id}/review/edit/${review.id}`)}
+                                    title="Edit your review"
+                                    className="p-1 text-gray-400 hover:text-white transition-colors"
+                                  >
+                                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M17.414 2.586a2 2 0 010 2.828l-9.9 9.9a2 2 0 01-.878.502l-3.293.823a1 1 0 01-1.212-1.212l.823-3.293a2 2 0 01.502-.878l9.9-9.9a2 2 0 012.828 0zM15 4l-9.5 9.5-.5 2 2-.5L16 5 15 4z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteReview(review.id)}
+                                    disabled={deletingReviewId === review.id}
+                                    title="Delete your review"
+                                    className={`p-1 ${deletingReviewId === review.id ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-red-400'} transition-colors`}
+                                  >
+                                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M6 7a1 1 0 011-1h6a1 1 0 011 1v9a2 2 0 01-2 2H8a2 2 0 01-2-2V7zm3-3a1 1 0 00-1 1v1H6a1 1 0 000 2h8a1 1 0 100-2h-2V5a1 1 0 00-1-1H9z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
                             </div>
                             
                             <p className="text-white text-base leading-relaxed mb-4">

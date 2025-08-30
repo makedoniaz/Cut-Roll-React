@@ -27,6 +27,7 @@ import ListCreate from '../pages/ListCreate'
 import ActionLists from '../pages/ActionLists'
 import Reviews from '../pages/Reviews'
 import ReviewCreate from '../pages/ReviewCreate'
+import ReviewEdit from '../pages/ReviewEdit'
 import AdminDashboard from '../pages/AdminDashboard'
 import DynamicSearchFilterExample from '../components/examples/DynamicSearchFilterExample'
 
@@ -54,6 +55,11 @@ const AppRouter = () => {
             <Route path="movie/:id/review/create" element={
               <ProtectedRoute>
                 <ReviewCreate />
+              </ProtectedRoute>
+            } />
+            <Route path="movie/:id/review/edit/:reviewId" element={
+              <ProtectedRoute>
+                <ReviewEdit />
               </ProtectedRoute>
             } />
             <Route path="reviews" element={<Reviews />} />
