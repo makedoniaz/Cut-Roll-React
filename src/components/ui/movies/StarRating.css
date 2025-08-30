@@ -1,0 +1,73 @@
+/* Custom Slider Styling */
+.custom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.custom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.custom-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.custom-slider::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+
+.custom-slider::-moz-range-thumb {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.custom-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.custom-slider::-moz-range-thumb:active {
+  transform: scale(1.05);
+}
+
+.custom-slider::-moz-range-track {
+  height: 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+/* Focus states for accessibility */
+.custom-slider:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+.custom-slider:focus::-webkit-slider-thumb {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+.custom-slider:focus::-moz-range-thumb {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}

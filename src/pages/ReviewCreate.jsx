@@ -51,7 +51,13 @@ const ReviewCreate = () => {
   };
 
   const handleRatingChange = (newRating) => {
-    setRating(newRating);
+    console.log('Rating changed to:', newRating);
+    // Ensure rating is a valid number
+    if (typeof newRating === 'number' && newRating >= 0 && newRating <= 10) {
+      setRating(newRating);
+    } else {
+      console.warn('Invalid rating value:', newRating);
+    }
   };
 
   const handleSubmit = async () => {
@@ -166,7 +172,7 @@ const ReviewCreate = () => {
                       {rating > 0 ? `${rating}/10` : 'Select rating'}
                     </span>
                     <span className="text-sm text-gray-400">
-                      Click on the stars to rate from 1 to 10
+                      Use the slider to rate from 0 to 10 (half-star ratings supported)
                     </span>
                   </div>
                 </div>

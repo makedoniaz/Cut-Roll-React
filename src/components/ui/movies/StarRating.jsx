@@ -1,37 +1,140 @@
-import { useState } from 'react'
+import React, { useState, useRef } from 'react';
+import './StarRating.css';
 
 const StarRating = ({ rating, onRate }) => {
-  const [hover, setHover] = useState(0);
-  
-  const handleStarClick = (starValue) => {
-    onRate(starValue);
+  const [isDragging, setIsDragging] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
+  const sliderRef = useRef(null);
+  const instanceId = useRef('sr-' + Math.random().toString(36).slice(2));
+
+  // Handle slider input for real-time updates
+  const handleSliderInput = (e) => {
+    const value = parseFloat(e.target.value);
+    // Update the local state immediately for real-time star updates
+    setHoverRating(value);
+    onRate(value);
   };
-  
+
+  // Handle slider value change (when sliding ends)
+  const handleSliderChange = (e) => {
+    const value = parseFloat(e.target.value);
+    setHoverRating(0); // Reset hover rating
+    onRate(value);
+  };
+
+  // Handle mouse/touch events for better interaction
+  const handleMouseDown = () => setIsDragging(true);
+  const handleMouseUp = () => setIsDragging(false);
+  const handleTouchStart = () => setIsDragging(true);
+  const handleTouchEnd = () => setIsDragging(false);
+
+  // Render individual star using a single SVG with a per-star gradient
+  const renderStar = (starIndex, currentRating) => {
+    // Fill ratio for this star (0..1)
+    const fillRatioRaw = currentRating - (starIndex - 1);
+    const fillRatio = Math.max(0, Math.min(1, fillRatioRaw));
+    const percent = Math.round(fillRatio * 100);
+    const gradId = `${instanceId.current}-g-${starIndex}`;
+
+    return (
+      <svg
+        key={starIndex}
+        className="w-8 h-8 transition-colors duration-200"
+        viewBox="0 0 24 24"
+        role="img"
+        aria-label={`Star ${starIndex} fill ${percent}%`}
+      >
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset={`${percent}%`} stopColor="#10b981" />
+            <stop offset={`${percent}%`} stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+          fill={`url(#${gradId})`}
+        />
+      </svg>
+    );
+  };
+
+  // Render all 10 stars
+  const renderStars = (currentRating) => {
+    const stars = [];
+    for (let i = 1; i <= 10; i++) {
+      stars.push(renderStar(i, currentRating));
+    }
+    return stars;
+  };
+
+  // Calculate the active rating (either hover or actual rating)
+  const activeRating = hoverRating > 0 ? hoverRating : rating;
+
   return (
-    <div className="flex gap-2">
-      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => {
-        const isActive = rating >= star;
-        const isHovered = hover >= star;
+    <div className="flex flex-col items-center gap-6">
+      {/* Star Display */}
+      <div className="flex gap-1 items-center">
+        {renderStars(activeRating)}
+      </div>
+      
+      {/* Rating Value Display */}
+      <div className="text-2xl font-bold text-white">
+        {activeRating > 0 ? `${activeRating.toFixed(1)}/10` : '0.0/10'}
+      </div>
+      
+      {/* Slider Input */}
+      <div className="w-full max-w-md">
+        <div className="relative">
+          <input
+            ref={sliderRef}
+            type="range"
+            min="0"
+            max="10"
+            step="0.5"
+            value={rating}
+            onChange={handleSliderChange}
+            onInput={handleSliderInput}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseEnter={() => setHoverRating(rating)}
+            onMouseLeave={() => setHoverRating(0)}
+            className="w-full h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer custom-slider"
+            style={{
+              background: `linear-gradient(to right, #10b981 0%, #10b981 ${(rating / 10) * 100}%, #4b5563 ${(rating / 10) * 100}%, #4b5563 100%)`
+            }}
+          />
+        </div>
         
-        return (
-          <button
-            key={star}
-            onClick={() => handleStarClick(star)}
-            onMouseEnter={() => setHover(star)}
-            onMouseLeave={() => setHover(0)}
-            className="transition-colors duration-200 focus:outline-none"
-          >
-            <svg 
-              className={`w-8 h-8 ${
-                isActive || isHovered ? 'text-green-500 fill-current' : 'text-gray-600'
-              }`} 
-              viewBox="0 0 24 24"
-            >
-              <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </button>
-        );
-      })}
+        {/* Slider Labels */}
+        <div className="flex justify-between text-sm text-gray-400 mt-3">
+          <span>0</span>
+          <span>2.5</span>
+          <span>5.0</span>
+          <span>7.5</span>
+          <span>10</span>
+        </div>
+        
+        {/* Step indicators */}
+        <div className="flex justify-between mt-1">
+          {[0, 2.5, 5, 7.5, 10].map((step) => (
+            <div 
+              key={step}
+              className={`w-1 h-1 rounded-full ${
+                rating >= step ? 'bg-green-500' : 'bg-gray-600'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Instructions */}
+      <div className="text-sm text-gray-400 text-center max-w-xs">
+        Drag the slider to set your rating. Half-star ratings (like 1.5, 2.5) are supported.
+      </div>
     </div>
   );
 };
