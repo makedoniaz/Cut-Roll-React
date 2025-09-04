@@ -21,7 +21,7 @@ const StarRatingExample = () => {
           <div className="text-center">
             <h2 className="text-xl font-semibold text-white mb-4">Current Rating</h2>
             <div className="text-4xl font-bold text-yellow-400">
-              {rating > 0 ? `${rating.toFixed(1)}/10` : '0.0/10'}
+              {rating > 0 ? `${rating.toFixed(1)}/5` : '0.0/5'}
             </div>
           </div>
 
@@ -37,7 +37,7 @@ const StarRatingExample = () => {
           <div className="text-center text-gray-400 max-w-2xl mx-auto">
             <h3 className="text-lg font-semibold text-white mb-2">How to Use</h3>
             <ul className="text-sm space-y-1">
-              <li>• Drag the slider to set your rating from 0 to 10</li>
+                             <li>• Drag the slider to set your rating from 0 to 5</li>
               <li>• Half-star ratings (like 1.5, 2.5) are supported</li>
               <li>• The stars above will update in real-time as you slide</li>
               <li>• The rating value is displayed below the stars</li>
@@ -48,7 +48,7 @@ const StarRatingExample = () => {
           <div className="text-center">
             <h3 className="text-lg font-semibold text-white mb-4">Quick Test Values</h3>
             <div className="flex flex-wrap justify-center gap-2">
-              {[0, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map((value) => (
+                             {[0, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((value) => (
                 <button
                   key={value}
                   onClick={() => setRating(value)}

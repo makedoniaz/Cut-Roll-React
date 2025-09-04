@@ -53,7 +53,7 @@ const ReviewCreate = () => {
   const handleRatingChange = (newRating) => {
     console.log('Rating changed to:', newRating);
     // Ensure rating is a valid number
-    if (typeof newRating === 'number' && newRating >= 0 && newRating <= 10) {
+    if (typeof newRating === 'number' && newRating >= 0 && newRating <= 5) {
       setRating(newRating);
     } else {
       console.warn('Invalid rating value:', newRating);
@@ -89,7 +89,7 @@ const ReviewCreate = () => {
         userId: user.id,
         movieId: movieId,
         content: content.trim(),
-        rating: rating
+        rating: rating // Send the actual 0-5 rating
       };
 
       console.log('Creating review:', reviewData);
@@ -169,10 +169,10 @@ const ReviewCreate = () => {
                   />
                   <div className="flex items-center gap-4">
                     <span className="text-lg font-semibold text-white">
-                      {rating > 0 ? `${rating}/10` : 'Select rating'}
+                      {rating > 0 ? `${rating}/5` : 'Select rating'}
                     </span>
                     <span className="text-sm text-gray-400">
-                      Use the slider to rate from 0 to 10 (half-star ratings supported)
+                      Use the slider to rate from 0 to 5 (half-star ratings supported)
                     </span>
                   </div>
                 </div>
@@ -198,7 +198,7 @@ const ReviewCreate = () => {
               {/* Action Buttons */}
               <div className="flex justify-between">
                 <div className="text-sm text-gray-400">
-                  {rating > 0 && `Rating: ${rating}/10`}
+                  {rating > 0 && `Rating: ${rating}/5`}
                 </div>
                 
                 <div className="flex space-x-3">

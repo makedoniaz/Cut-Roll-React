@@ -128,6 +128,8 @@ const MovieDetails = () => {
       try {
         setReviewsLoading(true);
         setReviewsError(null);
+        
+        // Fetch all reviews for the movie
         const reviewsData = await ReviewService.getReviewsByMovie({
           movieId: movie.id,
           page: 0,
@@ -149,6 +151,37 @@ const MovieDetails = () => {
 
     fetchReviews();
   }, [movie?.id]);
+
+  // Fetch user's own review when movie and user are available
+  useEffect(() => {
+    const fetchUserReview = async () => {
+      if (!movie?.id || !isAuthenticated || !user?.id) return;
+      
+      try {
+        const userReview = await ReviewService.getReviewByUserAndMovie(user.id, movie.id);
+        console.log('User review:', userReview); // Debug log
+        
+        // Update reviews to include user's review at the top
+        setReviews(prevReviews => {
+          // Remove any existing user review from the list
+          const otherReviews = prevReviews.filter(review => {
+            const reviewUserId = getReviewUserId(review);
+            return !(reviewUserId && String(reviewUserId) === String(user.id));
+          });
+          
+          // Add user's review at the beginning
+          return [userReview, ...otherReviews];
+        });
+      } catch (err) {
+        // If user doesn't have a review, that's fine - just log it
+        if (err.message !== 'Review not found') {
+          console.error('Error fetching user review:', err);
+        }
+      }
+    };
+
+    fetchUserReview();
+  }, [movie?.id, isAuthenticated, user?.id]);
 
   // Fetch average rating when movie is available
   useEffect(() => {
@@ -536,8 +569,10 @@ const MovieDetails = () => {
   const keywords = getKeywords();
   const videos = getVideos();
   const images = getImages();
-  const myReviews = reviews.filter(isMyReview);
-  const otherReviews = reviews.filter(r => !isMyReview(r));
+  
+  // Get user's review (first review if it belongs to current user)
+  const userReview = reviews.length > 0 && isMyReview(reviews[0]) ? reviews[0] : null;
+  const otherReviews = userReview ? reviews.slice(1) : reviews;
 
   
   
@@ -975,11 +1010,11 @@ const MovieDetails = () => {
             <div className="bg-gray-900 mb-12">
               <div className="max-w-4xl mx-auto">
                 <div>
-                  <TabNav 
-                    tabs={[ 'MY REVIEW', 'OTHER' ]}
-                    activeTab={activeReviewTab}
-                    onTabChange={setActiveReviewTab}
-                  />
+                                     <TabNav 
+                     tabs={isAuthenticated ? ['MY REVIEW', 'OTHER'] : ['REVIEWS']}
+                     activeTab={activeReviewTab}
+                     onTabChange={setActiveReviewTab}
+                   />
                   
                   {reviewsLoading ? (
                     <div className="text-center py-8">
@@ -991,30 +1026,30 @@ const MovieDetails = () => {
                       <div className="text-4xl mb-2">⚠️</div>
                       <p>Failed to load reviews: {reviewsError}</p>
                     </div>
-                  ) : (activeReviewTab === 'MY REVIEW' ? myReviews.length === 0 : otherReviews.length === 0) ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <div className="text-4xl mb-2">💬</div>
-                      {activeReviewTab === 'MY REVIEW' ? (
-                        <>
-                          <p>You haven't written a review for this movie yet.</p>
-                          <p className="text-sm mt-2">Be the first to share your thoughts!</p>
-                        </>
-                      ) : (
-                        <p>No reviews from other users yet</p>
-                      )}
-                      {isAuthenticated && activeReviewTab === 'MY REVIEW' && (
-                        <button 
-                          onClick={() => navigate(`/movie/${movie.id}/review/create`)}
-                          className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
-                        >
-                          Write a Review
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="rounded-lg">
-                      {(activeReviewTab === 'MY REVIEW' ? myReviews : otherReviews).map((review, index) => (
-                        <div key={review.id} className={`flex gap-4 ${index === 0 ? 'pt-0 pb-6' : index === (activeReviewTab === 'MY REVIEW' ? myReviews : otherReviews).length - 1 ? 'pt-6 pb-0' : 'py-6'} border-b border-gray-800 last:border-b-0`}>
+                                     ) : (isAuthenticated && activeReviewTab === 'MY REVIEW' ? !userReview : otherReviews.length === 0) ? (
+                     <div className="text-center py-8 text-gray-500">
+                       <div className="text-4xl mb-2">💬</div>
+                       {activeReviewTab === 'MY REVIEW' ? (
+                         <>
+                           <p>You haven't written a review for this movie yet.</p>
+                           <p className="text-sm mt-2">Be the first to share your thoughts!</p>
+                         </>
+                       ) : (
+                         <p>No reviews from other users yet</p>
+                       )}
+                                               {isAuthenticated && activeReviewTab === 'MY REVIEW' && (
+                          <button 
+                            onClick={() => navigate(userReview ? `/movie/${movie.id}/review/edit/${userReview.id}` : `/movie/${movie.id}/review/create`)}
+                            className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+                          >
+                            {userReview ? 'Edit your Review' : 'Write a Review'}
+                          </button>
+                        )}
+                     </div>
+                   ) : (
+                     <div className="rounded-lg">
+                                               {(isAuthenticated && activeReviewTab === 'MY REVIEW' ? [userReview] : reviews).filter(Boolean).map((review, index) => (
+                                                 <div key={review.id} className={`flex gap-4 ${index === 0 ? 'pt-0 pb-6' : index === (isAuthenticated && activeReviewTab === 'MY REVIEW' ? 0 : reviews.length - 1) ? 'pt-6 pb-0' : 'py-6'} border-b border-gray-800 last:border-b-0`}>
                           <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                             {(review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author) ? 
                               (review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author).charAt(0).toUpperCase() : 'U'}
@@ -1030,10 +1065,12 @@ const MovieDetails = () => {
                                                              {(review.rating !== undefined && review.rating !== null) && (
                                  <div className="flex items-center gap-2">
                                    <div className="flex items-center gap-1">
-                                     {[...Array(10)].map((_, i) => {
+                                     {[...Array(5)].map((_, i) => {
                                        const starValue = i + 1;
                                        const isHalfStar = review.rating >= starValue - 0.5 && review.rating < starValue;
                                        const isFullStar = review.rating >= starValue;
+
+                                       console.log(review);
                                        
                                        return (
                                          <div key={i} className="relative">
@@ -1060,7 +1097,7 @@ const MovieDetails = () => {
                                      })}
                                    </div>
                                    <span className="text-sm text-green-500 font-medium">
-                                     {review.rating.toFixed(1)}
+                                     {review.rating}
                                    </span>
                                  </div>
                                )}
@@ -1175,113 +1212,169 @@ const MovieDetails = () => {
               </div>
             )}
             
-                         {/* User Rating - Only for logged in users */}
+                                      {/* Your Rating - Only for authenticated users */}
              {isAuthenticated && (
                <div className="bg-gray-800 rounded-lg p-4">
-                 <h3 className="text-sm font-semibold text-gray-400 mb-3">AVERAGE RATING</h3>
+                 <h3 className="text-sm font-semibold text-gray-400 mb-3">YOUR RATING</h3>
 
-                  
-                   
-                   {/* Average Rating Summary */}
-            <div className="bg-gray-800 rounded-lg ">
-              <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-green-500">
-                  {averageRatingLoading ? '...' : (averageRating !== undefined && averageRating !== null && averageRating > 0 ? averageRating.toFixed(1) : 'N/A')}
-                </span>
-                {!averageRatingLoading && averageRating !== undefined && averageRating !== null && averageRating > 0 && (
-                  <div className="flex gap-0.5">
-                    {(() => {
-                      // Helper function to round to nearest 0.5
-                      const roundToHalf = (num) => {
-                        return Math.round(num * 2) / 2;
-                      };
-                      
-                      const roundedRating = roundToHalf(averageRating);
-                      
-                      return [1,2,3,4,5,6,7,8,9,10].map(star => {
-                        let starClass = 'text-gray-600'; // Default gray
-                        let isHalfStar = false;
-                        
-                        if (star <= Math.floor(roundedRating)) {
-                          starClass = 'text-green-500'; // Full star
-                        } else if (star === Math.ceil(roundedRating) && roundedRating % 1 === 0.5) {
-                          isHalfStar = true; // Mark as half star
-                        }
-                        
-                        return (
-                          <div key={star} className="relative">
-                            {isHalfStar ? (
-                              // Half star - show gray star with green overlay
-                              <>
-                                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <div className="absolute inset-0 overflow-hidden">
-                                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20" style={{ clipPath: 'inset(0 50% 0 0)' }}>
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                  </svg>
-                                </div>
-                              </>
-                            ) : (
-                              // Regular star (full or empty)
-                              <svg className={`w-4 h-4 ${starClass}`} fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            )}
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                )}
-              </div>
-              {!averageRatingLoading && averageRating !== undefined && averageRating !== null && averageRating > 0 && (
-                <div className="text-xs text-gray-500 mt-1">Rate this movie to join!</div>
-              )}
-            </div>
-            <button 
-              onClick={() => navigate(`/movie/${movie.id}/review/create`)}
-              className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm"
-            >
-              Write a Review
-            </button>
-                  <button className="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
-                    Add to lists...
-                  </button>
+                    
+                    
+                    {/* Your Rating Summary */}
+             <div className="bg-gray-800 rounded-lg ">
+               <div className="flex items-center gap-2">
+                                   <span className="text-3xl font-bold text-green-500">
+                     {userReview && userReview.rating !== undefined && userReview.rating !== null && userReview.rating > 0 ? userReview.rating.toFixed(1) : 'N/A'}
+                   </span>
+                 {userReview && userReview.rating !== undefined && userReview.rating !== null && userReview.rating > 0 && (
+                   <div className="flex gap-0.5">
+                     {(() => {
+                       // Helper function to round to nearest 0.5
+                       const roundToHalf = (num) => {
+                         return Math.round(num * 2) / 2;
+                       };
+                       
+                       // Use the rating directly without rounding - preserve decimal values
+                       const displayRating = userReview.rating;
+                       
+                       return [1,2,3,4,5].map(star => {
+                         let starClass = 'text-gray-600'; // Default gray
+                         let isHalfStar = false;
+                         
+                         if (star <= Math.floor(displayRating)) {
+                           starClass = 'text-green-500'; // Full star
+                         } else if (star === Math.ceil(displayRating) && displayRating % 1 === 0.5) {
+                           isHalfStar = true; // Mark as half star
+                         }
+                         
+                         return (
+                           <div key={star} className="relative">
+                             {isHalfStar ? (
+                               // Half star - show gray star with green overlay
+                               <>
+                                 <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                 </svg>
+                                 <div className="absolute inset-0 overflow-hidden">
+                                   <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20" style={{ clipPath: 'inset(0 50% 0 0)' }}>
+                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                   </svg>
+                                 </div>
+                               </>
+                             ) : (
+                               // Regular star (full or empty)
+                               <svg className={`w-4 h-4 ${starClass}`} fill="currentColor" viewBox="0 0 20 20">
+                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                               </svg>
+                             )}
+                           </div>
+                         );
+                       });
+                     })()}
+                   </div>
+                 )}
+               </div>
+             </div>
+                                       {isAuthenticated && (
                 <button 
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: movie.title,
-                        text: `Check out ${movie.title} (${getReleaseYear()}) - ${movie.overview || 'A great movie!'}`,
-                        url: window.location.href
-                      }).catch(console.error);
-                    } else {
-                      // Fallback for browsers that don't support Web Share API
-                      navigator.clipboard.writeText(window.location.href).then(() => {
-                        alert('Link copied to clipboard!');
-                      }).catch(() => {
-                        // Fallback for older browsers
-                        const textArea = document.createElement('textarea');
-                        textArea.value = window.location.href;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textArea);
-                        alert('Link copied to clipboard!');
-                      });
-                    }
-                  }}
-                  className="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm"
+                  onClick={() => navigate(userReview ? `/movie/${movie.id}/review/edit/${userReview.id}` : `/movie/${movie.id}/review/create`)}
+                  className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm"
                 >
-                  Share
+                  {userReview ? 'Edit your Review' : 'Write a Review'}
                 </button>
-              </div>
-            )}
-            
-            {/* IMDb Ratings Summary */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-400 mb-3">IMDB RATING</h3>
+              )}
+              {isAuthenticated && (
+                <button className="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
+                  Add to lists...
+                </button>
+              )}
+                 <button 
+                   onClick={() => {
+                     if (navigator.share) {
+                       navigator.share({
+                         title: movie.title,
+                         text: `Check out ${movie.title} (${getReleaseYear()}) - ${movie.overview || 'A great movie!'}`,
+                         url: window.location.href
+                       }).catch(console.error);
+                     } else {
+                       // Fallback for browsers that don't support Web Share API
+                       navigator.clipboard.writeText(window.location.href).then(() => {
+                         alert('Link copied to clipboard!');
+                       }).catch(() => {
+                         // Fallback for older browsers
+                         const textArea = document.createElement('textarea');
+                         textArea.value = window.location.href;
+                         document.body.appendChild(textArea);
+                         textArea.select();
+                         document.execCommand('copy');
+                         document.body.removeChild(textArea);
+                         alert('Link copied to clipboard!');
+                       });
+                     }
+                   }}
+                   className="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm"
+                 >
+                   Share
+                                  </button>
+                </div>
+             )}
+             
+                           {/* IMDb Ratings Summary */}
+             <div className="bg-gray-800 rounded-lg p-4">
+               <h3 className="text-sm font-semibold text-gray-400 mb-3">AVERAGE RATING</h3>
+               <div className="flex items-center gap-2 mb-4">
+                 <span className="text-3xl font-bold text-green-500">
+                   {averageRatingLoading ? '...' : (averageRating !== undefined && averageRating !== null && averageRating > 0 ? averageRating.toFixed(1) : 'N/A')}
+                 </span>
+                 {!averageRatingLoading && averageRating !== undefined && averageRating !== null && averageRating > 0 && (
+                   <div className="flex gap-0.5">
+                     {(() => {
+                       // Helper function to round to nearest 0.5
+                       const roundToHalf = (num) => {
+                         return Math.round(num * 2) / 2;
+                       };
+                       
+                       // Use the rating directly without rounding - preserve decimal values
+                       const displayRating = averageRating;
+                       
+                       return [1,2,3,4,5].map(star => {
+                         let starClass = 'text-gray-600'; // Default gray
+                         let isHalfStar = false;
+                         
+                         if (star <= Math.floor(displayRating)) {
+                           starClass = 'text-green-500'; // Full star
+                         } else if (star === Math.ceil(displayRating) && displayRating % 1 === 0.5) {
+                           isHalfStar = true; // Mark as half star
+                         }
+                         
+                         return (
+                           <div key={star} className="relative">
+                             {isHalfStar ? (
+                               // Half star - show gray star with green overlay
+                               <>
+                                 <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                 </svg>
+                                 <div className="absolute inset-0 overflow-hidden">
+                                   <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20" style={{ clipPath: 'inset(0 50% 0 0)' }}>
+                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                   </svg>
+                                 </div>
+                               </>
+                             ) : (
+                               // Regular star (full or empty)
+                               <svg className={`w-4 h-4 ${starClass}`} fill="currentColor" viewBox="0 0 20 20">
+                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                               </svg>
+                             )}
+                           </div>
+                         );
+                       });
+                     })()}
+                   </div>
+                 )}
+               </div>
+               
+               <h3 className="text-sm font-semibold text-gray-400 mb-3">IMDB RATING</h3>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-3xl font-bold text-green-500">
                   {movie.voteAverage !== undefined && movie.voteAverage !== null && movie.voteAverage > 0 ? movie.voteAverage.toFixed(1) : 'N/A'}

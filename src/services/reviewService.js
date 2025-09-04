@@ -8,7 +8,7 @@ export class ReviewService {
      * @param {string} reviewData.userId - User ID
      * @param {string} reviewData.movieId - Movie ID (UUID)
      * @param {string} reviewData.content - Review content
-     * @param {number} reviewData.rating - Review rating (0-10)
+     * @param {number} reviewData.rating - Review rating (0-5)
      * @returns {Promise<Object>} Created review
      */
     static async createReview(reviewData) {
@@ -16,8 +16,8 @@ export class ReviewService {
             throw new Error('userId, movieId, content, and rating are required');
         }
 
-        if (reviewData.rating < 0 || reviewData.rating > 10) {
-            throw new Error('Rating must be between 0 and 10');
+        if (reviewData.rating < 0 || reviewData.rating > 5) {
+            throw new Error('Rating must be between 0 and 5');
         }
 
         const payload = {
@@ -44,7 +44,7 @@ export class ReviewService {
      * @param {string} reviewData.id - Review ID (UUID)
      * @param {string} reviewData.userId - User ID
      * @param {string} reviewData.content - Review content
-     * @param {number} reviewData.rating - Review rating (0-10)
+     * @param {number} reviewData.rating - Review rating (0-5)
      * @returns {Promise<Object>} Updated review
      */
     static async updateReview(reviewData) {
@@ -52,8 +52,8 @@ export class ReviewService {
             throw new Error('id, userId, content, and rating are required');
         }
 
-        if (reviewData.rating < 0 || reviewData.rating > 10) {
-            throw new Error('Rating must be between 0 and 10');
+        if (reviewData.rating < 0 || reviewData.rating > 5) {
+            throw new Error('Rating must be between 0 and 5');
         }
 
         const payload = {

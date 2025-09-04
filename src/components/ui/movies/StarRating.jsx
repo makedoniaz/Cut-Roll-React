@@ -60,10 +60,10 @@ const StarRating = ({ rating, onRate }) => {
     );
   };
 
-  // Render all 10 stars
+  // Render all 5 stars
   const renderStars = (currentRating) => {
     const stars = [];
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 5; i++) {
       stars.push(renderStar(i, currentRating));
     }
     return stars;
@@ -81,7 +81,7 @@ const StarRating = ({ rating, onRate }) => {
       
       {/* Rating Value Display */}
       <div className="text-2xl font-bold text-white">
-        {activeRating > 0 ? `${activeRating.toFixed(1)}/10` : '0.0/10'}
+        {activeRating > 0 ? `${activeRating.toFixed(1)}/5` : '0.0/5'}
       </div>
       
       {/* Slider Input */}
@@ -91,7 +91,7 @@ const StarRating = ({ rating, onRate }) => {
             ref={sliderRef}
             type="range"
             min="0"
-            max="10"
+            max="5"
             step="0.5"
             value={rating}
             onChange={handleSliderChange}
@@ -104,7 +104,7 @@ const StarRating = ({ rating, onRate }) => {
             onMouseLeave={() => setHoverRating(0)}
             className="w-full h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer custom-slider"
             style={{
-              background: `linear-gradient(to right, #10b981 0%, #10b981 ${(rating / 10) * 100}%, #4b5563 ${(rating / 10) * 100}%, #4b5563 100%)`
+              background: `linear-gradient(to right, #10b981 0%, #10b981 ${(rating / 5) * 100}%, #4b5563 ${(rating / 5) * 100}%, #4b5563 100%)`
             }}
           />
         </div>
@@ -112,15 +112,15 @@ const StarRating = ({ rating, onRate }) => {
         {/* Slider Labels */}
         <div className="flex justify-between text-sm text-gray-400 mt-3">
           <span>0</span>
+          <span>1.5</span>
           <span>2.5</span>
-          <span>5.0</span>
-          <span>7.5</span>
-          <span>10</span>
+          <span>3.5</span>
+          <span>5</span>
         </div>
         
         {/* Step indicators */}
         <div className="flex justify-between mt-1">
-          {[0, 2.5, 5, 7.5, 10].map((step) => (
+          {[0, 1.5, 2.5, 3.5, 5].map((step) => (
             <div 
               key={step}
               className={`w-1 h-1 rounded-full ${
