@@ -10,3 +10,4 @@ export const LIKE_STATUS = {
     LIKED: 'liked',
     NOT_LIKED: 'not_liked'
 };
+[]
