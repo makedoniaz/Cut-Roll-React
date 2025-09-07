@@ -4,6 +4,7 @@ import { Edit2, Trash2, Share2 } from 'lucide-react';
 import ListMovieGrid from "../components/ui/movies/ListMovieGrid";
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import CommentSection from "../components/ui/comments/CommentSection";
+import AddMoviesModal from "../components/ui/forms/AddMoviesModal";
 import { ListsService } from '../services/listsService';
 import { ListsLikeService } from '../services/listsLikeService';
 import { useAuthStore } from '../stores/authStore';
@@ -27,6 +28,9 @@ const ListDetails = () => {
     const [isLiked, setIsLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
     const [isLikeLoading, setIsLikeLoading] = useState(false);
+    
+    // Add Movies Modal state
+    const [isAddMoviesModalOpen, setIsAddMoviesModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchList = async () => {
@@ -67,9 +71,18 @@ const ListDetails = () => {
     };
 
     const handleAddMovies = () => {
-        // Navigate to movie search or show modal to add movies to this list
-        // For now, we'll navigate to the movie search page with list context
-        navigate(`/movies?addToList=${list.id}`);
+        setIsAddMoviesModalOpen(true);
+    };
+
+    const handleMoviesAdded = (addedMovies) => {
+        console.log('Movies added to list:', addedMovies);
+        // Here you could update the local list state or refetch the list
+        // For now, we'll just log the added movies
+        // TODO: Update the movies list in the component state
+    };
+
+    const handleCloseAddMoviesModal = () => {
+        setIsAddMoviesModalOpen(false);
     };
 
     const handleDeleteList = async () => {
@@ -564,6 +577,14 @@ const ListDetails = () => {
             <CommentSection 
                 initialComments={mockComments}
                 onAddComment={handleAddComment}
+            />
+
+            {/* Add Movies Modal */}
+            <AddMoviesModal 
+                isOpen={isAddMoviesModalOpen}
+                onClose={handleCloseAddMoviesModal}
+                listId={list?.id}
+                onMoviesAdded={handleMoviesAdded}
             />
         </div>
     );
