@@ -56,8 +56,9 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
     setIsAddingMovies(true);
     
     try {
-      console.log('Adding movies to list:', {
+      console.log('🎬 Starting bulk add operation for movies:', {
         listId,
+        movieCount: selectedMovies.length,
         movies: selectedMovies.map(movie => ({
           movieId: movie.id,
           title: movie.name,
@@ -67,9 +68,21 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
 
       // Use the real ListMovieService to add movies (bulk operation)
       const movieIds = selectedMovies.map(movie => movie.id);
+      
+      console.log('🚀 Calling ListMovieService.addMultipleMoviesToList with:', {
+        listId,
+        movieIds
+      });
+
       const response = await ListMovieService.addMultipleMoviesToList({
         listId,
         movieIds
+      });
+
+      console.log('📡 Bulk add response:', {
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText
       });
 
       // Check if the response is successful
@@ -79,6 +92,7 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
           onMoviesAdded(selectedMovies);
         }
 
+        console.log('✅ Successfully added movies to list');
         alert(`Successfully added ${selectedMovies.length} movie(s) to the list!`);
 
         // Reset state and close modal
@@ -87,11 +101,15 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
       } else {
         // Request failed
         const errorText = await response.text();
+        console.error('❌ Bulk movie addition failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText
+        });
         alert('Failed to add movies to the list. Please try again.');
-        console.error('Bulk movie addition failed:', errorText);
       }
     } catch (error) {
-      console.error('Error adding movies to list:', error);
+      console.error('💥 Error adding movies to list:', error);
       alert('Failed to add movies to the list. Please try again.');
     } finally {
       setIsAddingMovies(false);
@@ -165,6 +183,16 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
           </div>
         )}
 
+
+        {/* Bulk-add Status */}
+        {selectedMovies.length > 1 && (
+          <div className="mb-6 p-3 bg-green-600/20 border border-green-600/30 rounded-lg">
+            <p className="text-green-300 text-sm">
+              🚀 <strong>Bulk Add Mode:</strong> {selectedMovies.length} movies will be added in a single optimized API call.
+            </p>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex justify-end space-x-3">
           <button
@@ -184,8 +212,9 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
                 : 'bg-gray-500 text-gray-300 cursor-not-allowed'
             }`}
             onClick={handleAddMovies}
+            title={selectedMovies.length === 0 ? 'Please select at least one movie to add' : ''}
           >
-            {isAddingMovies ? 'Adding Movies...' : `Add ${selectedMovies.length} Movie(s)`}
+            {isAddingMovies ? 'Adding Movies...' : selectedMovies.length === 0 ? 'Select Movies to Add' : `Add ${selectedMovies.length} Movie(s)`}
           </button>
         </div>
       </div>
