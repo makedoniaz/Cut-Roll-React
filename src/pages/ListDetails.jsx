@@ -285,45 +285,8 @@ const ListDetails = () => {
         }
     ];
 
-    // Mock movies for now - in a real app, these would come from the list data or a separate movies service
-    const movies = [
-        {
-            id: 1,
-            title: "Punch-Drunk Love",
-            year: "2002",
-            poster: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&h=450&fit=crop&crop=center"
-        },
-        {
-            id: 2,
-            title: "All About Lily Chou-Chou",
-            year: "2001",
-            poster: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=450&fit=crop&crop=center"
-        },
-        {
-            id: 3,
-            title: "Chungking Express",
-            year: "1994",
-            poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&h=450&fit=crop&crop=center"
-        },
-        {
-            id: 4,
-            title: "Drive",
-            year: "2011",
-            poster: "https://images.unsplash.com/photo-1485095329183-d0797cdc5676?w=300&h=450&fit=crop&crop=center"
-        },
-        {
-            id: 5,
-            title: "I Saw the TV Glow",
-            year: "2024",
-            poster: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=300&h=450&fit=crop&crop=center"
-        },
-        {
-            id: 6,
-            title: "Frances Ha",
-            year: "2012",
-            poster: "https://images.unsplash.com/photo-1489945052260-4f21c52268b9?w=300&h=450&fit=crop&crop=center"
-        }
-    ];
+    // Get movies from list data or use empty array if list has no movies
+    const movies = list?.movies || [];
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">

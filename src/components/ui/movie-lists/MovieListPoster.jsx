@@ -1,13 +1,17 @@
 import MoviePoster from "../movies/MoviePoster";
 
 const MovieListPoster = ({ images, title }) => {
-  const postersToShow = images.slice(0, 5); // max 5 posters
+  // Always show exactly 4 posters - mix of real movie posters and placeholders
+  const realImages = images && images.length > 0 ? images.slice(0, 4) : [];
+  const placeholdersNeeded = 4 - realImages.length;
+  const placeholders = Array(placeholdersNeeded).fill('/poster-placeholder.png');
+  const postersToShow = [...realImages, ...placeholders];
 
   return (
     <div 
       className="relative h-28 flex items-end"
       style={{
-        width: `${80 + (postersToShow.length - 1) * 50}px`, // ширина первого постера + отступы остальных
+        width: `${80 + (4 - 1) * 50}px`, // Fixed width for 4 posters
       }}
     >
       {postersToShow.map((image, index) => (
@@ -16,7 +20,7 @@ const MovieListPoster = ({ images, title }) => {
           className="absolute w-20 h-28 rounded-md overflow-hidden shadow-lg border border-gray-800"
           style={{
             left: `${index * 50}px`, // adjust spacing between posters
-            zIndex: postersToShow.length - index, // первая фотка будет иметь наивысший zIndex
+            zIndex: 4 - index, // первая фотка будет иметь наивысший zIndex
           }}
         >
           <MoviePoster

@@ -26,14 +26,16 @@ const MovieGrid = ({
                             ))}
                         </div>
                     ) : (
-                        <PaginatedGridContainer
-                            items={movies}
-                            itemsPerRow={itemsPerRow}
-                            rows={rows}
-                            renderItem={(movie) => <CardComponent movie={movie} />}
-                            itemHeight="h-64"
-                            gap="gap-6"
-                        />
+                        movies && movies.length > 0 ? (
+                            <PaginatedGridContainer
+                                items={movies}
+                                itemsPerRow={itemsPerRow}
+                                rows={rows}
+                                renderItem={(movie) => <CardComponent movie={movie} />}
+                                itemHeight="h-64"
+                                gap="gap-6"
+                            />
+                        ) : null
                     )}
                 </div>
             </div>

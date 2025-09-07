@@ -121,10 +121,10 @@ const Lists = () => {
         id: list.id,
         title: list.title,
         description: list.description,
-        coverImages: ['https://images.unsplash.com/photo-1489599538824-2e2b8e3a5f3a?w=400&h=600&fit=crop'], // Placeholder image for now
+        coverImages: [], // MovieListPoster will handle showing 4 posters (real movies + placeholders)
         author: {
-          name: list.userSimlified?.userName || 'Unknown',
-          avatar: '👤' // Use emoji instead of full URL
+          name: list.userSimplified?.userName || 'Unknown',
+          avatar: list.userSimplified?.avatarPath || '👤'
         },
         stats: {
           films: list.moviesCount || 0,
@@ -170,10 +170,10 @@ const Lists = () => {
         id: list.id,
         title: list.title,
         description: list.description,
-        coverImages: ['https://images.unsplash.com/photo-1489599538824-2e2b8e3a5f3a?w=400&h=600&fit=crop'], // Placeholder image for now
+        coverImages: [], // MovieListPoster will handle showing 4 posters (real movies + placeholders)
         author: {
-          name: list.userSimlified?.userName || 'Unknown',
-          avatar: '👤' // Use emoji instead of full URL
+          name: list.userSimplified?.userName || 'Unknown',
+          avatar: list.userSimplified?.avatarPath || '👤'
         },
         stats: {
           films: list.moviesCount || 0,
