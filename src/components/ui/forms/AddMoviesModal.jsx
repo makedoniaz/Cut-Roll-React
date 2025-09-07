@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import FlexibleSearchInput from "../common/FlexibleSearchInput";
 import Modal from "../../layout/Modal";
 import { MovieService } from "../../../services/movieService";
+import { ListMovieService } from "../../../services/listMovieService";
 
 function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
   const [selectedMovies, setSelectedMovies] = useState([]);
@@ -55,7 +56,6 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
     setIsAddingMovies(true);
     
     try {
-      // Mock API call - replace with actual service call
       console.log('Adding movies to list:', {
         listId,
         movies: selectedMovies.map(movie => ({
@@ -65,20 +65,31 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
         }))
       });
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use the real ListMovieService to add movies (bulk operation)
+      const movieIds = selectedMovies.map(movie => movie.id);
+      const response = await ListMovieService.addMultipleMoviesToList({
+        listId,
+        movieIds
+      });
 
-      // Call the parent callback to notify movies were added
-      if (onMoviesAdded) {
-        onMoviesAdded(selectedMovies);
+      // Check if the response is successful
+      if (response.ok) {
+        // Call the parent callback to notify movies were added
+        if (onMoviesAdded) {
+          onMoviesAdded(selectedMovies);
+        }
+
+        alert(`Successfully added ${selectedMovies.length} movie(s) to the list!`);
+
+        // Reset state and close modal
+        setSelectedMovies([]);
+        onClose();
+      } else {
+        // Request failed
+        const errorText = await response.text();
+        alert('Failed to add movies to the list. Please try again.');
+        console.error('Bulk movie addition failed:', errorText);
       }
-
-      // Show success message
-      alert(`Successfully added ${selectedMovies.length} movie(s) to the list!`);
-
-      // Reset state and close modal
-      setSelectedMovies([]);
-      onClose();
     } catch (error) {
       console.error('Error adding movies to list:', error);
       alert('Failed to add movies to the list. Please try again.');
