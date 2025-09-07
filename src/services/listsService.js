@@ -55,13 +55,14 @@ export class ListsService {
      * Update an existing list
      * @param {Object} updateData - The data to update
      * @param {string} updateData.id - The list ID (GUID format)
+     * @param {string} updateData.userId - The user ID for authorization
      * @param {string} updateData.title - The new title
      * @param {string} updateData.description - The new description
      * @returns {Promise<Object>} The updated list data
      */
     static async updateList(updateData) {
-        if (!updateData || !updateData.id || !updateData.title || !updateData.description) {
-            throw new Error('id, title, and description are required');
+        if (!updateData || !updateData.id || !updateData.userId || !updateData.title || !updateData.description) {
+            throw new Error('id, userId, title, and description are required');
         }
 
         const response = await api.put(API_ENDPOINTS.UPDATE, updateData);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit2 } from 'lucide-react';
-import MovieGrid from "../components/ui/movies/MovieGrid";
+import { Edit2, Trash2, Share2 } from 'lucide-react';
+import ListMovieGrid from "../components/ui/movies/ListMovieGrid";
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import CommentSection from "../components/ui/comments/CommentSection";
 import { ListsService } from '../services/listsService';
@@ -66,19 +66,71 @@ const ListDetails = () => {
         console.log('New comment added:', comment);
     };
 
+    const handleAddMovies = () => {
+        // Navigate to movie search or show modal to add movies to this list
+        // For now, we'll navigate to the movie search page with list context
+        navigate(`/movies?addToList=${list.id}`);
+    };
+
+    const handleDeleteList = async () => {
+        if (!list?.id) return;
+
+        const confirmDelete = window.confirm(
+            `Are you sure you want to delete "${list.title}"? This action cannot be undone.`
+        );
+
+        if (!confirmDelete) return;
+
+        try {
+            setIsUpdating(true);
+            setError(null);
+
+            await ListsService.deleteList(list.id);
+            
+            // Navigate back to lists page after successful deletion
+            navigate('/lists');
+        } catch (err) {
+            console.error('Error deleting list:', err);
+            setError(err.message || 'Failed to delete list');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleShareList = async () => {
+        if (!list?.id) return;
+
+        try {
+            const shareUrl = `${window.location.origin}/lists/${list.id}`;
+            
+            if (navigator.share) {
+                // Use native share API if available (mobile devices)
+                await navigator.share({
+                    title: list.title,
+                    text: `Check out this movie list: ${list.title}`,
+                    url: shareUrl
+                });
+            } else {
+                // Fallback to clipboard copy
+                await navigator.clipboard.writeText(shareUrl);
+                alert('List URL copied to clipboard!');
+            }
+        } catch (err) {
+            console.error('Error sharing list:', err);
+            // Fallback: show the URL to user
+            const shareUrl = `${window.location.origin}/lists/${list.id}`;
+            prompt('Copy this URL to share the list:', shareUrl);
+        }
+    };
+
     // Check if current user owns this list
-    const isOwner = list && user && list.userSimlified?.id === user.id;
+    const isOwner = list && user && list.userSimplified?.id === user.id;
     
-    // Debug logging
-    console.log('Debug Info:', {
+    // Debug logging for ownership check
+    console.log('Ownership Check:', {
         isAuthenticated,
-        user: user ? { id: user.id, username: user.username } : null,
-        list: list ? { 
-            id: list.id, 
-            userId: list.userSimlified?.id, 
-            userName: list.userSimlified?.userName,
-            title: list.title 
-        } : null,
+        currentUserId: user?.id,
+        listOwnerUserId: list?.userSimplified?.id,
         isOwner
     });
 
@@ -104,6 +156,7 @@ const ListDetails = () => {
             
             const updateData = {
                 id: list.id,
+                userId: user.id,
                 title: editTitle.trim(),
                 description: list.description // Keep existing description
             };
@@ -142,6 +195,7 @@ const ListDetails = () => {
             
             const updateData = {
                 id: list.id,
+                userId: user.id,
                 title: list.title, // Keep existing title
                 description: editDescription.trim()
             };
@@ -410,10 +464,10 @@ const ListDetails = () => {
                              )}
                         </div>
 
-                        {list.userSimlified && (
+                        {list.userSimplified && (
                             <div className="mt-4 flex items-center gap-3">
                                 <div className="text-sm text-gray-400">
-                                    Created by: {list.userSimlified.userName}
+                                    Created by: {list.userSimplified.userName}
                                 </div>
                                 {isOwner && (
                                     <div className="px-2 py-1 bg-blue-600/20 border border-blue-600/30 rounded text-xs text-blue-400">
@@ -433,8 +487,9 @@ const ListDetails = () => {
                             </div>
                         )}
 
-                        {/* Like Button and Count */}
-                        <div className="mt-4 flex items-center gap-4">
+                        {/* Action Buttons */}
+                        <div className="mt-4 flex items-center gap-4 flex-wrap">
+                            {/* Like Button and Count */}
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleLikeToggle}
@@ -464,6 +519,29 @@ const ListDetails = () => {
                                     {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                                 </span>
                             </div>
+
+                            {/* Share Button */}
+                            <button
+                                onClick={handleShareList}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                title="Share this list"
+                            >
+                                <Share2 className="h-5 w-5" />
+                                Share
+                            </button>
+
+                            {/* Delete Button - Only show for list owner */}
+                            {isOwner && (
+                                <button
+                                    onClick={handleDeleteList}
+                                    disabled={isUpdating}
+                                    className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Delete this list"
+                                >
+                                    <Trash2 className="h-5 w-5" />
+                                    {isUpdating ? 'Deleting...' : 'Delete'}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -471,12 +549,14 @@ const ListDetails = () => {
 
             {/* Movies Grid */}
             <div className="mb-10">
-                <MovieGrid 
+                <ListMovieGrid 
                     heading={`Movies in this List (${list.moviesCount || 0})`}
                     rows={Math.ceil(movies.length / 6)} 
                     itemsPerRow={6} 
                     movies={movies} 
                     CardComponent={SmallMovieCard}
+                    onAddMoviesClick={isOwner ? handleAddMovies : null}
+                    showAddMovies={isOwner}
                 />
             </div>
 
