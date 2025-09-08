@@ -7,6 +7,7 @@ import Search from '../pages/Search';
 import SearchHub from '../pages/SearchHub';
 import NewsSearch from '../pages/NewsSearch';
 import ListsSearch from '../pages/ListsSearch';
+import ReviewsSearch from '../pages/ReviewsSearch';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import NotFound from '../pages/NotFound';
@@ -69,6 +70,7 @@ const AppRouter = () => {
             <Route path="search/movies" element={<Search />} />
             <Route path="search/lists" element={<ListsSearch />} />
             <Route path="search/news" element={<NewsSearch />} />
+            <Route path="search/reviews" element={<ReviewsSearch />} />
             <Route path="test-filter" element={<DynamicSearchFilterExample />} />
             <Route path="auth/callback" element={<AuthCallback />} />
 

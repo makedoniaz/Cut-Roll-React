@@ -1,5 +1,5 @@
 import api from './api.js';
-import { API_ENDPOINTS } from '../constants/review.js';
+import { API_ENDPOINTS, REVIEW_SORT_BY } from '../constants/review.js';
 
 export class ReviewService {
     /**
@@ -269,6 +269,213 @@ export class ReviewService {
             }
             let errorMessage = await response.text();
             throw new Error(errorMessage || 'Failed to fetch review count');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
+    /**
+     * Search reviews with filters
+     * @param {Object} searchParams - Search parameters
+     * @param {string} [searchParams.userId] - User ID (optional)
+     * @param {string} [searchParams.movieId] - Movie ID (UUID, optional)
+     * @param {number} [searchParams.minRating] - Minimum rating (optional)
+     * @param {number} [searchParams.maxRating] - Maximum rating (optional)
+     * @param {string} [searchParams.createdAfter] - Created after date (ISO string, optional)
+     * @param {string} [searchParams.createdBefore] - Created before date (ISO string, optional)
+     * @param {number} [searchParams.sortBy] - Sort by field (0=CreatedAt, 1=Rating, 2=Likes, optional)
+     * @param {boolean} [searchParams.sortDescending] - Sort descending (optional)
+     * @param {number} [searchParams.page=1] - Page number (1-based, defaults to 1)
+     * @param {number} [searchParams.pageSize=10] - Page size (defaults to 10)
+     * @returns {Promise<Object>} Paginated search results
+     */
+    static async searchReview(searchParams = {}) {
+        // Set default values for page and pageSize
+        const page = searchParams.page !== undefined ? searchParams.page : 1;
+        const pageSize = searchParams.pageSize !== undefined ? searchParams.pageSize : 10;
+
+        // Validate page and pageSize
+        if (page < 1) {
+            throw new Error('Page must be 1 or greater');
+        }
+
+        if (pageSize <= 0) {
+            throw new Error('Page size must be greater than 0');
+        }
+
+        // Validate sortBy if provided
+        if (searchParams.sortBy !== undefined && searchParams.sortBy !== null) {
+            const validSortValues = Object.values(REVIEW_SORT_BY);
+            if (!validSortValues.includes(searchParams.sortBy)) {
+                throw new Error(`Invalid sortBy value. Must be one of: ${validSortValues.join(', ')}`);
+            }
+        }
+
+        // Validate rating range if provided
+        if (searchParams.minRating !== undefined && searchParams.minRating !== null) {
+            if (searchParams.minRating < 0 || searchParams.minRating > 5) {
+                throw new Error('minRating must be between 0 and 5');
+            }
+        }
+
+        if (searchParams.maxRating !== undefined && searchParams.maxRating !== null) {
+            if (searchParams.maxRating < 0 || searchParams.maxRating > 5) {
+                throw new Error('maxRating must be between 0 and 5');
+            }
+        }
+
+        // Build the payload with only non-null/undefined values
+        const payload = {
+            page: page,
+            pageSize: pageSize
+        };
+
+        // Add optional fields only if they have values
+        if (searchParams.userId !== undefined && searchParams.userId !== null) {
+            payload.userId = searchParams.userId;
+        }
+
+        if (searchParams.movieId !== undefined && searchParams.movieId !== null) {
+            payload.movieId = searchParams.movieId;
+        }
+
+        if (searchParams.minRating !== undefined && searchParams.minRating !== null) {
+            payload.minRating = searchParams.minRating;
+        }
+
+        if (searchParams.maxRating !== undefined && searchParams.maxRating !== null) {
+            payload.maxRating = searchParams.maxRating;
+        }
+
+        if (searchParams.createdAfter !== undefined && searchParams.createdAfter !== null) {
+            payload.createdAfter = searchParams.createdAfter;
+        }
+
+        if (searchParams.createdBefore !== undefined && searchParams.createdBefore !== null) {
+            payload.createdBefore = searchParams.createdBefore;
+        }
+
+        if (searchParams.sortBy !== undefined && searchParams.sortBy !== null) {
+            payload.sortBy = searchParams.sortBy;
+        }
+
+        if (searchParams.sortDescending !== undefined && searchParams.sortDescending !== null) {
+            payload.sortDescending = searchParams.sortDescending;
+        }
+
+        const response = await api.post(API_ENDPOINTS.SEARCH, payload);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to search reviews');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
+    /**
+     * Search movies for reviews
+     * @param {Object} searchParams - Search parameters
+     * @param {string} [searchParams.title] - Movie title to search for (optional)
+     * @param {number} [searchParams.pageNumber=1] - Page number (1-based, defaults to 1)
+     * @param {number} [searchParams.pageSize=10] - Page size (defaults to 10)
+     * @returns {Promise<Object>} Search results
+     */
+    static async searchReviewMovies(searchParams = {}) {
+        // Set default values
+        const pageNumber = searchParams.page !== undefined ? searchParams.page : 1;
+        const pageSize = searchParams.pageSize !== undefined ? searchParams.pageSize : 10;
+
+        // Validate page and pageSize
+        if (pageNumber < 1) {
+            throw new Error('Page number must be 1 or greater');
+        }
+
+        if (pageSize <= 0) {
+            throw new Error('Page size must be greater than 0');
+        }
+
+        // Build the payload
+        const payload = {
+            page: pageNumber, // Max value as specified
+            pageSize: pageSize,
+            title: searchParams.title || null,
+            genres: null,
+            actor: null,
+            director: null,
+            keywords: null,
+            year: null,
+            minRating: null,
+            maxRating: null,
+            country: null,
+            language: null,
+            sortBy: null,
+            sortDescending: true
+        };
+
+        // Remove null values
+        Object.keys(payload).forEach(key => {
+            if (payload[key] === null) {
+                delete payload[key];
+            }
+        });
+
+        const response = await api.post(API_ENDPOINTS.SEARCH_MOVIES, payload);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to search movies');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
+    /**
+     * Search users for reviews
+     * @param {Object} searchParams - Search parameters
+     * @param {string} [searchParams.searchTerm] - Search term for users (optional)
+     * @param {number} [searchParams.pageNumber=1] - Page number (1-based, defaults to 1)
+     * @param {number} [searchParams.pageSize=10] - Page size (defaults to 10)
+     * @returns {Promise<Object>} Search results
+     */
+    static async searchReviewUsers(searchParams = {}) {
+        // Set default values
+        const pageNumber = searchParams.pageNumber !== undefined ? searchParams.pageNumber : 1;
+        const pageSize = searchParams.pageSize !== undefined ? searchParams.pageSize : 10;
+
+        // Validate page and pageSize
+        if (pageNumber < 1) {
+            throw new Error('Page number must be 1 or greater');
+        }
+
+        if (pageSize <= 0) {
+            throw new Error('Page size must be greater than 0');
+        }
+
+        // Build the payload
+        const payload = {
+            searchTerm: searchParams.searchTerm || null,
+            isBanned: null,
+            isMuted: null,
+            pageNumber: pageNumber,
+            pageSize: pageSize
+        };
+
+        // Remove null values
+        Object.keys(payload).forEach(key => {
+            if (payload[key] === null) {
+                delete payload[key];
+            }
+        });
+
+        const response = await api.post(API_ENDPOINTS.SEARCH_USERS, payload);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to search users');
         }
 
         const data = await response.json();
