@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
     DELETE: 'users/ListEntity/',
     SEARCH: 'users/ListEntity/search',
     GET_BY_USER: 'users/ListEntity/by-user',
+    SEARCH_AUTHORS: 'users/User/search',
 };
 
 export const LIST_TYPES = {

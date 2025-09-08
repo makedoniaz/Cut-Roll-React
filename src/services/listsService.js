@@ -194,4 +194,36 @@ export class ListsService {
         const data = await response.json();
         return data;
     }
+
+    /**
+     * Search for list authors/users
+     * @param {Object} searchParams - Search parameters
+     * @param {string} searchParams.searchTerm - Search term for user names
+     * @param {number} [searchParams.pageNumber] - Page number (1-based, defaults to 1)
+     * @param {number} [searchParams.pageSize] - Page size (defaults to 10)
+     * @returns {Promise<Object>} Search results with pagination
+     */
+    static async searchListAuthors(searchParams) {
+        if (!searchParams.searchTerm) {
+            throw new Error('searchTerm is required');
+        }
+
+        const searchData = {
+            searchTerm: searchParams.searchTerm,
+            isBanned: null,
+            isMuted: null,
+            pageNumber: searchParams.pageNumber || 1,
+            pageSize: searchParams.pageSize || 10
+        };
+
+        const response = await api.post(API_ENDPOINTS.SEARCH_AUTHORS, searchData);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to search list authors');
+        }
+
+        const data = await response.json();
+        return data;
+    }
 }

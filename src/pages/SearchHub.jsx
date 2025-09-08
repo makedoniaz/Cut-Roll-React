@@ -108,62 +108,6 @@ const SearchHub = () => {
           })}
         </div>
 
-        {/* Quick Search Section */}
-        <div className="bg-gray-700 rounded-xl shadow-sm border border-gray-600 p-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">
-            Quick Search
-          </h2>
-          
-          <div className="max-w-2xl mx-auto">
-            <div className="flex space-x-4">
-              <input
-                type="text"
-                placeholder="What are you looking for?"
-                className="flex-1 px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400"
-              />
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                Search All
-              </button>
-            </div>
-            
-            <p className="text-sm text-gray-400 mt-3 text-center">
-              Use the quick search above to search across all content types, or choose a specialized search tool above for more targeted results.
-            </p>
-          </div>
-        </div>
-
-        {/* Tips Section */}
-        <div className="mt-12 bg-blue-900/20 rounded-xl p-8 border border-blue-800/30">
-          <h3 className="text-xl font-semibold text-blue-300 mb-4">
-            Search Tips
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium text-blue-200 mb-2">Use Filters</h4>
-              <p className="text-blue-100 text-sm">
-                Each search page has specialized filters to help you narrow down results quickly.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium text-blue-200 mb-2">Save Searches</h4>
-              <p className="text-blue-100 text-sm">
-                Bookmark your favorite search combinations for future use.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium text-blue-200 mb-2">Advanced Queries</h4>
-              <p className="text-blue-100 text-sm">
-                Use quotes for exact phrases and minus signs to exclude terms.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium text-blue-200 mb-2">Sort Results</h4>
-              <p className="text-blue-100 text-sm">
-                Most search pages allow you to sort by relevance, date, popularity, and more.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
