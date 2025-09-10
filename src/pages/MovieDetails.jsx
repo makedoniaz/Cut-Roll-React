@@ -1149,6 +1149,18 @@ const MovieDetails = () => {
                               {review.text || review.content || review.reviewText || 'No review text available'}
                             </p>
                             
+                            {/* View full review link */}
+                            {review.id && (
+                              <div className="mb-4">
+                                <button
+                                  onClick={() => navigate(`/review/${review.id}`)}
+                                  className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium"
+                                >
+                                  View full review →
+                                </button>
+                              </div>
+                            )}
+                            
                             <div className="flex items-center gap-4 text-sm text-gray-500">
                               <span>{new Date(review.createdAt || review.createdDate || review.dateCreated || review.date || Date.now()).toLocaleDateString()}</span>
                               {(review.likes || review.likeCount || review.likesCount) && <span>{review.likes || review.likeCount || review.likesCount} likes</span>}

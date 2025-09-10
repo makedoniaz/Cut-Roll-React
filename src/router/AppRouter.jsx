@@ -31,6 +31,7 @@ import ActionLists from '../pages/ActionLists'
 import Reviews from '../pages/Reviews'
 import ReviewCreate from '../pages/ReviewCreate'
 import ReviewEdit from '../pages/ReviewEdit'
+import ReviewPage from '../pages/ReviewPage'
 import AdminDashboard from '../pages/AdminDashboard'
 import DynamicSearchFilterExample from '../components/examples/DynamicSearchFilterExample'
 
@@ -65,6 +66,7 @@ const AppRouter = () => {
                 <ReviewEdit />
               </ProtectedRoute>
             } />
+            <Route path="review/:reviewId" element={<ReviewPage />} />
             <Route path="reviews" element={<Reviews />} />
             <Route path="search" element={<SearchHub />} />
             <Route path="search/movies" element={<Search />} />

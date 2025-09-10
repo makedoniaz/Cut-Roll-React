@@ -4,8 +4,10 @@ import ReviewStarRating from "../reviews/ReviewStarRating"
 
 import { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const ReviewCard = ({ review, isFirst = false, isLast = false }) => {
+  const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(review.likes);
 
@@ -56,6 +58,18 @@ const ReviewCard = ({ review, isFirst = false, isLast = false }) => {
         <p className="text-white text-base leading-relaxed mb-4">
           {review.text}
         </p>
+        
+        {/* Read More Link */}
+        {review.id && (
+          <div className="mb-4">
+            <button
+              onClick={() => navigate(`/review/${review.id}`)}
+              className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium"
+            >
+              Read full review →
+            </button>
+          </div>
+        )}
         
         <LikeButton
           likes={likeCount}
