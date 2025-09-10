@@ -29,7 +29,6 @@ const MovieListCard = ({ list }) => {
         <ListStats 
           films={list.stats.films}
           likes={list.stats.likes}
-          comments={list.stats.comments}
         />
       </div>
     </div>

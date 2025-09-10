@@ -10,14 +10,10 @@ const ListStats = ({ films, likes, comments }) => {
 
   return (
     <div className="flex items-center gap-4 text-sm text-gray-400">
-      <span>{films} films</span>
+      <span>{films} movies</span>
       <div className="flex items-center gap-1">
         <Heart className="w-4 h-4" />
         <span>{formatNumber(likes)}</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <MessageCircle className="w-4 h-4" />
-        <span>{comments}</span>
       </div>
     </div>
   );

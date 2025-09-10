@@ -573,11 +573,6 @@ const ListDetails = () => {
                 />
             </div>
 
-            {/* Comments Section */}
-            <CommentSection 
-                initialComments={mockComments}
-                onAddComment={handleAddComment}
-            />
 
             {/* Add Movies Modal */}
             <AddMoviesModal 
