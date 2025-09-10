@@ -3,4 +3,5 @@ export const API_ENDPOINTS = {
     UNLIKE: 'users/ListLike/unlike',
     IS_LIKED: 'users/ListLike/is-liked',
     COUNT: 'users/ListLike/count/',
+    LIKED_LISTS: 'users/ListLike/liked-lists',
 };

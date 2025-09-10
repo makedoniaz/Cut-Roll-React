@@ -4,6 +4,7 @@ import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
 import TabNav from "../components/ui/common/TabNav";
 import { useAuthStore } from "../stores/authStore";
 import { ListsService } from "../services/listsService";
+import { ListsLikeService } from "../services/listsLikeService";
 
 const Lists = () => {
   const navigate = useNavigate();
@@ -11,8 +12,10 @@ const Lists = () => {
   const [activeTab, setActiveTab] = useState('popular');
   const [popularLists, setPopularLists] = useState([]);
   const [myLists, setMyLists] = useState([]);
+  const [likedLists, setLikedLists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [myListsLoading, setMyListsLoading] = useState(false);
+  const [likedListsLoading, setLikedListsLoading] = useState(false);
 
   const movieLists = [
     {
@@ -101,7 +104,7 @@ const Lists = () => {
       // For now, let's use a dummy userId to test the API
       // In a real scenario, you might want to create a different endpoint for popular lists
       const searchParams = {
-        userId: user?.id || 'dummy-user-id', // Use current user ID or dummy ID
+        userId: null,
         title: null,
         fromDate: null,
         toDate: null,
@@ -193,10 +196,59 @@ const Lists = () => {
     }
   };
 
+  const fetchLikedLists = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLikedListsLoading(true);
+      console.log('🔍 Fetching liked lists...');
+      
+      const params = {
+        userId: user.id,
+        page: null, // Will default to 1
+        pageSize: null // Will default to 8
+      };
+      
+      console.log('📤 Liked lists params:', params);
+      const result = await ListsLikeService.getLikedLists(params);
+      console.log('📥 Liked lists result:', result);
+      
+      // Extract the data array from the API response
+      const listsData = result.data || result.items || result || [];
+      
+      // Transform API data to match MovieListCard expected structure
+      const transformedLists = listsData.map(list => ({
+        id: list.id,
+        title: list.title,
+        description: list.description,
+        coverImages: [], // MovieListPoster will handle showing 4 posters (real movies + placeholders)
+        author: {
+          name: list.userSimplified?.userName || 'Unknown',
+          avatar: list.userSimplified?.avatarPath || '👤'
+        },
+        stats: {
+          films: list.moviesCount || 0,
+          likes: list.likesCount || 0,
+          comments: 0 // API doesn't provide comments count yet
+        }
+      }));
+      
+      setLikedLists(transformedLists);
+      console.log('✅ Liked lists set:', transformedLists);
+    } catch (error) {
+      console.error('❌ Error fetching liked lists:', error);
+      setLikedLists([]);
+    } finally {
+      setLikedListsLoading(false);
+      console.log('🏁 Liked lists loading finished');
+    }
+  };
+
   useEffect(() => {
     fetchPopularLists();
     if (isAuthenticated && user?.id) {
       fetchMyLists();
+      fetchLikedLists();
     }
   }, [isAuthenticated, user?.id]);
 
@@ -253,15 +305,27 @@ const Lists = () => {
         )}
         
         {activeTab === 'liked' && isAuthenticated && (
-          <div className="text-center p-8 bg-gray-900 border border-gray-700 rounded-lg">
-            <div className="text-6xl mb-4">❤️</div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Liked Lists
-            </h3>
-            <p className="text-gray-400 mb-4">
-              Lists you've liked will appear here. Start liking movie lists to see them in this tab.
-            </p>
-          </div>
+          likedListsLoading ? (
+            <div className="text-center p-8">
+              <div className="text-white text-xl">Loading liked lists...</div>
+            </div>
+          ) : likedLists.length > 0 ? (
+            <MovieListsGrid 
+              rows={Math.ceil(likedLists.length / 4)} 
+              itemsPerRow={4} 
+              movieLists={likedLists}
+            />
+          ) : (
+            <div className="text-center p-8 bg-gray-900 border border-gray-700 rounded-lg">
+              <div className="text-6xl mb-4">❤️</div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Liked Lists
+              </h3>
+              <p className="text-gray-400 mb-4">
+                Lists you've liked will appear here. Start liking movie lists to see them in this tab.
+              </p>
+            </div>
+          )
         )}
 
                  {activeTab === 'my' && isAuthenticated && (

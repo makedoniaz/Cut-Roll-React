@@ -116,10 +116,6 @@ export class ListsService {
      * @returns {Promise<Object>} Search results with pagination
      */
     static async searchLists(searchParams) {
-        if (!searchParams.userId) {
-            throw new Error('userId is required');
-        }
-
         const searchData = {
             userId: searchParams.userId,
             title: searchParams.title || null,

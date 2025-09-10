@@ -97,4 +97,34 @@ export class ListsLikeService {
         const count = await response.json();
         return count;
     }
+
+    /**
+     * Get liked lists for a user
+     * @param {Object} params - The parameters for getting liked lists
+     * @param {string} params.userId - The user ID
+     * @param {number|null} [params.page] - The page number (defaults to 1 if null)
+     * @param {number|null} [params.pageSize] - The page size (defaults to 8 if null)
+     * @returns {Promise<Object>} The liked lists response
+     */
+    static async getLikedLists({ userId, page = null, pageSize = null }) {
+        if (!userId) {
+            throw new Error('userId is required');
+        }
+
+        const requestBody = {
+            userId: userId,
+            page: page === null ? 1 : page,
+            pageSize: pageSize === null ? 8 : pageSize
+        };
+
+        const response = await api.post(API_ENDPOINTS.LIKED_LISTS, requestBody);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to get liked lists');
+        }
+
+        const likedLists = await response.json();
+        return likedLists;
+    }
 }
