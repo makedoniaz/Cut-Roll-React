@@ -286,7 +286,6 @@ const ReviewPage = () => {
                       );
                     })}
                   </div>
-                  <span className="text-green-500 font-bold">{review.rating % 1 === 0.5 ? '½' : ''}</span>
                 </div>
               )}
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import PaginatedGridContainer from '../components/layout/PaginatedGridContainer';
-import ReviewSearchCard from '../components/ui/reviews/ReviewSearchCard';
+import ReviewCard from '../components/ui/reviews/ReviewCard';
 import { ReviewService } from '../services/reviewService';
 import { REVIEW_SORT_BY } from '../constants/review';
 import { Filter, X, Search as SearchIcon } from 'lucide-react';
@@ -392,10 +392,10 @@ const ReviewsSearch = () => {
                   itemsPerRow={1}
                   rows={20}
                   renderItem={(review) => (
-                    <ReviewSearchCard review={review} />
+                    <ReviewCard review={review} />
                   )}
                   itemHeight="auto"
-                  gap="gap-4"
+                  gap="gap-6"
                   itemWidth="w-full"
                   useExternalPagination={true}
                   currentPage={currentPage}

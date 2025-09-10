@@ -1,81 +1,148 @@
-import Avatar from "../users/Avatar";
-import LikeButton from "../buttons/LikeButton";
-import ReviewStarRating from "../reviews/ReviewStarRating"
-
-import { useState } from 'react';
-import { MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Calendar, MessageCircle, ThumbsUp, Star } from 'lucide-react';
 
-const ReviewCard = ({ review, isFirst = false, isLast = false }) => {
+const ReviewCard = ({ review }) => {
   const navigate = useNavigate();
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(review.likes);
 
-  const handleLikeToggle = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
-  };
-
-  // Dynamic padding classes based on position
-  const getPaddingClasses = () => {
-    if (isFirst && isLast) {
-      // Single item - no vertical padding
-      return "py-0";
-    } else if (isFirst) {
-      // First item - no top padding
-      return "pt-0 pb-6";
-    } else if (isLast) {
-      // Last item - no bottom padding
-      return "pt-6 pb-0";
-    } else {
-      // Middle items - full padding
-      return "py-6";
+  const handleReviewClick = () => {
+    if (review.id) {
+      navigate(`/review/${review.id}`);
     }
   };
 
-  return (
-    <div className={`flex gap-4 ${getPaddingClasses()} border-b border-gray-800 last:border-b-0`}>
-      <Avatar
-        src={review.avatar}
-        alt={review.username}
-        size="md"
-      />
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-gray-400 text-sm">
-            Review by <span className="text-white font-medium">{review.username}</span>
-          </span>
-          <ReviewStarRating rating={review.rating} />
-          {review.comments && (
-            <div className="flex items-center gap-1 text-gray-500">
-              <MessageCircle className="w-4 h-4" />
-              <span className="text-sm">{review.comments}</span>
-            </div>
-          )}
-        </div>
-        
-        <p className="text-white text-base leading-relaxed mb-4">
-          {review.text}
-        </p>
-        
-        {/* Read More Link */}
-        {review.id && (
-          <div className="mb-4">
-            <button
-              onClick={() => navigate(`/review/${review.id}`)}
-              className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium"
-            >
-              Read full review →
-            </button>
+  const handleUserClick = (e) => {
+    e.stopPropagation();
+    if (review.userSimplified?.userName) {
+      navigate(`/profile/${review.userSimplified.userName}`);
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  // Render star rating
+  const renderStars = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(
+        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+      );
+    }
+
+    if (hasHalfStar) {
+      stars.push(
+        <div key="half" className="relative">
+          <Star className="w-4 h-4 text-gray-600" />
+          <div className="absolute inset-0 overflow-hidden w-1/2">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
           </div>
-        )}
-        
-        <LikeButton
-          likes={likeCount}
-          isLiked={isLiked}
-          onToggle={handleLikeToggle}
-        />
+        </div>
+      );
+    }
+
+    const remainingStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < remainingStars; i++) {
+      stars.push(
+        <Star key={`empty-${i}`} className="w-4 h-4 text-gray-600" />
+      );
+    }
+
+    return stars;
+  };
+
+  return (
+    <div 
+      className="bg-gray-800 rounded-xl border border-gray-700 p-6 hover:border-gray-600 transition-all duration-300 hover:shadow-lg cursor-pointer"
+      onClick={handleReviewClick}
+    >
+      {/* Header Section */}
+      <div className="flex items-start justify-between mb-4">
+        {/* User Info */}
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+            onClick={handleUserClick}
+          >
+            {review.userSimplified?.avatarPath ? (
+              <img 
+                src={review.userSimplified.avatarPath} 
+                alt={review.userSimplified.userName}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-white font-semibold text-lg">
+                {review.userSimplified?.userName?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            )}
+          </div>
+          
+          <div>
+            <button
+              onClick={handleUserClick}
+              className="text-white font-medium hover:text-blue-400 transition-colors"
+            >
+              {review.userSimplified?.userName || 'Unknown User'}
+            </button>
+            <div className="text-gray-400 text-sm">
+              {review.userSimplified?.email}
+            </div>
+          </div>
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {renderStars(review.rating)}
+          </div>
+          <span className="text-yellow-400 font-semibold text-lg">
+            {review.rating.toFixed(1)}
+          </span>
+        </div>
+      </div>
+
+      {/* Review Content */}
+      <div className="mb-4">
+        <p className="text-gray-300 leading-relaxed text-sm">
+          {review.content}
+        </p>
+      </div>
+
+      {/* Footer Section */}
+      <div className="flex items-center justify-between pt-4 border-t border-gray-700">
+        {/* Date */}
+        <div className="flex items-center gap-2 text-gray-500 text-sm">
+          <Calendar className="w-4 h-4" />
+          <span>{formatDate(review.createdAt)}</span>
+        </div>
+
+        {/* Engagement Stats */}
+        <div className="flex items-center gap-4">
+          {/* Likes */}
+          <div className="flex items-center gap-1 text-gray-500 text-sm">
+            <ThumbsUp className="w-4 h-4" />
+            <span>{review.likesCount || 0}</span>
+          </div>
+
+          {/* Comments */}
+          <div className="flex items-center gap-1 text-gray-500 text-sm">
+            <MessageCircle className="w-4 h-4" />
+            <span>{review.commentsCount || 0}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
