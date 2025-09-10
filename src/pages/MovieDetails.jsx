@@ -3,6 +3,7 @@ import CastGrid from '../components/ui/movies/CastGrid';
 
 import TabNav from '../components/ui/common/TabNav';
 import MovieDetailsPoster from '../components/ui/movies/MovieDetailsPoster';
+import AddToListsModal from '../components/ui/forms/AddToListsModal';
 import { MovieService } from '../services/movieService';
 
 import { useState, useEffect } from 'react'
@@ -38,6 +39,7 @@ const MovieDetails = () => {
   const [averageRatingLoading, setAverageRatingLoading] = useState(false);
   const [activeReviewTab, setActiveReviewTab] = useState('MY REVIEW');
   const [deletingReviewId, setDeletingReviewId] = useState(null);
+  const [showAddToListsModal, setShowAddToListsModal] = useState(false);
   
   // Fetch movie data
   useEffect(() => {
@@ -548,6 +550,23 @@ const MovieDetails = () => {
     } finally {
       setDeletingReviewId(null);
     }
+  };
+
+  // Handle add to lists button click
+  const handleAddToListsClick = () => {
+    if (!isAuthenticated || !user?.id) {
+      // Redirect to login if not authenticated
+      navigate('/login');
+      return;
+    }
+    
+    setShowAddToListsModal(true);
+  };
+
+  // Handle movie added to lists
+  const handleMovieAddedToLists = (addedLists) => {
+    console.log('Movie added to lists:', addedLists);
+    // You could update UI state here if needed
   };
 
   const formatCurrency = (amount) => {
@@ -1283,7 +1302,10 @@ const MovieDetails = () => {
                 </button>
               )}
               {isAuthenticated && (
-                <button className="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm">
+                <button 
+                  onClick={handleAddToListsClick}
+                  className="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm"
+                >
                   Add to lists...
                 </button>
               )}
@@ -1433,6 +1455,15 @@ const MovieDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Add to Lists Modal */}
+      <AddToListsModal
+        isOpen={showAddToListsModal}
+        onClose={() => setShowAddToListsModal(false)}
+        movieId={movie?.id}
+        movieTitle={movie?.title}
+        onMovieAddedToLists={handleMovieAddedToLists}
+      />
     </div>
   );
 };

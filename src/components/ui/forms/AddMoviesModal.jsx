@@ -16,6 +16,7 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
       const searchResults = await MovieService.searchMovies({
         title: query,
         pageSize: 10,
+        page: 1,
         sortBy: 'title',
         sortDescending: false
       });
@@ -183,15 +184,6 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
           </div>
         )}
 
-
-        {/* Bulk-add Status */}
-        {selectedMovies.length > 1 && (
-          <div className="mb-6 p-3 bg-green-600/20 border border-green-600/30 rounded-lg">
-            <p className="text-green-300 text-sm">
-              🚀 <strong>Bulk Add Mode:</strong> {selectedMovies.length} movies will be added in a single optimized API call.
-            </p>
-          </div>
-        )}
 
         {/* Action Buttons */}
         <div className="flex justify-end space-x-3">
