@@ -21,6 +21,8 @@ import RegistrationProtectedRoute from '../components/auth/RegistrationProtected
 import { useAuth } from '../hooks/useStores';
 import ConfirmEmail from '../pages/ConfirmEmail';
 import NewsPage from '../pages/NewsPage';
+import MyNews from '../pages/MyNews';
+import LikedNews from '../pages/LikedNews';
 import ArticlePage from '../pages/ArticlePage';
 import NewsCreatePage from '../pages/NewsCreatePage';
 import NewsEditPage from '../pages/NewsEditPage';
@@ -78,6 +80,16 @@ const AppRouter = () => {
 
             {/* News Routes */}
             <Route path="news" element={<NewsPage />} />
+            <Route path="news/my" element={
+              <ProtectedRoute>
+                <MyNews />
+              </ProtectedRoute>
+            } />
+            <Route path="news/liked" element={
+              <ProtectedRoute>
+                <LikedNews />
+              </ProtectedRoute>
+            } />
             <Route path="news/:id" element={<ArticlePage />} />
 
             <Route path="lists" element={<Lists />} />

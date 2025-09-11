@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
     COUNT: 'news/news/count/',
     PAGINATION: 'news/news/pagination/',
     LIKE: 'news/news/{newsId}/likes/',
+    LIKED_NEWS: 'news/news/liked/',
     REFERENCE_MOVIE: 'news/Movie/search/',
     REFERENCE_PERSON: 'news/Person/search/',
     REFERENCE_GENRE: 'news/Genre/search/',

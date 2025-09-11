@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import NewsFeed from '../components/news/NewsFeed';
-import NewsSectionHeading from '../components/news/NewsSectionHeading';
+import TabNav from '../components/ui/common/TabNav';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useNavigation } from '../hooks/useNavigation';
@@ -67,6 +67,14 @@ const NewsPage = () => {
     setActiveTab(tabId);
   };
 
+  const tabs = [
+    { id: "recent", label: "Recent News" },
+    ...(isAuthenticated ? [
+      ...(hasAdminOrPublisherRole() ? [{ id: "my", label: "My News" }] : []),
+      { id: "liked", label: "Liked News" }
+    ] : [])
+  ];
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
@@ -82,29 +90,31 @@ const NewsPage = () => {
         <div className="mt-4 sm:mt-0 flex items-center gap-3">
           <button
             onClick={() => goToNewsSearch('')}
-            className="flex items-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200"
+            className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200"
+            title="Search News"
           >
             <Search className="w-5 h-5" />
-            Search News
           </button>
           
           {/* Create Article Button - Only for Admin and Publisher roles */}
           {hasAdminOrPublisherRole() && (
             <button
               onClick={handleCreateArticle}
-              className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
+              className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200"
+              title="Create Article"
             >
               <Plus className="w-5 h-5" />
-              Create Article
             </button>
           )}
         </div>
       </div>
 
-      {/* News Section Heading with Tabs */}
-      <NewsSectionHeading
+      {/* Tab Navigation */}
+      <TabNav 
+        tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        showMoreButton={true}
         onMoreClick={() => {
           if (activeTab === 'recent') {
             // For recent tab, pass date range filters (current date to week ago)
@@ -118,13 +128,17 @@ const NewsPage = () => {
             };
             
             goToNewsSearch('', { dateRange });
+          } else if (activeTab === 'my') {
+            // For "My News" tab, redirect to MyNews page
+            navigate('/news/my');
+          } else if (activeTab === 'liked') {
+            // For "Liked News" tab, redirect to LikedNews page
+            navigate('/news/liked');
           } else {
             // For other tabs, just go to search without filters
             goToNewsSearch('');
           }
         }}
-        isAuthenticated={isAuthenticated}
-        hasAdminOrPublisherRole={hasAdminOrPublisherRole()}
       />
 
       {/* Content based on active tab */}

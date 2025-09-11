@@ -286,6 +286,11 @@ const Lists = () => {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        showMoreButton={true}
+        onMoreClick={() => {
+          // Navigate to lists search page
+          navigate('/lists/search');
+        }}
       />
 
       {/* Content based on active tab */}

@@ -423,4 +423,29 @@ export class NewsService {
         const data = await response.json();
         return data;
     }
+
+    static async getLikedNews(page = 1, pageSize = 10) {
+        if (page < 1) {
+            throw new Error('Page must be 1 or greater');
+        }
+
+        if (pageSize < 1 || pageSize > 100) {
+            throw new Error('Page size must be between 1 and 100');
+        }
+
+        const paginationData = {
+            page: page - 1, // Convert to 0-based indexing
+            pageSize: pageSize
+        };
+
+        const response = await api.post(API_ENDPOINTS.LIKED_NEWS, paginationData);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to fetch liked news articles');
+        }
+
+        const data = await response.json();
+        return data;
+    }
 }
