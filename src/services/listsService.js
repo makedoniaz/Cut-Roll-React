@@ -222,4 +222,34 @@ export class ListsService {
         const data = await response.json();
         return data;
     }
+
+    /**
+     * Get movies from a specific list
+     * @param {Object} params - Parameters
+     * @param {string} params.listId - The list ID
+     * @param {number} [params.page] - Page number (defaults to 1)
+     * @param {number} [params.pageSize] - Page size (defaults to 10)
+     * @returns {Promise<Object>} Movies from the list with pagination
+     */
+    static async getMoviesFromList(params) {
+        if (!params.listId) {
+            throw new Error('listId is required');
+        }
+
+        const requestData = {
+            listId: params.listId,
+            page: params.page || 1,
+            pageSize: params.pageSize || 10
+        };
+
+        const response = await api.post('users/ListEntity/movies', requestData);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to get movies from list');
+        }
+
+        const data = await response.json();
+        return data;
+    }
 }

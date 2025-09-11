@@ -40,6 +40,7 @@ const MovieDetails = () => {
   const [activeReviewTab, setActiveReviewTab] = useState('MY REVIEW');
   const [deletingReviewId, setDeletingReviewId] = useState(null);
   const [showAddToListsModal, setShowAddToListsModal] = useState(false);
+  const [showAllVideos, setShowAllVideos] = useState(false);
   
   // Fetch movie data
   useEffect(() => {
@@ -925,41 +926,100 @@ const MovieDetails = () => {
                              {/* VIDEOS Tab */}
                {activeTab === 'VIDEOS' && (
                  <div className="space-y-4">
-                   <h3 className="text-lg font-semibold text-gray-300 mb-4">Movie Videos</h3>
                    {videos && videos.length > 0 ? (
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       {videos.map((video, index) => (
-                         <div key={index} className="bg-gray-800 rounded-lg p-4">
-                           {video.key && video.site === 'YouTube' ? (
-                             <a 
-                               href={`https://www.youtube.com/watch?v=${video.key}`}
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               className="block aspect-video bg-gray-700 rounded mb-3 flex items-center justify-center hover:bg-gray-600 transition-colors cursor-pointer"
-                             >
-                               <div className="text-center">
-                                 <div className="text-4xl mb-2">▶️</div>
-                                 <div className="text-sm text-gray-400">Click to Watch</div>
-                               </div>
-                             </a>
-                           ) : (
-                             <div className="aspect-video bg-gray-700 rounded mb-3 flex items-center justify-center">
-                               <div className="text-center">
-                                 <div className="text-4xl mb-2">🎬</div>
-                                 <div className="text-sm text-gray-400">{video.name || 'Video'}</div>
+                     (() => {
+                       // Find trailer first, then any YouTube video as fallback
+                       const trailer = videos.find(v => 
+                         v.key && v.site === 'YouTube' && 
+                         (v.type?.toLowerCase().includes('trailer') || v.name?.toLowerCase().includes('trailer'))
+                       );
+                       const mainVideo = trailer || videos.find(v => v.key && v.site === 'YouTube');
+                       const otherVideos = videos.filter(v => v !== mainVideo);
+                       
+                       return (
+                         <div className="space-y-6">
+                           {/* Main Video Player */}
+                           {mainVideo && (
+                             <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+                               <iframe
+                                 src={`https://www.youtube.com/embed/${mainVideo.key}`}
+                                 title={mainVideo.name || 'Video'}
+                                 className="w-full aspect-video"
+                                 frameBorder="0"
+                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                 allowFullScreen
+                               ></iframe>
+                               <div className="p-4">
+                                 <h4 className="font-medium text-white mb-2">{mainVideo.name || 'Untitled Video'}</h4>
+                                 <p className="text-sm text-gray-400">{mainVideo.type || 'Unknown Type'}</p>
                                </div>
                              </div>
                            )}
-                           <h4 className="font-semibold text-gray-200 mb-2">{video.name || 'Untitled Video'}</h4>
-                           <p className="text-sm text-gray-400 mb-2">{video.type || 'Unknown Type'}</p>
-                           {video.site && (
-                             <span className="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                               {video.site}
-                             </span>
+                           
+                           {/* Other Videos as Links */}
+                           {otherVideos.length > 0 && (
+                             (() => {
+                               const maxVisibleVideos = 3;
+                               const videosToShow = showAllVideos ? otherVideos : otherVideos.slice(0, maxVisibleVideos);
+                               const hasMoreVideos = otherVideos.length > maxVisibleVideos;
+                               
+                               return (
+                                 <div>
+                                   <div className="space-y-2">
+                                     {videosToShow.map((video, index) => (
+                                       <div key={index} className="bg-gray-800 hover:bg-gray-700 rounded-lg p-3 transition-colors border border-gray-700 hover:border-green-500">
+                                         {video.key && video.site === 'YouTube' ? (
+                                           <a 
+                                             href={`https://www.youtube.com/watch?v=${video.key}`}
+                                             target="_blank"
+                                             rel="noopener noreferrer"
+                                             className="flex items-center gap-3 text-gray-200 hover:text-white transition-colors"
+                                           >
+                                             <div className="flex-shrink-0 w-8 h-8 bg-red-600 rounded flex items-center justify-center">
+                                               <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                                 <path d="M8 5v14l11-7z"/>
+                                               </svg>
+                                             </div>
+                                             <div className="flex-1">
+                                               <h5 className="font-medium text-sm">{video.name || 'Untitled Video'}</h5>
+                                               <p className="text-xs text-gray-400">{video.type || 'Unknown Type'}</p>
+                                             </div>
+                                           </a>
+                                         ) : (
+                                           <div className="flex items-center gap-3 text-gray-400">
+                                             <div className="flex-shrink-0 w-8 h-8 bg-gray-600 rounded flex items-center justify-center">
+                                               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                 <path d="M8 5v14l11-7z"/>
+                                               </svg>
+                                             </div>
+                                             <div className="flex-1">
+                                               <h5 className="font-medium text-sm">{video.name || 'Untitled Video'}</h5>
+                                               <p className="text-xs text-gray-400">{video.type || 'Unknown Type'}</p>
+                                             </div>
+                                           </div>
+                                         )}
+                                       </div>
+                                     ))}
+                                   </div>
+                                   
+                                   {/* More Videos Button */}
+                                   {hasMoreVideos && (
+                                     <div className="mt-4 text-center">
+                                       <button
+                                         onClick={() => setShowAllVideos(!showAllVideos)}
+                                         className="px-4 py-2 bg-gray-700 hover:bg-green-600 text-gray-200 hover:text-white rounded-lg transition-colors text-sm font-medium"
+                                       >
+                                         {showAllVideos ? 'Show Less' : `More videos (${otherVideos.length - maxVisibleVideos} more)`}
+                                       </button>
+                                     </div>
+                                   )}
+                                 </div>
+                               );
+                             })()
                            )}
                          </div>
-                       ))}
-                     </div>
+                       );
+                     })()
                    ) : (
                      <div className="text-center py-8 text-gray-500">
                        <div className="text-4xl mb-2">📹</div>
@@ -972,7 +1032,6 @@ const MovieDetails = () => {
                              {/* PHOTOS Tab */}
                {activeTab === 'PHOTOS' && (
                  <div className="space-y-4">
-                   <h3 className="text-lg font-semibold text-gray-300 mb-4">Movie Photos</h3>
                    {images && images.length > 0 ? (
                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                        {images.map((image, index) => (
@@ -999,14 +1058,8 @@ const MovieDetails = () => {
                              <div className="hidden w-full h-full bg-gray-600 items-center justify-center group-hover:flex">
                                <div className="text-center">
                                  <div className="text-2xl mb-1">🖼️</div>
-                                 <div className="text-xs text-gray-400">{image.type || 'Image'}</div>
                                </div>
                              </div>
-                           </div>
-                           <div className="mt-2 text-center">
-                             <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
-                               {image.type || 'Unknown'}
-                             </span>
                            </div>
                          </div>
                        ))}
@@ -1051,7 +1104,6 @@ const MovieDetails = () => {
                        {activeReviewTab === 'MY REVIEW' ? (
                          <>
                            <p>You haven't written a review for this movie yet.</p>
-                           <p className="text-sm mt-2">Be the first to share your thoughts!</p>
                          </>
                        ) : (
                          <p>No reviews from other users yet</p>
@@ -1059,7 +1111,7 @@ const MovieDetails = () => {
                                                {isAuthenticated && activeReviewTab === 'MY REVIEW' && (
                           <button 
                             onClick={() => navigate(userReview ? `/movie/${movie.id}/review/edit/${userReview.id}` : `/movie/${movie.id}/review/create`)}
-                            className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+                            className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors"
                           >
                             {userReview ? 'Edit your Review' : 'Write a Review'}
                           </button>
@@ -1076,11 +1128,14 @@ const MovieDetails = () => {
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-3">
-                              <span className="text-gray-400 text-sm">
-                                Review by <span className="text-white font-medium">
+                              <button 
+                                onClick={() => navigate(`/review/${review.id}`)}
+                                className="text-gray-400 text-sm hover:text-gray-300 transition-colors cursor-pointer"
+                              >
+                                Review by <span className="text-gray-200 hover:text-gray-100 font-medium">
                                   {review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author || 'Anonymous'}
                                 </span>
-                              </span>
+                              </button>
                                                              {(review.rating !== undefined && review.rating !== null) && (
                                  <div className="flex items-center gap-2">
                                    <div className="flex items-center gap-1">
@@ -1107,7 +1162,7 @@ const MovieDetails = () => {
                                              </>
                                            ) : (
                                              // Regular star (full or empty)
-                                             <svg className={`w-3 h-3 ${isFullStar ? 'text-green-500 fill-current' : 'text-gray-600'}`} viewBox="0 0 20 20">
+                                             <svg className={`w-3 h-3 ${isFullStar ? 'text-green-500 fill-current' : 'text-gray-600 fill-current'}`} viewBox="0 0 20 20">
                                                <path d="M9.048 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                              </svg>
                                            )}
@@ -1149,21 +1204,20 @@ const MovieDetails = () => {
                               {review.text || review.content || review.reviewText || 'No review text available'}
                             </p>
                             
-                            {/* View full review link */}
-                            {review.id && (
-                              <div className="mb-4">
-                                <button
-                                  onClick={() => navigate(`/review/${review.id}`)}
-                                  className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium"
-                                >
-                                  View full review →
-                                </button>
-                              </div>
-                            )}
                             
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <span>{new Date(review.createdAt || review.createdDate || review.dateCreated || review.date || Date.now()).toLocaleDateString()}</span>
-                              {(review.likes || review.likeCount || review.likesCount) && <span>{review.likes || review.likeCount || review.likesCount} likes</span>}
+                            {/* Like and Comment buttons */}
+                            <div className="flex items-center gap-4 mb-3">
+                              <button className="flex items-center cursor-pointer gap-2 text-gray-400 hover:text-gray-300 transition-colors">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                <span className="text-sm">{review.likes || review.likeCount || review.likesCount || 0}</span>
+                              </button>
+                              <button className="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-300 transition-colors">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                              </button>
                             </div>
                           </div>
                         </div>
