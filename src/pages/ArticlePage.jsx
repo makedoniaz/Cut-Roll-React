@@ -318,7 +318,7 @@ function ArticlePage() {
                                 isLiking
                                     ? 'text-gray-500 cursor-not-allowed' 
                                     : isLiked
-                                        ? 'text-red-400 hover:text-red-500'
+                                        ? 'text-green-400 hover:text-green-500'
                                         : 'text-gray-400 hover:text-green-400'
                             }`}
                         >
