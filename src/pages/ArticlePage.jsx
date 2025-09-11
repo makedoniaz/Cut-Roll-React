@@ -13,6 +13,7 @@ function ArticlePage() {
     const [isLiking, setIsLiking] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const { id } = useParams();
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
@@ -78,12 +79,19 @@ function ArticlePage() {
     // getReferenceTypeName function removed as it's not being used
 
         const handleShare = () => {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000); // уведомление исчезает через 2 сек
-    });
-};
+        if (navigator.share) {
+            navigator.share({
+                title: article.title,
+                url: window.location.href
+            });
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            });
+        }
+    };
 
     const handleLike = async () => {
         if (!article || isLiking) return;
@@ -112,27 +120,31 @@ function ArticlePage() {
         }
     };
 
-    const handleDelete = async () => {
+    const handleDeleteClick = () => {
+        setShowDeleteConfirmation(true);
+    };
+
+    const handleDeleteConfirm = async () => {
         if (!article || !isAuthenticated || user?.id !== article.authorId) return;
-        
-        // Show confirmation dialog
-        const isConfirmed = window.confirm('Are you sure you want to delete this article? This action cannot be undone.');
-        if (!isConfirmed) return;
         
         setIsDeleting(true);
         try {
             // Delete the article
             await NewsService.deleteNewsArticle(article.id);
             
-            // Show success message and redirect to news page
-            alert('Article deleted successfully!');
+            // Redirect to news page without popup
             navigate('/news');
         } catch (error) {
             console.error('Error deleting article:', error);
-            alert(`Failed to delete article: ${error.message}`);
+            // You could show a toast notification here instead of alert
         } finally {
             setIsDeleting(false);
+            setShowDeleteConfirmation(false);
         }
+    };
+
+    const handleDeleteCancel = () => {
+        setShowDeleteConfirmation(false);
     };
 
     // Loading state
@@ -207,29 +219,21 @@ function ArticlePage() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-8 text-gray-100">
-            {/* Back button */}
-            <button
-                onClick={() => navigate('/news')}
-                className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors mb-6"
-            >
-                ← Back to News
-            </button>
-
-            {/* Header with Share and Like buttons */}
+            {/* Header with Edit/Delete buttons on left and Like/Share buttons on right */}
             <div className="flex items-start justify-between mb-6">
-                <h1 className="text-3xl font-bold flex-1 mr-4">{article.title}</h1>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-3xl font-bold">{article.title}</h1>
                     {/* Edit and Delete buttons - Only show for authenticated users who are the author */}
                     {isAuthenticated && user?.id === article.authorId && (
-                        <>
+                        <div className="flex items-center space-x-2">
                             {/* Edit Button */}
                             <button
                                 onClick={() => navigate(`/news/edit/${article.id}`)}
-                                className="cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 bg-blue-600 hover:bg-blue-700"
+                                className="cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 text-gray-400 hover:text-yellow-400 group relative"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5 transition-transform duration-200 text-white"
+                                    className="h-5 w-5 transition-transform duration-200"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -241,84 +245,115 @@ function ArticlePage() {
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                     />
                                 </svg>
-                                <span className="font-medium">Edit</span>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                    Edit
+                                </div>
                             </button>
 
                             {/* Delete Button */}
-                            <button
-                                onClick={handleDelete}
-                                disabled={isDeleting}
-                                className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
-                                    isDeleting 
-                                        ? 'bg-red-700 cursor-not-allowed' 
-                                        : 'bg-red-600 hover:bg-red-700'
-                                }`}
-                            >
-                                {isDeleting ? (
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                ) : (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-5 w-5 transition-transform duration-200 text-white"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
+                            {!showDeleteConfirmation ? (
+                                <button
+                                    onClick={handleDeleteClick}
+                                    disabled={isDeleting}
+                                    className={`cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative ${
+                                        isDeleting 
+                                            ? 'text-gray-500 cursor-not-allowed' 
+                                            : 'text-gray-400 hover:text-red-400'
+                                    }`}
+                                >
+                                    {isDeleting ? (
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+                                    ) : (
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-5 w-5 transition-transform duration-200"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                            />
+                                        </svg>
+                                    )}
+                                    {/* Tooltip */}
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                        Delete
+                                    </div>
+                                </button>
+                            ) : (
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-red-400 text-sm font-medium">Are you sure?</span>
+                                    <button
+                                        onClick={handleDeleteConfirm}
+                                        disabled={isDeleting}
+                                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                        />
-                                    </svg>
-                                )}
-                                <span className="font-medium">
-                                    {isDeleting ? 'Deleting...' : 'Delete'}
-                                </span>
-                            </button>
-                        </>
+                                        {isDeleting ? 'Deleting...' : 'Yes'}
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteCancel}
+                                        disabled={isDeleting}
+                                        className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     )}
-
+                </div>
+                
+                <div className="flex items-center space-x-3">
                     {/* Like Button - Only show for authenticated users */}
                     {isAuthenticated && (
                         <button
                             onClick={handleLike}
                             disabled={isLiking}
-                            className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
+                            className={`cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative ${
                                 isLiking
-                                    ? 'bg-gray-600 cursor-not-allowed' 
+                                    ? 'text-gray-500 cursor-not-allowed' 
                                     : isLiked
-                                        ? 'bg-red-600 hover:bg-red-700'
-                                        : 'bg-gray-700 hover:bg-gray-600'
+                                        ? 'text-red-400 hover:text-red-500'
+                                        : 'text-gray-400 hover:text-green-400'
                             }`}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 transition-transform duration-200 text-white"
-                                fill={isLiked ? "currentColor" : "none"}
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                                />
-                            </svg>
-                            <span className="font-medium">
+                            {isLiking ? (
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+                            ) : (
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 transition-transform duration-200"
+                                    fill={isLiked ? "currentColor" : "none"}
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                    />
+                                </svg>
+                            )}
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
                                 {isLiking ? 'Processing...' : (isLiked ? 'Unlike' : 'Like')}
-                            </span>
+                            </div>
                         </button>
                     )}
 
                     {/* Share Button */}
                     <button
                         onClick={handleShare}
-                        className={`cursor-pointer group flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
+                        className={`cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative ${
                             copied 
-                                ? 'bg-green-700' 
-                                : 'bg-gradient-to-r bg-gray-700 hover:bg-gray-600'
+                                ? 'text-green-400' 
+                                : 'text-gray-400 hover:text-green-400'
                         }`}
                     >
                         <svg
@@ -344,9 +379,10 @@ function ArticlePage() {
                                 />
                             )}
                         </svg>
-                        <span className="font-medium">
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
                             {copied ? 'Copied!' : 'Share'}
-                        </span>
+                        </div>
                     </button>
                 </div>
             </div>
@@ -413,7 +449,23 @@ function ArticlePage() {
             {/* Article stats */}
             <div className="mt-8 pt-6 border-t border-gray-700">
                 <div className="flex items-center gap-4 text-sm text-gray-400">
-                    <span>❤️ {article.likesCount || 0} likes</span>
+                    <span className="flex items-center gap-1">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 text-green-400"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                        </svg>
+                        {article.likesCount || 0} likes
+                    </span>
                     <span>•</span>
                     <span>Article ID: {article.id}</span>
                 </div>

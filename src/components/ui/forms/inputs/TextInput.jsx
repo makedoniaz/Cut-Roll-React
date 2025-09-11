@@ -5,6 +5,8 @@ const TextInput = ({
   placeholder = "", 
   required = false,
   className = "",
+  maxLength,
+  showCharCount = false,
   ...props 
 }) => {
   return (
@@ -20,9 +22,15 @@ const TextInput = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
+        maxLength={maxLength}
         className="w-full px-4 py-2 rounded-lg bg-gray-900 outline-none transition-all"
         {...props}
       />
+      {showCharCount && maxLength && (
+        <div className="text-xs text-gray-400">
+          {value.length}/{maxLength} characters
+        </div>
+      )}
     </div>
   );
 };

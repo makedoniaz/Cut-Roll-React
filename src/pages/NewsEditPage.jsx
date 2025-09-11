@@ -93,8 +93,7 @@ function NewsEditPage() {
             // Update the article
             await NewsService.updateNewsArticle(id, updateData);
             
-            // Show success message and redirect back to article
-            alert('Article updated successfully!');
+            // Redirect back to article without popup
             navigate(`/news/${id}`);
         } catch (error) {
             console.error('Error updating article:', error);
@@ -192,9 +191,13 @@ function NewsEditPage() {
                         name="newTitle"
                         value={formData.newTitle}
                         onChange={handleInputChange}
+                        maxLength={200}
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="Enter article title..."
                     />
+                    <div className="text-xs text-gray-400 mt-1">
+                        {formData.newTitle.length}/200 characters
+                    </div>
                 </div>
 
                 {/* Content Field */}
@@ -207,10 +210,14 @@ function NewsEditPage() {
                         name="newContent"
                         value={formData.newContent}
                         onChange={handleInputChange}
+                        maxLength={10000}
                         rows={15}
                         className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-vertical"
                         placeholder="Enter article content..."
                     />
+                    <div className="text-xs text-gray-400 mt-1">
+                        {formData.newContent.length}/10,000 characters
+                    </div>
                 </div>
 
                 {/* Action Buttons */}

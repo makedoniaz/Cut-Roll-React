@@ -8,7 +8,9 @@ const RichTextBox = ({
   placeholder = "Start typing...",
   minHeight = "16rem",
   className = "",
-  disabled = false
+  disabled = false,
+  maxLength,
+  showCharCount = false
 }) => {
   const editorRef = useRef(null);
   const [isEditorFocused, setIsEditorFocused] = useState(false);
@@ -52,7 +54,21 @@ const RichTextBox = ({
 
   const handleContentChange = () => {
     if (editorRef.current && !disabled) {
-      onChange(editorRef.current.innerHTML);
+      const newContent = editorRef.current.innerHTML;
+      
+      // Check character limit if specified
+      if (maxLength) {
+        const textContent = editorRef.current.textContent || editorRef.current.innerText || '';
+        if (textContent.length > maxLength) {
+          // Truncate content if it exceeds the limit
+          const truncatedText = textContent.substring(0, maxLength);
+          editorRef.current.innerHTML = truncatedText;
+          onChange(truncatedText);
+          return;
+        }
+      }
+      
+      onChange(newContent);
     }
   };
 
@@ -106,6 +122,11 @@ const RichTextBox = ({
         suppressContentEditableWarning={true}
         data-placeholder={disabled ? '' : placeholder}
       />
+      {showCharCount && maxLength && (
+        <div className="text-xs text-gray-400">
+          {(value.replace(/<[^>]*>/g, '').length)}/{maxLength} characters
+        </div>
+      )}
     </div>
   );
 };

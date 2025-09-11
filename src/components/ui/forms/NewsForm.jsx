@@ -123,10 +123,7 @@ function NewsForm({ onClose }) {
       
       console.log('News article created successfully with ID:', createdNewsId);
       
-      // Show success message before navigating
-      alert('News article created successfully!');
-      
-      // Navigate to the created news article or back to news list
+      // Navigate to the created news article or back to news list without popup
       navigate('/news');
       
     } catch (error) {
@@ -191,6 +188,8 @@ function NewsForm({ onClose }) {
               placeholder="Enter news article title..."
               required
               disabled={!isAuthenticated}
+              maxLength={200}
+              showCharCount={true}
             />
 
             <MediaUploader 
@@ -213,6 +212,8 @@ function NewsForm({ onClose }) {
               placeholder="Start writing your news article..."
               minHeight="20rem"
               disabled={!isAuthenticated}
+              maxLength={10000}
+              showCharCount={true}
             />
             
             <button
