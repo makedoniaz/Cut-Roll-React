@@ -1,12 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, User, Film, LogOut, Newspaper } from 'lucide-react';
+import { Search, User, Film, LogOut } from 'lucide-react';
 import { useNavigation } from '../../hooks/useNavigation';
 import { useAuth } from '../../hooks/useStores';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { goToSearch, goToNewsSearch } = useNavigation();
+  const { goToSearch } = useNavigation();
   const { isAuthenticated, user, logout } = useAuth();
 
   const isActiveRoute = (path) => {
@@ -104,13 +104,6 @@ const Header = () => {
               aria-label="Search Movies"
             >
               <Search className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => goToNewsSearch('')}
-              className="cursor-pointer p-2 hover:bg-gray-700 rounded-lg transition-colors"
-              aria-label="Search News"
-            >
-              <Newspaper className="w-5 h-5" />
             </button>
             
             {isAuthenticated ? (

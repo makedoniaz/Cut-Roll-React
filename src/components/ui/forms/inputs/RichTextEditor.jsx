@@ -115,8 +115,8 @@ const RichTextBox = ({
         onBlur={handleBlur}
         onMouseUp={handleMouseUp}
         onKeyUp={handleKeyUp}
-        className={`rich-text-editor w-full p-4 border rounded-lg outline-none bg-gray-900 text-white overflow-y-auto min-h-[20rem] ${
-          isEditorFocused ? "border-transparent" : "border-gray-800"
+        className={`rich-text-editor w-full p-4 border rounded-lg outline-none bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent overflow-y-auto min-h-[20rem] ${
+          isEditorFocused ? "border-green-500" : "border-gray-600"
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         style={{ minHeight }}
         suppressContentEditableWarning={true}

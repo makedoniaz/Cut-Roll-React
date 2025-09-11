@@ -151,19 +151,19 @@ const NewsCard = ({ article, showAuthor = true, showActions = false, onDelete })
             <div className="flex items-center gap-2">
               <button
                 onClick={handleEdit}
-                className="p-1 text-yellow-400 hover:text-yellow-300 transition-colors rounded hover:bg-yellow-500/20"
+                className="p-1 text-gray-400 hover:text-yellow-400 transition-colors rounded"
                 title="Edit"
               >
                 <Edit className="w-4 h-4" />
               </button>
               
-                              <button
-                  onClick={handleDelete}
-                  className="p-1 text-red-400 hover:text-red-300 transition-colors rounded hover:bg-red-500/20"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              <button
+                onClick={handleDelete}
+                className="p-1 text-gray-400 hover:text-red-400 transition-colors rounded"
+                title="Delete"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>

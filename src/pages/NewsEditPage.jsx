@@ -166,89 +166,107 @@ function NewsEditPage() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8 text-gray-100">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-bold">Edit Article</h1>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+            {/* Header with Back Button */}
+            <div className="flex items-center gap-4 mb-8">
                 <button
                     onClick={handleCancel}
-                    className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
                 >
-                    Cancel
+                    ← Cancel
                 </button>
+                <div className="h-6 w-px bg-gray-700"></div>
+                <h1 className="text-3xl font-bold text-white">Edit News Article</h1>
             </div>
 
-            {/* Edit Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Title Field */}
-                <div>
-                    <label htmlFor="newTitle" className="block text-sm font-medium text-gray-300 mb-2">
-                        Title
-                    </label>
-                    <input
-                        type="text"
-                        id="newTitle"
-                        name="newTitle"
-                        value={formData.newTitle}
-                        onChange={handleInputChange}
-                        maxLength={200}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Enter article title..."
-                    />
-                    <div className="text-xs text-gray-400 mt-1">
-                        {formData.newTitle.length}/200 characters
-                    </div>
-                </div>
+            {/* Edit Form with same background as NewsForm */}
+            <div className="w-full">
+                <div className="flex w-full min-h-[600px]">
+                    <div className="w-full rounded-lg p-6 bg-gray-800">
+                        <div className="flex items-center justify-between mb-6">
+                            <h1 className="text-2xl font-bold text-white">Edit News Article</h1>
+                        </div>
 
-                {/* Content Field */}
-                <div>
-                    <label htmlFor="newContent" className="block text-sm font-medium text-gray-300 mb-2">
-                        Content
-                    </label>
-                    <textarea
-                        id="newContent"
-                        name="newContent"
-                        value={formData.newContent}
-                        onChange={handleInputChange}
-                        maxLength={10000}
-                        rows={15}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-vertical"
-                        placeholder="Enter article content..."
-                    />
-                    <div className="text-xs text-gray-400 mt-1">
-                        {formData.newContent.length}/10,000 characters
-                    </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-4 pt-6">
-                    <button
-                        type="button"
-                        onClick={handleCancel}
-                        className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className={`px-6 py-3 font-medium rounded-lg transition-colors duration-200 ${
-                            saving
-                                ? 'bg-green-700 cursor-not-allowed'
-                                : 'bg-green-600 hover:bg-green-700'
-                        } text-white`}
-                    >
-                        {saving ? (
-                            <div className="flex items-center space-x-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                <span>Saving...</span>
+                        {/* Error Display */}
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-600/20 border border-red-600 rounded-lg">
+                                <p className="text-red-400">{error}</p>
                             </div>
-                        ) : (
-                            'Save Changes'
                         )}
-                    </button>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Title Field */}
+                            <div>
+                                <label htmlFor="newTitle" className="block text-sm font-medium text-gray-300 mb-2">
+                                    Article Title
+                                </label>
+                                <input
+                                    type="text"
+                                    id="newTitle"
+                                    name="newTitle"
+                                    value={formData.newTitle}
+                                    onChange={handleInputChange}
+                                    maxLength={200}
+                                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    placeholder="Enter article title..."
+                                />
+                                <div className="text-xs text-gray-400 mt-1">
+                                    {formData.newTitle.length}/200 characters
+                                </div>
+                            </div>
+
+                            {/* Content Field */}
+                            <div>
+                                <label htmlFor="newContent" className="block text-sm font-medium text-gray-300 mb-2">
+                                    Article Content
+                                </label>
+                                <textarea
+                                    id="newContent"
+                                    name="newContent"
+                                    value={formData.newContent}
+                                    onChange={handleInputChange}
+                                    maxLength={10000}
+                                    rows={15}
+                                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-vertical"
+                                    placeholder="Enter article content..."
+                                />
+                                <div className="text-xs text-gray-400 mt-1">
+                                    {formData.newContent.length}/10,000 characters
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex justify-end space-x-4 pt-6">
+                                <button
+                                    type="button"
+                                    onClick={handleCancel}
+                                    className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className={`px-6 py-3 font-medium rounded-lg transition-colors duration-200 ${
+                                        saving
+                                            ? 'bg-green-700 cursor-not-allowed'
+                                            : 'bg-green-600 hover:bg-green-700'
+                                    } text-white`}
+                                >
+                                    {saving ? (
+                                        <div className="flex items-center space-x-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                            <span>Saving...</span>
+                                        </div>
+                                    ) : (
+                                        'Save Changes'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     );
 }

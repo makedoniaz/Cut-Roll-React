@@ -82,7 +82,7 @@ const NewsPage = () => {
         <div>
           <h1 className="text-4xl font-bold text-white mb-2">News</h1>
           <p className="text-gray-400">
-            Stay updated with the latest movie news, reviews, and industry insights
+            Stay updated with the latest movie news and industry insights
           </p>
         </div>
         
