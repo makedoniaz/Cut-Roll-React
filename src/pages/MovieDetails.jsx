@@ -37,10 +37,20 @@ const MovieDetails = () => {
   const [totalReviews, setTotalReviews] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [averageRatingLoading, setAverageRatingLoading] = useState(false);
-  const [activeReviewTab, setActiveReviewTab] = useState('MY REVIEW');
+  const [activeReviewTab, setActiveReviewTab] = useState(isAuthenticated ? 'MY REVIEW' : 'REVIEWS');
   const [deletingReviewId, setDeletingReviewId] = useState(null);
   const [showAddToListsModal, setShowAddToListsModal] = useState(false);
   const [showAllVideos, setShowAllVideos] = useState(false);
+  
+  // Update active review tab when authentication status changes
+  useEffect(() => {
+    setActiveReviewTab(isAuthenticated ? 'MY REVIEW' : 'REVIEWS');
+  }, [isAuthenticated]);
+
+  // Scroll to top when page loads or movie ID changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
   
   // Fetch movie data
   useEffect(() => {
@@ -638,9 +648,6 @@ const MovieDetails = () => {
               {/* Movie Poster */}
               <MovieDetailsPoster 
                 title={movie.title}
-                views={movie.views}
-                lists={movie.lists}
-                likes={movie.likes}
                 posterUrl={getPosterUrl(movie.images)}
               />
               
@@ -1098,15 +1105,15 @@ const MovieDetails = () => {
                       <div className="text-4xl mb-2">⚠️</div>
                       <p>Failed to load reviews: {reviewsError}</p>
                     </div>
-                                     ) : (isAuthenticated && activeReviewTab === 'MY REVIEW' ? !userReview : otherReviews.length === 0) ? (
+                                     ) : (isAuthenticated && activeReviewTab === 'MY REVIEW' ? !userReview : (isAuthenticated ? otherReviews.length === 0 : reviews.length === 0)) ? (
                      <div className="text-center py-8 text-gray-500">
                        <div className="text-4xl mb-2">💬</div>
-                       {activeReviewTab === 'MY REVIEW' ? (
+                       {(isAuthenticated && activeReviewTab === 'MY REVIEW') ? (
                          <>
                            <p>You haven't written a review for this movie yet.</p>
                          </>
                        ) : (
-                         <p>No reviews from other users yet</p>
+                         <p>No reviews {isAuthenticated ? 'from other users' : 'available'} yet</p>
                        )}
                                                {isAuthenticated && activeReviewTab === 'MY REVIEW' && (
                           <button 
@@ -1119,7 +1126,7 @@ const MovieDetails = () => {
                      </div>
                    ) : (
                      <div className="rounded-lg">
-                                               {(isAuthenticated && activeReviewTab === 'MY REVIEW' ? [userReview] : reviews).filter(Boolean).map((review, index) => (
+                                               {(isAuthenticated && activeReviewTab === 'MY REVIEW' ? [userReview] : (isAuthenticated ? otherReviews : reviews)).filter(Boolean).map((review, index) => (
                                                  <div key={review.id} className={`flex gap-4 ${index === 0 ? 'pt-0 pb-6' : index === (isAuthenticated && activeReviewTab === 'MY REVIEW' ? 0 : reviews.length - 1) ? 'pt-6 pb-0' : 'py-6'} border-b border-gray-800 last:border-b-0`}>
                           <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                             {(review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author) ? 
@@ -1180,7 +1187,7 @@ const MovieDetails = () => {
                                   <button
                                     onClick={() => navigate(`/movie/${movie.id}/review/edit/${review.id}`)}
                                     title="Edit your review"
-                                    className="p-1 text-gray-400 hover:text-white transition-colors"
+                                    className="p-1 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
                                   >
                                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                                       <path d="M17.414 2.586a2 2 0 010 2.828l-9.9 9.9a2 2 0 01-.878.502l-3.293.823a1 1 0 01-1.212-1.212l.823-3.293a2 2 0 01.502-.878l9.9-9.9a2 2 0 012.828 0zM15 4l-9.5 9.5-.5 2 2-.5L16 5 15 4z" />
@@ -1190,7 +1197,7 @@ const MovieDetails = () => {
                                     onClick={() => handleDeleteReview(review.id)}
                                     disabled={deletingReviewId === review.id}
                                     title="Delete your review"
-                                    className={`p-1 ${deletingReviewId === review.id ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-red-400'} transition-colors`}
+                                    className={`p-1 flex items-center justify-center ${deletingReviewId === review.id ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-red-400'} transition-colors`}
                                   >
                                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                                       <path d="M6 7a1 1 0 011-1h6a1 1 0 011 1v9a2 2 0 01-2 2H8a2 2 0 01-2-2V7zm3-3a1 1 0 00-1 1v1H6a1 1 0 000 2h8a1 1 0 100-2h-2V5a1 1 0 00-1-1H9z" />
@@ -1205,20 +1212,25 @@ const MovieDetails = () => {
                             </p>
                             
                             
-                            {/* Like and Comment buttons */}
-                            <div className="flex items-center gap-4 mb-3">
-                              <button className="flex items-center cursor-pointer gap-2 text-gray-400 hover:text-gray-300 transition-colors">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                                <span className="text-sm">{review.likes || review.likeCount || review.likesCount || 0}</span>
-                              </button>
-                              <button className="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-300 transition-colors">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                              </button>
-                            </div>
+                            {/* Like and Comment buttons - Only show for authenticated users */}
+                            {isAuthenticated && (
+                              <div className="flex items-center gap-4 mb-3">
+                                <button className="flex items-center cursor-pointer gap-2 text-gray-400 hover:text-gray-300 transition-colors">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                  </svg>
+                                  <span className="text-sm">{review.likes || review.likeCount || review.likesCount || 0}</span>
+                                </button>
+                                <button 
+                                  onClick={() => navigate(`/review/${review.id}`)}
+                                  className="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-300 transition-colors"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
