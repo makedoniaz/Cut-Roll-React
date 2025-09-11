@@ -82,7 +82,7 @@ const MediaUploader = ({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-4">
+      <label className="block text-sm font-medium text-white mb-4">
         Media
       </label>
       
@@ -121,7 +121,7 @@ const MediaUploader = ({
               <span className="font-medium">Click to upload</span> or drag and drop
             </p>
             <p className="text-sm text-gray-400">
-              PNG, JPG, GIF up to 10MB
+              PNG, JPG up to 10MB
             </p>
             
             <button

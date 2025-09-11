@@ -31,14 +31,6 @@ function NewsForm({ onClose }) {
     }
   }, [isAuthenticated]);
 
-  const handleSaveDraft = () => {
-    console.log('Draft saved:', { 
-      title, 
-      content, 
-      image: image?.name
-    });
-    alert('Draft saved successfully!');
-  };
 
   // Transform references from the current format to the API format
   const transformReferencesForAPI = () => {
@@ -222,7 +214,7 @@ function NewsForm({ onClose }) {
               disabled={!isAuthenticated}
               className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 isAuthenticated
-                  ? 'cursor-pointer bg-blue-600 text-white hover:bg-blue-700' 
+                  ? 'cursor-pointer bg-green-600 text-white hover:bg-green-700' 
                   : 'bg-gray-500 text-gray-300 cursor-not-allowed'
               }`}
             >
@@ -260,19 +252,7 @@ function NewsForm({ onClose }) {
                 {image && `Image: ${image.name}`}
               </div>
               
-              <div className="flex space-x-3">
-                <button
-                  type="button"
-                  onClick={handleSaveDraft}
-                  disabled={!isAuthenticated}
-                  className={`cursor-pointer px-6 py-2 rounded-lg transition-colors ${
-                    isAuthenticated 
-                      ? 'bg-gray-600 text-white hover:bg-gray-500' 
-                      : 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                  }`}
-                >
-                  Save Draft
-                </button>
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={handlePublish}

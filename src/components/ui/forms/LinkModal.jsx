@@ -271,7 +271,14 @@ function LinkModal({ onClose, onAddReference = null }) {
             setLinkType(e.target.value);
             setSelectedReference(null);
           }}
-          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 pr-8 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          style={{
+            appearance: 'none',
+            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+            backgroundPosition: 'right 8px center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: '16px'
+          }}
         >
           {linkTypes.map((type) => (
             <option key={type.value} value={type.value}>
@@ -335,7 +342,7 @@ function LinkModal({ onClose, onAddReference = null }) {
           disabled={!selectedReference}
           className={`px-4 py-2 rounded-lg transition-colors ${
             selectedReference
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-green-600 text-white hover:bg-green-700'
               : 'bg-gray-500 text-gray-300 cursor-not-allowed'
           }`}
           onClick={handleAddReference}

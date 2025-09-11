@@ -90,20 +90,26 @@ const NewsPage = () => {
         <div className="mt-4 sm:mt-0 flex items-center gap-3">
           <button
             onClick={() => goToNewsSearch('')}
-            className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200"
-            title="Search News"
+            className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200 group relative"
           >
             <Search className="w-5 h-5" />
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+              Search News
+            </div>
           </button>
           
           {/* Create Article Button - Only for Admin and Publisher roles */}
           {hasAdminOrPublisherRole() && (
             <button
               onClick={handleCreateArticle}
-              className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200"
-              title="Create Article"
+              className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200 group relative"
             >
               <Plus className="w-5 h-5" />
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                Create Article
+              </div>
             </button>
           )}
         </div>
