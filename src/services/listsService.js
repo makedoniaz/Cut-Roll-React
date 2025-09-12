@@ -113,6 +113,7 @@ export class ListsService {
      * @param {Date|string} [searchParams.toDate] - End date for filtering
      * @param {number} [searchParams.page] - Page number (0-based)
      * @param {number} [searchParams.pageSize] - Page size
+     * @param {boolean} [searchParams.sortByLikesAscending] - Sort by likes ascending (true) or descending (false)
      * @returns {Promise<Object>} Search results with pagination
      */
     static async searchLists(searchParams) {
@@ -122,7 +123,8 @@ export class ListsService {
             fromDate: searchParams.fromDate || null,
             toDate: searchParams.toDate || null,
             page: searchParams.page || 0,
-            pageSize: searchParams.pageSize || 10
+            pageSize: searchParams.pageSize || 10,
+            sortByLikesAscending: searchParams.sortByLikesAscending !== undefined ? searchParams.sortByLikesAscending : false
         };
 
         // Validate and format dates if provided

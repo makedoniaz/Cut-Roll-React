@@ -29,6 +29,8 @@ import NewsEditPage from '../pages/NewsEditPage';
 import Lists from '../pages/Lists'
 import ListDetails from '../pages/ListDetails'
 import ListCreate from '../pages/ListCreate'
+import LikedLists from '../pages/LikedLists'
+import MyLists from '../pages/MyLists'
 import ActionLists from '../pages/ActionLists'
 import Reviews from '../pages/Reviews'
 import ReviewCreate from '../pages/ReviewCreate'
@@ -96,6 +98,16 @@ const AppRouter = () => {
             <Route path="lists/create" element={
               <ProtectedRoute>
                 <ListCreate />
+              </ProtectedRoute>
+            } />
+            <Route path="lists/liked" element={
+              <ProtectedRoute>
+                <LikedLists />
+              </ProtectedRoute>
+            } />
+            <Route path="lists/my" element={
+              <ProtectedRoute>
+                <MyLists />
               </ProtectedRoute>
             } />
             <Route path="lists/:id" element={<ListDetails />} />

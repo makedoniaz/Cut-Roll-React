@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
 import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
 import TabNav from "../components/ui/common/TabNav";
 import { useAuthStore } from "../stores/authStore";
@@ -109,7 +110,8 @@ const Lists = () => {
         fromDate: null,
         toDate: null,
         page: 1,
-        pageSize: 10
+        pageSize: 10,
+        sortByLikesAscending: false // Popular lists should be sorted by likes descending
       };
       
       console.log('📤 Search params:', searchParams);
@@ -275,9 +277,13 @@ const Lists = () => {
         <h1 className="text-3xl font-bold text-white">Movie Lists</h1>
         <button
           onClick={() => navigate('/lists/create')}
-          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200 group relative"
         >
-          Create List
+          <Plus className="w-5 h-5" />
+          {/* Tooltip */}
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+            Create List
+          </div>
         </button>
       </div>
 
@@ -288,8 +294,26 @@ const Lists = () => {
         onTabChange={handleTabChange}
         showMoreButton={true}
         onMoreClick={() => {
-          // Navigate to lists search page
-          navigate('/lists/search');
+          // Navigate based on active tab
+          if (activeTab === 'popular') {
+            // Navigate to search with sortByLikesAscending: false
+            navigate('/search/lists', { 
+              state: { 
+                searchParams: { 
+                  sortByLikesAscending: false 
+                } 
+              } 
+            });
+          } else if (activeTab === 'liked') {
+            // Navigate to liked lists page
+            navigate('/lists/liked');
+          } else if (activeTab === 'my') {
+            // Navigate to my lists page
+            navigate('/lists/my');
+          } else {
+            // Default fallback
+            navigate('/search/lists');
+          }
         }}
       />
 

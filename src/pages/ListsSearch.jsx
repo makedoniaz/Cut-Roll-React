@@ -12,6 +12,9 @@ const ListsSearch = () => {
   const location = useLocation();
   const { user } = useAuthStore();
   
+  // Get search parameters from navigation state
+  const searchParamsFromState = location.state?.searchParams || {};
+  
   // Filters based on the searchLists method parameters
   const listsFilters = [
     {
@@ -25,13 +28,20 @@ const ListsSearch = () => {
       label: 'Author',
       type: 'flexiblesearch',
       defaultValue: null
+    },
+    {
+      key: 'sortByLikesAscending',
+      label: 'Sort by Likes',
+      type: 'checkbox',
+      defaultValue: false
     }
   ];
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState({
     dateRange: { fromDate: null, toDate: null },
-    author: null
+    author: null,
+    sortByLikesAscending: searchParamsFromState.sortByLikesAscending || false
   });
 
   const [lists, setLists] = useState([]);
@@ -75,6 +85,9 @@ const ListsSearch = () => {
       if (key === 'author') {
         return value !== null;
       }
+      if (key === 'sortByLikesAscending') {
+        return value === true; // Only consider it active if explicitly set to true
+      }
       return value && value !== '';
     });
   }, [filterValues]);
@@ -105,7 +118,8 @@ const ListsSearch = () => {
         fromDate: filterValues.dateRange.fromDate,
         toDate: filterValues.dateRange.toDate,
         page: page - 1, // API uses 0-based pages
-        pageSize: 20
+        pageSize: 20,
+        sortByLikesAscending: filterValues.sortByLikesAscending
       };
 
       console.log('Final search parameters being sent:', searchParams);
@@ -158,6 +172,15 @@ const ListsSearch = () => {
     }
   }, [searchQuery, filterValues, user?.id]);
 
+  // Auto-trigger search if we have parameters from navigation
+  useEffect(() => {
+    if (searchParamsFromState.sortByLikesAscending !== undefined) {
+      // Auto-search with the passed parameters - this will search for popular lists
+      console.log('Auto-triggering search with pre-filters:', searchParamsFromState);
+      searchLists(1);
+    }
+  }, [searchParamsFromState, searchLists]);
+
   // Handle search query changes
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -199,7 +222,18 @@ const ListsSearch = () => {
 
   return (
     <div className="relative">
-      <h1 className="text-3xl font-bold mb-8">Search Movie Lists</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        {searchParamsFromState.sortByLikesAscending !== undefined ? 'Popular Lists' : 'Search Movie Lists'}
+      </h1>
+      
+      {/* Subtitle for popular lists */}
+      {searchParamsFromState.sortByLikesAscending !== undefined && (
+        <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+          <p className="text-gray-300">
+            Showing popular lists sorted by likes (most liked first)
+          </p>
+        </div>
+      )}
       
       {/* Main Content */}
       <div className={`transition-all duration-300 ${isFiltersSidebarOpen ? 'opacity-70' : 'opacity-100'}`}>
@@ -397,6 +431,32 @@ const ListsSearch = () => {
                           debounceMs={500}
                           maxResults={10}
                         />
+                      </div>
+                    );
+                  }
+
+                  if (filter.type === 'checkbox') {
+                    return (
+                      <div key={filter.key} className="space-y-2">
+                        <label className="flex items-center space-x-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={value || false}
+                            onChange={(e) => {
+                              const newFilterValues = { ...filterValues, [filter.key]: e.target.checked };
+                              setFilterValues(newFilterValues);
+                            }}
+                            className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                          />
+                          <span className="text-sm font-medium text-gray-300">
+                            {filter.key === 'sortByLikesAscending' ? 'Sort by likes ascending (lowest first)' : filter.label}
+                          </span>
+                        </label>
+                        {filter.key === 'sortByLikesAscending' && (
+                          <p className="text-xs text-gray-400 ml-7">
+                            When unchecked, lists are sorted by likes descending (most popular first)
+                          </p>
+                        )}
                       </div>
                     );
                   }
