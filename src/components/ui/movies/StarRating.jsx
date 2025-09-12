@@ -85,7 +85,7 @@ const StarRating = ({ rating, onRate }) => {
       </div>
       
       {/* Slider Input */}
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <div className="relative">
           <input
             ref={sliderRef}
@@ -109,31 +109,7 @@ const StarRating = ({ rating, onRate }) => {
           />
         </div>
         
-        {/* Slider Labels */}
-        <div className="flex justify-between text-sm text-gray-400 mt-3">
-          <span>0</span>
-          <span>1.5</span>
-          <span>2.5</span>
-          <span>3.5</span>
-          <span>5</span>
-        </div>
         
-        {/* Step indicators */}
-        <div className="flex justify-between mt-1">
-          {[0, 1.5, 2.5, 3.5, 5].map((step) => (
-            <div 
-              key={step}
-              className={`w-1 h-1 rounded-full ${
-                rating >= step ? 'bg-green-500' : 'bg-gray-600'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-      
-      {/* Instructions */}
-      <div className="text-sm text-gray-400 text-center max-w-xs">
-        Drag the slider to set your rating. Half-star ratings (like 1.5, 2.5) are supported.
       </div>
     </div>
   );

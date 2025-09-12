@@ -98,9 +98,6 @@ const ReviewCreate = () => {
       
       console.log('Review created successfully:', createdReview);
       
-      // Show success message before navigating
-      alert('Review created successfully!');
-      
       // Navigate back to the movie details page
       navigate(`/movie/${movieId}`);
       

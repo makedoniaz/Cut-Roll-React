@@ -16,7 +16,7 @@ const ReviewEdit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [movieTitle, setMovieTitle] = useState('');
+  const [movieData, setMovieData] = useState(null);
 
   const MAX_CONTENT_LENGTH = 1000;
 
@@ -32,11 +32,21 @@ const ReviewEdit = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [movie, review] = await Promise.all([
-          MovieService.getMovieById(movieId),
-          ReviewService.getReviewById(reviewId)
-        ]);
-        setMovieTitle(movie.title);
+        const review = await ReviewService.getReviewById(reviewId);
+        
+        // Use movieSimplified data from review if available, otherwise fallback to movieId
+        if (review.movieSimplified) {
+          setMovieData(review.movieSimplified);
+        } else {
+          // Fallback: fetch movie data using movieId
+          const movie = await MovieService.getMovieById(movieId);
+          setMovieData({
+            movieId: movie.id,
+            title: movie.title,
+            poster: movie.posterPath || movie.poster
+          });
+        }
+        
         setContent(review.content || review.text || review.reviewText || '');
         setRating(typeof review.rating === 'number' ? review.rating : 0);
       } catch (e) {
@@ -47,13 +57,18 @@ const ReviewEdit = () => {
       }
     };
 
-    if (movieId && reviewId) {
+    if (reviewId) {
       loadData();
     }
-  }, [movieId, reviewId]);
+  }, [reviewId, movieId]);
 
   const handleBackToMovie = () => {
     navigate(`/movie/${movieId}`);
+  };
+
+  const getPosterUrl = () => {
+    if (!movieData?.poster) return '/poster-placeholder.png';
+    return `https://image.tmdb.org/t/p/w500${movieData.poster}`;
   };
 
   const handleRatingChange = (newRating) => {
@@ -95,7 +110,6 @@ const ReviewEdit = () => {
       };
 
       await ReviewService.updateReview(reviewData);
-      alert('Review updated successfully!');
       navigate(`/movie/${movieId}`);
     } catch (e) {
       console.error('Failed to update review:', e);
@@ -138,33 +152,31 @@ const ReviewEdit = () => {
             )}
 
             <div className="space-y-6">
-              <div className="p-4 bg-gray-700 rounded-lg">
-                <h3 className="text-lg font-semibold text-white mb-2">Editing Review For:</h3>
-                <p className="text-gray-300">{movieTitle || `Movie ID: ${movieId}`}</p>
-              </div>
-
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-white">
-                  Your Rating *
-                </label>
-                <div className="flex flex-col gap-3">
+              {/* Movie Info and Rating Section */}
+              <div className="flex items-start">
+                {/* Left side - Movie Poster and Title */}
+                <div className="flex items-center gap-6">
+                  <img 
+                    src={getPosterUrl()} 
+                    alt={movieData?.title || 'Movie poster'}
+                    className="w-32 h-48 object-cover rounded-lg shadow-lg"
+                  />
+                  <div>
+                    <h3 className="text-2xl font-semibold text-white">{movieData?.title || 'Unknown Movie'}</h3>
+                  </div>
+                </div>
+                
+                {/* Right side - Rating - fills remaining space */}
+                <div className="flex-1 flex flex-col items-center justify-center gap-3">
                   <StarRating 
                     rating={rating} 
                     onRate={handleRatingChange}
                   />
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-semibold text-white">
-                      {rating > 0 ? `${rating}/5` : 'Select rating'}
-                    </span>
-                    <span className="text-sm text-gray-400">
-                                             Use the slider to rate from 0 to 5 (half-star ratings supported)
-                    </span>
-                  </div>
                 </div>
               </div>
 
               <TextArea
-                label="Review Content *"
+                label=""
                 value={content}
                 onChange={setContent}
                 placeholder="Update your thoughts about this movie..."

@@ -26,11 +26,6 @@ const TextArea = ({
         className="w-full px-4 py-2 rounded-lg bg-gray-900 outline-none transition-all resize-vertical"
         {...props}
       />
-      {maxLength && (
-        <div className="text-sm text-gray-400 text-right">
-          {value.length}/{maxLength} characters
-        </div>
-      )}
     </div>
   );
 };

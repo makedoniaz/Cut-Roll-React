@@ -4,6 +4,7 @@ import CastGrid from '../components/ui/movies/CastGrid';
 import TabNav from '../components/ui/common/TabNav';
 import MovieDetailsPoster from '../components/ui/movies/MovieDetailsPoster';
 import AddToListsModal from '../components/ui/forms/AddToListsModal';
+import ConfirmationDialog from '../components/ui/common/ConfirmationDialog';
 import { MovieService } from '../services/movieService';
 
 import { useState, useEffect } from 'react'
@@ -41,6 +42,8 @@ const MovieDetails = () => {
   const [deletingReviewId, setDeletingReviewId] = useState(null);
   const [showAddToListsModal, setShowAddToListsModal] = useState(false);
   const [showAllVideos, setShowAllVideos] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
   
   // Update active review tab when authentication status changes
   useEffect(() => {
@@ -544,22 +547,26 @@ const MovieDetails = () => {
     }
     if (!reviewId) return;
 
-    const confirmed = window.confirm('Delete your review? This cannot be undone.');
-    if (!confirmed) return;
+    setReviewToDelete(reviewId);
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!reviewToDelete) return;
 
     try {
-      setDeletingReviewId(reviewId);
-      await ReviewService.deleteReview(reviewId);
+      setDeletingReviewId(reviewToDelete);
+      await ReviewService.deleteReview(reviewToDelete);
       // Remove from local state
-      setReviews(prev => prev.filter(r => r.id !== reviewId));
+      setReviews(prev => prev.filter(r => r.id !== reviewToDelete));
       // Optionally update totals
       setTotalReviews(t => Math.max(0, (t || 1) - 1));
-      alert('Review deleted.');
     } catch (e) {
       console.error('Failed to delete review:', e);
       alert(e.message || 'Failed to delete review.');
     } finally {
       setDeletingReviewId(null);
+      setReviewToDelete(null);
     }
   };
 
@@ -1186,22 +1193,28 @@ const MovieDetails = () => {
                                 <div className="ml-auto flex items-center gap-2">
                                   <button
                                     onClick={() => navigate(`/movie/${movie.id}/review/edit/${review.id}`)}
-                                    title="Edit your review"
-                                    className="p-1 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+                                    className="p-1 cursor-pointer text-gray-400 hover:text-white transition-colors flex items-center justify-center group relative"
                                   >
                                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                                       <path d="M17.414 2.586a2 2 0 010 2.828l-9.9 9.9a2 2 0 01-.878.502l-3.293.823a1 1 0 01-1.212-1.212l.823-3.293a2 2 0 01.502-.878l9.9-9.9a2 2 0 012.828 0zM15 4l-9.5 9.5-.5 2 2-.5L16 5 15 4z" />
                                     </svg>
+                                    {/* Tooltip */}
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                      Edit Review
+                                    </div>
                                   </button>
                                   <button
                                     onClick={() => handleDeleteReview(review.id)}
                                     disabled={deletingReviewId === review.id}
-                                    title="Delete your review"
-                                    className={`p-1 flex items-center justify-center ${deletingReviewId === review.id ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-red-400'} transition-colors`}
+                                    className={`p-1 flex cursor-pointer items-center justify-center group relative ${deletingReviewId === review.id ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-red-400'} transition-colors`}
                                   >
                                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                                       <path d="M6 7a1 1 0 011-1h6a1 1 0 011 1v9a2 2 0 01-2 2H8a2 2 0 01-2-2V7zm3-3a1 1 0 00-1 1v1H6a1 1 0 000 2h8a1 1 0 100-2h-2V5a1 1 0 00-1-1H9z" />
                                     </svg>
+                                    {/* Tooltip */}
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                      Delete Review
+                                    </div>
                                   </button>
                                 </div>
                               )}
@@ -1215,19 +1228,27 @@ const MovieDetails = () => {
                             {/* Like and Comment buttons - Only show for authenticated users */}
                             {isAuthenticated && (
                               <div className="flex items-center gap-4 mb-3">
-                                <button className="flex items-center cursor-pointer gap-2 text-gray-400 hover:text-gray-300 transition-colors">
+                                <button className="flex items-center cursor-pointer gap-2 text-gray-400 hover:text-gray-300 transition-colors group relative">
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                   </svg>
                                   <span className="text-sm">{review.likes || review.likeCount || review.likesCount || 0}</span>
+                                  {/* Tooltip */}
+                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                    Like Review
+                                  </div>
                                 </button>
                                 <button 
                                   onClick={() => navigate(`/review/${review.id}`)}
-                                  className="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-300 transition-colors"
+                                  className="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-300 transition-colors group relative"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                   </svg>
+                                  {/* Tooltip */}
+                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                    View Comments
+                                  </div>
                                 </button>
                               </div>
                             )}
@@ -1541,6 +1562,22 @@ const MovieDetails = () => {
         movieId={movie?.id}
         movieTitle={movie?.title}
         onMovieAddedToLists={handleMovieAddedToLists}
+      />
+
+      {/* Delete Review Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmDialog}
+        onClose={() => {
+          setShowDeleteConfirmDialog(false);
+          setReviewToDelete(null);
+        }}
+        onConfirm={confirmDeleteReview}
+        title="Delete Review"
+        message="Are you sure you want to delete your review? This action cannot be undone."
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        isLoading={deletingReviewId !== null}
       />
     </div>
   );

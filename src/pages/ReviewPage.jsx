@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { ReviewService } from '../services/reviewService';
 import { MovieService } from '../services/movieService';
 import CommentSection from '../components/ui/comments/CommentSection';
+import ConfirmationDialog from '../components/ui/common/ConfirmationDialog';
 
 const ReviewPage = () => {
   const { reviewId } = useParams();
@@ -15,6 +16,7 @@ const ReviewPage = () => {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
 
   // Fetch review and movie data
   useEffect(() => {
@@ -80,9 +82,10 @@ const ReviewPage = () => {
       return;
     }
 
-    const confirmed = window.confirm('Delete your review? This cannot be undone.');
-    if (!confirmed) return;
+    setShowDeleteConfirmDialog(true);
+  };
 
+  const confirmDeleteReview = async () => {
     try {
       await ReviewService.deleteReview(reviewId);
       navigate(`/movie/${movie.id}`, { 
@@ -363,6 +366,18 @@ const ReviewPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Review Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmDialog}
+        onClose={() => setShowDeleteConfirmDialog(false)}
+        onConfirm={confirmDeleteReview}
+        title="Delete Review"
+        message="Are you sure you want to delete your review? This action cannot be undone."
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+      />
     </div>
   );
 };
