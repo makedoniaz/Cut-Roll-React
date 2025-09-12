@@ -239,7 +239,7 @@ const Home = () => {
                   </div>
                 )}
                 <button 
-                  onClick={() => navigate('/search', { 
+                  onClick={() => navigate('/search/movies', { 
                     state: { 
                       prefillFilters: { 
                         sortBy: 'releasedate', 
@@ -296,7 +296,7 @@ const Home = () => {
                   </div>
                 )}
                 <button 
-                  onClick={() => navigate('/search', { 
+                  onClick={() => navigate('/search/movies', { 
                     state: { 
                       prefillFilters: { 
                         sortBy: 'revenue', 

@@ -614,7 +614,7 @@ const MovieDetails = () => {
         <div className="mb-6 flex gap-4">
           {isFromSearch() ? (
             <button
-              onClick={() => navigate('/search', { 
+              onClick={() => navigate('/search/movies', { 
                 state: { 
                   restoreSearch: getSearchContext() 
                 } 
@@ -693,7 +693,7 @@ const MovieDetails = () => {
                       displayedCast.map((member, index) => (
                         <button
                           key={member.id || index}
-                          onClick={() => navigate('/search', { 
+                          onClick={() => navigate('/search/movies', { 
                             state: { 
                               prefillFilters: { 
                                 actor: member.person?.name 
@@ -772,7 +772,7 @@ const MovieDetails = () => {
                             {spokenLanguages.map((lang, index) => (
                               <button
                                 key={index}
-                                onClick={() => navigate('/search', {
+                                onClick={() => navigate('/search/movies', {
                                   state: {
                                     prefillFilters: {
                                       language: toEnglishLanguageName(lang)
@@ -794,7 +794,7 @@ const MovieDetails = () => {
                             {productionCompanies.map((company, index) => (
                               <button
                                 key={index}
-                                onClick={() => navigate('/search', { 
+                                onClick={() => navigate('/search/movies', { 
                                   state: { 
                                     prefillFilters: { 
                                       productionCompany: company 
@@ -843,7 +843,7 @@ const MovieDetails = () => {
                           {keywords.map((keyword, index) => (
                             <button
                               key={index}
-                              onClick={() => navigate('/search', { 
+                              onClick={() => navigate('/search/movies', { 
                                 state: { 
                                   prefillFilters: { 
                                     keyword: keyword.keyword?.name || keyword.keywordId || keyword || 'Unknown Keyword'
@@ -874,7 +874,7 @@ const MovieDetails = () => {
                      genres.map((genre, index) => (
                        <button
                          key={index}
-                         onClick={() => navigate('/search', { 
+                         onClick={() => navigate('/search/movies', { 
                            state: { 
                              prefillFilters: { 
                                genres: [genre]
@@ -905,7 +905,7 @@ const MovieDetails = () => {
                           {names.map((name, index) => (
                             <button
                               key={index}
-                              onClick={() => navigate('/search', { 
+                              onClick={() => navigate('/search/movies', { 
                                 state: { 
                                   prefillFilters: { 
                                     director: name 
