@@ -34,18 +34,13 @@ const ReviewEdit = () => {
         setLoading(true);
         const review = await ReviewService.getReviewById(reviewId);
         
-        // Use movieSimplified data from review if available, otherwise fallback to movieId
-        if (review.movieSimplified) {
-          setMovieData(review.movieSimplified);
-        } else {
-          // Fallback: fetch movie data using movieId
-          const movie = await MovieService.getMovieById(movieId);
-          setMovieData({
-            movieId: movie.id,
-            title: movie.title,
-            poster: movie.posterPath || movie.poster
-          });
-        }
+        // Always fetch full movie data to get proper poster images
+        const movie = await MovieService.getMovieById(movieId);
+        setMovieData({
+          movieId: movie.id,
+          title: movie.title,
+          images: movie.images
+        });
         
         setContent(review.content || review.text || review.reviewText || '');
         setRating(typeof review.rating === 'number' ? review.rating : 0);
@@ -67,8 +62,12 @@ const ReviewEdit = () => {
   };
 
   const getPosterUrl = () => {
-    if (!movieData?.poster) return '/poster-placeholder.png';
-    return `https://image.tmdb.org/t/p/w500${movieData.poster}`;
+    if (!movieData?.images) return '/poster-placeholder.png';
+    const poster = movieData.images.find(img => img.type === 'poster');
+    if (poster?.filePath) {
+      return `https://image.tmdb.org/t/p/w500${poster.filePath}`;
+    }
+    return '/poster-placeholder.png';
   };
 
   const handleRatingChange = (newRating) => {
@@ -88,10 +87,6 @@ const ReviewEdit = () => {
       return;
     }
 
-    if (rating === 0) {
-      setError('Please select a rating for your review.');
-      return;
-    }
 
     if (content.length > MAX_CONTENT_LENGTH) {
       setError(`Review content cannot exceed ${MAX_CONTENT_LENGTH} characters.`);
@@ -191,9 +186,9 @@ const ReviewEdit = () => {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !isAuthenticated || rating === 0 || !content.trim()}
+                  disabled={isSubmitting || !isAuthenticated || !content.trim()}
                   className={`cursor-pointer px-6 py-2 rounded-lg transition-colors ${
-                    isSubmitting || !isAuthenticated || rating === 0 || !content.trim()
+                    isSubmitting || !isAuthenticated || !content.trim()
                       ? 'bg-gray-500 text-gray-300 cursor-not-allowed' 
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}

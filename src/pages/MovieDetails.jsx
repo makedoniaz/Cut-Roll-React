@@ -1341,9 +1341,9 @@ const MovieDetails = () => {
              <div className="bg-gray-800 rounded-lg ">
                <div className="flex items-center gap-2">
                                    <span className="text-3xl font-bold text-green-500">
-                     {userReview && userReview.rating !== undefined && userReview.rating !== null && userReview.rating > 0 ? userReview.rating.toFixed(1) : 'N/A'}
+                     {userReview && userReview.rating !== undefined && userReview.rating !== null ? userReview.rating.toFixed(1) : 'N/A'}
                    </span>
-                 {userReview && userReview.rating !== undefined && userReview.rating !== null && userReview.rating > 0 && (
+                 {userReview && userReview.rating !== undefined && userReview.rating !== null && (
                    <div className="flex gap-0.5">
                      {(() => {
                        // Helper function to round to nearest 0.5
@@ -1444,9 +1444,9 @@ const MovieDetails = () => {
                <h3 className="text-sm font-semibold text-gray-400 mb-3">AVERAGE RATING</h3>
                <div className="flex items-center gap-2 mb-4">
                  <span className="text-3xl font-bold text-green-500">
-                   {averageRatingLoading ? '...' : (averageRating !== undefined && averageRating !== null && averageRating > 0 ? averageRating.toFixed(1) : 'N/A')}
+                   {averageRatingLoading ? '...' : (averageRating !== undefined && averageRating !== null ? averageRating.toFixed(1) : 'N/A')}
                  </span>
-                 {!averageRatingLoading && averageRating !== undefined && averageRating !== null && averageRating > 0 && (
+                 {!averageRatingLoading && averageRating !== undefined && averageRating !== null && (
                    <div className="flex gap-0.5">
                      {(() => {
                        // Helper function to round to nearest 0.5

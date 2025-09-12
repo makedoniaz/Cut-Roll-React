@@ -37,14 +37,14 @@ const ReviewCreate = () => {
         setMovieData({
           movieId: movie.id,
           title: movie.title,
-          poster: movie.posterPath || movie.poster
+          images: movie.images
         });
       } catch (error) {
         console.error('Failed to fetch movie data:', error);
         setMovieData({
           movieId: movieId,
           title: `Movie ID: ${movieId}`,
-          poster: null
+          images: null
         });
       }
     };
@@ -59,8 +59,12 @@ const ReviewCreate = () => {
   };
 
   const getPosterUrl = () => {
-    if (!movieData?.poster) return '/poster-placeholder.png';
-    return `https://image.tmdb.org/t/p/w500${movieData.poster}`;
+    if (!movieData?.images) return '/poster-placeholder.png';
+    const poster = movieData.images.find(img => img.type === 'poster');
+    if (poster?.filePath) {
+      return `https://image.tmdb.org/t/p/w500${poster.filePath}`;
+    }
+    return '/poster-placeholder.png';
   };
 
   const handleRatingChange = (newRating) => {
