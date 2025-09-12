@@ -1125,7 +1125,7 @@ const MovieDetails = () => {
                                                {isAuthenticated && activeReviewTab === 'MY REVIEW' && (
                           <button 
                             onClick={() => navigate(userReview ? `/movie/${movie.id}/review/edit/${userReview.id}` : `/movie/${movie.id}/review/create`)}
-                            className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors"
+                            className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                           >
                             {userReview ? 'Edit your Review' : 'Write a Review'}
                           </button>

@@ -46,8 +46,8 @@ const StarRating = ({ rating, onRate }) => {
       >
         <defs>
           <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset={`${percent}%`} stopColor="#10b981" />
+            <stop offset="0%" stopColor="#16a34a" />
+            <stop offset={`${percent}%`} stopColor="#16a34a" />
             <stop offset={`${percent}%`} stopColor="#4b5563" />
             <stop offset="100%" stopColor="#4b5563" />
           </linearGradient>
@@ -73,7 +73,7 @@ const StarRating = ({ rating, onRate }) => {
   const activeRating = hoverRating > 0 ? hoverRating : rating;
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-6 w-fit">
       {/* Star Display */}
       <div className="flex gap-1 items-center">
         {renderStars(activeRating)}
@@ -85,7 +85,7 @@ const StarRating = ({ rating, onRate }) => {
       </div>
       
       {/* Slider Input */}
-      <div className="w-full max-w-lg">
+      <div className="w-full">
         <div className="relative">
           <input
             ref={sliderRef}
@@ -104,7 +104,7 @@ const StarRating = ({ rating, onRate }) => {
             onMouseLeave={() => setHoverRating(0)}
             className="w-full h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer custom-slider"
             style={{
-              background: `linear-gradient(to right, #10b981 0%, #10b981 ${(rating / 5) * 100}%, #4b5563 ${(rating / 5) * 100}%, #4b5563 100%)`
+              background: `linear-gradient(to right, #16a34a 0%, #16a34a ${(rating / 5) * 100}%, #4b5563 ${(rating / 5) * 100}%, #4b5563 100%)`
             }}
           />
         </div>

@@ -14,7 +14,7 @@
   height: 24px;
   width: 24px;
   border-radius: 50%;
-  background: #10b981;
+  background: #16a34a;
   cursor: pointer;
   border: 3px solid #ffffff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -34,7 +34,7 @@
   height: 24px;
   width: 24px;
   border-radius: 50%;
-  background: #10b981;
+  background: #16a34a;
   cursor: pointer;
   border: 3px solid #ffffff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -58,16 +58,16 @@
 
 /* Focus states for accessibility */
 .custom-slider:focus {
-  outline: 2px solid #10b981;
+  outline: 2px solid #16a34a;
   outline-offset: 2px;
 }
 
 .custom-slider:focus::-webkit-slider-thumb {
-  outline: 2px solid #10b981;
+  outline: 2px solid #16a34a;
   outline-offset: 2px;
 }
 
 .custom-slider:focus::-moz-range-thumb {
-  outline: 2px solid #10b981;
+  outline: 2px solid #16a34a;
   outline-offset: 2px;
 }

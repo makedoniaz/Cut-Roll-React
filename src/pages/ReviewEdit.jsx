@@ -142,7 +142,7 @@ const ReviewEdit = () => {
         <div className="flex w-full min-h-[600px]">
           <div className="w-full rounded-lg p-6 bg-gray-800">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-white">Update Your Review</h1>
+              <h1 className="text-2xl font-bold text-white">{movieData?.title || 'Edit Review'}</h1>
             </div>
 
             {error && (
@@ -153,7 +153,7 @@ const ReviewEdit = () => {
 
             <div className="space-y-6">
               {/* Movie Info and Rating Section */}
-              <div className="flex items-start">
+              <div className="flex items-start gap-6">
                 {/* Left side - Movie Poster and Title */}
                 <div className="flex items-center gap-6">
                   <img 
@@ -161,13 +161,10 @@ const ReviewEdit = () => {
                     alt={movieData?.title || 'Movie poster'}
                     className="w-32 h-48 object-cover rounded-lg shadow-lg"
                   />
-                  <div>
-                    <h3 className="text-2xl font-semibold text-white">{movieData?.title || 'Unknown Movie'}</h3>
-                  </div>
                 </div>
                 
-                {/* Right side - Rating - fills remaining space */}
-                <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                {/* Right side - Rating - actual width */}
+                <div className="flex flex-col items-start gap-3">
                   <StarRating 
                     rating={rating} 
                     onRate={handleRatingChange}
