@@ -124,7 +124,7 @@ const Lists = () => {
         id: list.id,
         title: list.title,
         description: list.description,
-        coverImages: [], // MovieListPoster will handle showing 4 posters (real movies + placeholders)
+        coverImages: list.preview || [], // Use preview property from API for movie posters
         author: {
           name: list.userSimplified?.userName || 'Unknown',
           avatar: list.userSimplified?.avatarPath || '👤'
@@ -173,7 +173,7 @@ const Lists = () => {
         id: list.id,
         title: list.title,
         description: list.description,
-        coverImages: [], // MovieListPoster will handle showing 4 posters (real movies + placeholders)
+        coverImages: list.preview || [], // Use preview property from API for movie posters
         author: {
           name: list.userSimplified?.userName || 'Unknown',
           avatar: list.userSimplified?.avatarPath || '👤'
@@ -221,7 +221,7 @@ const Lists = () => {
         id: list.id,
         title: list.title,
         description: list.description,
-        coverImages: [], // MovieListPoster will handle showing 4 posters (real movies + placeholders)
+        coverImages: list.preview || [], // Use preview property from API for movie posters
         author: {
           name: list.userSimplified?.userName || 'Unknown',
           avatar: list.userSimplified?.avatarPath || '👤'
