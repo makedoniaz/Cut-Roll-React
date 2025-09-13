@@ -8,20 +8,24 @@ import SectionHeading from "../components/ui/common/SectionHeading";
 import PaginatedGridContainer from "../components/layout/PaginatedGridContainer";
 import { useAuthStore } from "../stores/authStore";
 import { MovieService } from "../services/movieService";
+import { ListsService } from "../services/listsService";
 
 const Home = () => {
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const [newReleases, setNewReleases] = useState([]);
   const [popularMovies, setPopularMovies] = useState([]);
+  const [popularLists, setPopularLists] = useState([]);
   const [isLoadingNewReleases, setIsLoadingNewReleases] = useState(false);
   const [isLoadingPopular, setIsLoadingPopular] = useState(false);
+  const [isLoadingPopularLists, setIsLoadingPopularLists] = useState(false);
   const [isLoadingNews, setIsLoadingNews] = useState(false);
   const [error, setError] = useState(null);
   
   // Refs for intersection observer
   const newReleasesRef = useRef(null);
   const popularMoviesRef = useRef(null);
+  const popularListsRef = useRef(null);
 
   // Lazy load new releases
   const loadNewReleases = useCallback(async () => {
@@ -71,6 +75,55 @@ const Home = () => {
     }
   }, [isLoadingPopular, popularMovies.length]);
 
+  // Lazy load popular lists
+  const loadPopularLists = useCallback(async () => {
+    if (isLoadingPopularLists || popularLists.length > 0) return;
+    
+    try {
+      setIsLoadingPopularLists(true);
+      setError(null);
+
+      const searchParams = {
+        userId: null,
+        title: null,
+        fromDate: null,
+        toDate: null,
+        page: 0,
+        pageSize: 4,
+        sortByLikesAscending: false // Popular lists should be sorted by likes descending
+      };
+      
+      const result = await ListsService.searchLists(searchParams);
+      
+      // Extract the data array from the API response
+      const listsData = result.data || result.items || result || [];
+      
+      // Transform API data to match MovieListCard expected structure
+      const transformedLists = listsData.map(list => ({
+        id: list.id,
+        title: list.title,
+        description: list.description,
+        coverImages: list.preview || [], // Use preview property from API for movie posters
+        author: {
+          name: list.userSimplified?.userName || 'Unknown',
+          avatar: list.userSimplified?.avatarPath || '👤'
+        },
+        stats: {
+          films: list.moviesCount || 0,
+          likes: list.likesCount || 0,
+          comments: 0 // API doesn't provide comments count yet
+        }
+      }));
+      
+      setPopularLists(transformedLists);
+    } catch (err) {
+      console.error('Error fetching popular lists:', err);
+      setError('Failed to load popular lists. Please try again later.');
+    } finally {
+      setIsLoadingPopularLists(false);
+    }
+  }, [isLoadingPopularLists, popularLists.length]);
+
   // Intersection observer for lazy loading
   useEffect(() => {
     const observerOptions = {
@@ -97,6 +150,15 @@ const Home = () => {
       });
     }, observerOptions);
 
+    const popularListsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadPopularLists();
+          popularListsObserver.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
     if (newReleasesRef.current) {
       newReleasesObserver.observe(newReleasesRef.current);
     }
@@ -105,90 +167,17 @@ const Home = () => {
       popularMoviesObserver.observe(popularMoviesRef.current);
     }
 
+    if (popularListsRef.current) {
+      popularListsObserver.observe(popularListsRef.current);
+    }
+
     return () => {
       newReleasesObserver.disconnect();
       popularMoviesObserver.disconnect();
+      popularListsObserver.disconnect();
     };
-  }, [loadNewReleases, loadPopularMovies]);
+  }, [loadNewReleases, loadPopularMovies, loadPopularLists]);
 
-  const movieLists = [
-  {
-    id: 1,
-    title: "Feminist Horror Starter Pack",
-    author: {
-      name: "Horrorville",
-      avatar: "🎭"
-    },
-    stats: {
-      films: 20,
-      likes: 2100,
-      comments: 24
-    },
-    coverImages: [
-      "https://images.unsplash.com/photo-1518929458119-e5bf444c30f4?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1489599538824-2e2b8e3a5f3a?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=400&h=600&fit=crop"
-    ]
-  },
-  {
-    id: 2,
-    title: "That was their first movie???",
-    author: {
-      name: "Bailey",
-      avatar: "👤"
-    },
-    stats: {
-      films: 46,
-      likes: 1500,
-      comments: 76
-    },
-    coverImages: [
-      "https://images.unsplash.com/photo-1489599538824-2e2b8e3a5f3a?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1518929458119-e5bf444c30f4?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1516796181074-bf453fbfa3e6?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop"
-    ]
-  },
-  {
-    id: 3,
-    title: "New York Times' 100 Best Movies of the 21st Century",
-    author: {
-      name: "Mogwai_Synth",
-      avatar: "🎬"
-    },
-    stats: {
-      films: 100,
-      likes: 2200,
-      comments: 282
-    },
-    coverImages: [
-      "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1489599538824-2e2b8e3a5f3a?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1518929458119-e5bf444c30f4?w=400&h=600&fit=crop"
-    ]
-  },
-    {
-    id: 4,
-    title: "That was their first movie???",
-    author: {
-      name: "Bailey",
-      avatar: "👤"
-    },
-    stats: {
-      films: 46,
-      likes: 1500,
-      comments: 76
-    },
-    coverImages: [
-      "https://images.unsplash.com/photo-1489599538824-2e2b8e3a5f3a?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1518929458119-e5bf444c30f4?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1516796181074-bf453fbfa3e6?w=400&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop"
-    ]
-  },
-];
 
   // Loading skeleton component
   const LoadingSkeleton = ({ count = 6 }) => (
@@ -339,13 +328,55 @@ const Home = () => {
         </div>
       </div>
       
-      <div className="mb-12">
-        <MovieListsGrid 
-          heading={"POPULAR LISTS"} 
-          rows={1} 
-          itemsPerRow={4} 
-          movieLists={movieLists}
-        />
+      {/* Popular Lists Section */}
+      <div ref={popularListsRef} className="mb-12">
+        <div className="py-2">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-center">
+              <h2 className="text-base font-medium text-gray-400 tracking-wider">POPULAR LISTS</h2>
+              <div className="flex items-center gap-3">
+                {isLoadingPopularLists && (
+                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                    <span>Loading...</span>
+                  </div>
+                )}
+                <button 
+                  onClick={() => navigate('/search/lists', { 
+                    state: { 
+                      searchParams: { 
+                        sortByLikesAscending: false 
+                      } 
+                    } 
+                  })}
+                  className="cursor-pointer font-medium text-gray-400 hover:text-green-500"
+                >
+                  MORE
+                </button>
+              </div>
+            </div>
+            <hr className="border-t border-gray-700 my-4 mb-8" />
+            <div>
+              {isLoadingPopularLists ? (
+                <div className="text-center p-8">
+                  <div className="text-white text-xl">Loading popular lists...</div>
+                </div>
+              ) : popularLists.length > 0 ? (
+                <div className="animate-fade-in">
+                  <MovieListsGrid 
+                    rows={1} 
+                    itemsPerRow={4} 
+                    movieLists={popularLists}
+                  />
+                </div>
+              ) : (
+                <div className="text-gray-400 text-center py-8">
+                  No popular lists available
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* Recent News Section */}

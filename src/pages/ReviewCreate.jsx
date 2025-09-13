@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { ReviewService } from '../services/reviewService';
 import { MovieService } from '../services/movieService';
+import { WatchedService } from '../services/watchedService';
 import StarRating from '../components/ui/movies/StarRating';
 import TextArea from '../components/ui/forms/inputs/TextArea';
 
@@ -110,6 +111,19 @@ const ReviewCreate = () => {
       const createdReview = await ReviewService.createReview(reviewData);
       
       console.log('Review created successfully:', createdReview);
+      
+      // Mark movie as watched after successful review creation
+      try {
+        await WatchedService.markAsWatched({
+          userId: user.id,
+          movieId: movieId
+        });
+        console.log('Movie marked as watched successfully');
+      } catch (watchedError) {
+        // Log the error but don't fail the entire operation
+        console.error('Failed to mark movie as watched:', watchedError);
+        // You could optionally show a warning message here
+      }
       
       // Navigate back to the movie details page
       navigate(`/movie/${movieId}`);
