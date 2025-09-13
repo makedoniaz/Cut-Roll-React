@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Search, Film, Newspaper, List, Star, Users, Filter } from 'lucide-react';
+import { Search, Film, Newspaper, List, Star, Users } from 'lucide-react';
 
 const SearchHub = () => {
   const searchCategories = [
@@ -7,52 +7,42 @@ const SearchHub = () => {
       title: 'Movies',
       description: 'Search through our extensive movie database',
       icon: Film,
-      path: '/search/movies',
-      color: 'bg-blue-500',
-      features: ['Genre filtering', 'Year range', 'Rating filters', 'Cast & crew search']
+      path: '/search/movies'
     },
     {
       title: 'News',
       description: 'Find articles, reviews, and industry updates',
       icon: Newspaper,
-      path: '/search/news',
-      color: 'bg-green-500',
-      features: ['Category filtering', 'Date ranges', 'Author search', 'Content search']
+      path: '/search/news'
     },
     {
       title: 'Lists',
-      description: 'Discover curated movie lists from the community',
+      description: 'Discover curated movie lists',
       icon: List,
-      path: '/search/lists',
-      color: 'bg-purple-500',
-      features: ['Sort by popularity', 'Minimum movies', 'Visibility filters', 'Author search']
+      path: '/search/lists'
     },
     {
       title: 'Reviews',
       description: 'Find movie reviews and ratings',
       icon: Star,
-      path: '/search/reviews',
-      color: 'bg-yellow-500',
-      features: ['Rating filters', 'Sort options', 'Movie-specific', 'Reviewer search']
+      path: '/search/reviews'
     },
     {
       title: 'Users',
       description: 'Connect with other movie enthusiasts',
       icon: Users,
-      path: '/search/users',
-      color: 'bg-red-500',
-      features: ['Activity sorting', 'Review counts', 'List counts', 'Verification status']
+      path: '/search/users'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-800">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-900/20 rounded-full">
-              <Search className="w-8 h-8 text-blue-400" />
+            <div className="p-3 bg-green-900/20 rounded-full">
+              <Search className="w-8 h-8 text-green-400" />
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mb-4">
@@ -74,9 +64,9 @@ const SearchHub = () => {
                 to={category.path}
                 className="group block"
               >
-                                 <div className="bg-gray-700 rounded-xl shadow-sm border border-gray-600 p-6 hover:shadow-lg hover:border-gray-500 transition-all duration-200 group-hover:scale-105">
+                                 <div className="bg-gray-800 rounded-xl shadow-sm border border-gray-600 p-6 hover:shadow-lg hover:border-gray-500 transition-all duration-200 group-hover:scale-105">
                    <div className="flex items-center mb-4">
-                     <div className={`p-3 rounded-lg ${category.color} text-white mr-4`}>
+                     <div className="p-3 rounded-lg bg-green-600 text-white mr-4">
                        <IconComponent className="w-6 h-6" />
                      </div>
                      <h3 className="text-xl font-semibold text-white">
@@ -88,17 +78,8 @@ const SearchHub = () => {
                      {category.description}
                    </p>
                    
-                   <ul className="space-y-2">
-                     {category.features.map((feature, index) => (
-                       <li key={index} className="flex items-center text-sm text-gray-400">
-                         <Filter className="w-4 h-4 mr-2 text-gray-500" />
-                         {feature}
-                       </li>
-                     ))}
-                   </ul>
-                   
                    <div className="mt-4 pt-4 border-t border-gray-600">
-                     <span className="text-blue-400 font-medium group-hover:text-blue-300 transition-colors">
+                     <span className="text-green-400 font-medium group-hover:text-green-300 transition-colors">
                        Start searching →
                      </span>
                    </div>

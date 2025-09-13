@@ -239,28 +239,31 @@ const ListsSearch = () => {
       <div className={`transition-all duration-300 ${isFiltersSidebarOpen ? 'opacity-70' : 'opacity-100'}`}>
         {/* Search Bar and Filter Button Row */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="flex-1 flex items-center gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search for movie lists..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearchButtonPress();
-                  }
-                }}
-                className="w-full px-4 py-3 pl-12 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400"
-              />
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <div className="flex-1">
+            <div className="relative flex">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  placeholder="Search for movie lists..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearchButtonPress();
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-l-lg focus:outline-none focus:border-green-500 text-white placeholder-gray-400"
+                />
+              </div>
+              <button
+                onClick={handleSearchButtonPress}
+                className="cursor-pointer px-4 py-3 bg-green-600 hover:bg-green-700 border border-green-600 rounded-r-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={handleSearchButtonPress}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
-            >
-              Search
-            </button>
           </div>
           <button
             onClick={() => setIsFiltersSidebarOpen(!isFiltersSidebarOpen)}

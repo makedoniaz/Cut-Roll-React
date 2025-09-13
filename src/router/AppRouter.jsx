@@ -3,7 +3,7 @@ import Layout from '../components/layout/Layout';
 import Home from '../pages/Home';
 import Movies from '../pages/Movies';
 import Profile from '../pages/Profile';
-import Search from '../pages/Search';
+import MovieSearch from '../pages/MovieSearch';
 import SearchHub from '../pages/SearchHub';
 import NewsSearch from '../pages/NewsSearch';
 import ListsSearch from '../pages/ListsSearch';
@@ -73,7 +73,7 @@ const AppRouter = () => {
             <Route path="review/:reviewId" element={<ReviewPage />} />
             <Route path="reviews" element={<Reviews />} />
             <Route path="search" element={<SearchHub />} />
-            <Route path="search/movies" element={<Search />} />
+            <Route path="search/movies" element={<MovieSearch />} />
             <Route path="search/lists" element={<ListsSearch />} />
             <Route path="search/news" element={<NewsSearch />} />
             <Route path="search/reviews" element={<ReviewsSearch />} />
