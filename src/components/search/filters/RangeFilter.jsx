@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 const RangeFilter = ({ label, value, onChange, min, max, step = 1, labelFormatter, defaultValue }) => {
   const [isDragging, setIsDragging] = useState(null);
   const [tempValue, setTempValue] = useState(value);
+  const [lastInteractedThumb, setLastInteractedThumb] = useState(null);
   const sliderRef = useRef(null);
 
   // Debug logging
@@ -89,6 +90,7 @@ const RangeFilter = ({ label, value, onChange, min, max, step = 1, labelFormatte
   const handleMouseDown = (thumb, e) => {
     e.preventDefault();
     setIsDragging(thumb);
+    setLastInteractedThumb(thumb);
   };
 
   // Use tempValue for positioning during drag, otherwise use value
@@ -122,19 +124,25 @@ const RangeFilter = ({ label, value, onChange, min, max, step = 1, labelFormatte
           
           {/* Min thumb */}
           <div
-            className={`absolute w-5 h-5 bg-white border-2 border-green-500 rounded-full cursor-pointer transform -translate-y-1/2 -translate-x-1/2 top-1/2 z-10 transition-none ${
+            className={`absolute w-5 h-5 bg-white border-2 border-green-500 rounded-full cursor-pointer transform -translate-y-1/2 -translate-x-1/2 top-1/2 transition-none ${
               isDragging === 'min' ? 'scale-110 shadow-lg' : 'hover:scale-105'
             }`}
-            style={{ left: `${minPercent}%` }}
+            style={{ 
+              left: `${minPercent}%`,
+              zIndex: isDragging === 'min' ? 20 : (displayValue[0] === displayValue[1] && lastInteractedThumb === 'min' ? 15 : 10)
+            }}
             onMouseDown={(e) => handleMouseDown('min', e)}
           />
           
           {/* Max thumb */}
           <div
-            className={`absolute w-5 h-5 bg-white border-2 border-green-500 rounded-full cursor-pointer transform -translate-y-1/2 -translate-x-1/2 top-1/2 z-10 transition-none ${
+            className={`absolute w-5 h-5 bg-white border-2 border-green-500 rounded-full cursor-pointer transform -translate-y-1/2 -translate-x-1/2 top-1/2 transition-none ${
               isDragging === 'max' ? 'scale-110 shadow-lg' : 'hover:scale-105'
             }`}
-            style={{ left: `${maxPercent}%` }}
+            style={{ 
+              left: `${maxPercent}%`,
+              zIndex: isDragging === 'max' ? 20 : (displayValue[0] === displayValue[1] && lastInteractedThumb === 'max' ? 15 : 10)
+            }}
             onMouseDown={(e) => handleMouseDown('max', e)}
           />
         </div>
