@@ -155,8 +155,9 @@ const FlexibleSearchInput = ({
   // Handle focus
   const handleFocus = () => {
     setIsFocused(true);
-    // Only open dropdown if there's input value or search results
-    if (inputValue.trim() || searchResults.length > 0) {
+    // Only open dropdown if there are search results (user is actively searching)
+    // Don't open on focus if input has value but no search results (selected item)
+    if (searchResults.length > 0) {
       setIsDropdownOpen(true);
     }
   };
