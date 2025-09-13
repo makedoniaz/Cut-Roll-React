@@ -1,21 +1,25 @@
-const CommentHeader = ({ totalComments, hasMore, showPrevious, onTogglePrevious }) => {
+const CommentHeader = ({ totalComments, hasMore, showPrevious, onTogglePrevious, loading }) => {
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-700">
-      <h3 className="font-medium text-gray-300">
-        {totalComments} COMMENTS
-      </h3>
-      
-      <div className="flex items-center gap-4">
-        {hasMore && (
-          <button
-            onClick={onTogglePrevious}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            {showPrevious ? 'Show recent 20' : 'Show previous'}
-          </button>
-        )}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-semibold text-white">
+          {loading ? 'Loading comments...' : `${totalComments} Comments`}
+        </h3>
         
+        <div className="flex items-center gap-4">
+          {hasMore && !loading && (
+            <button
+              onClick={onTogglePrevious}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              {showPrevious ? 'Show recent 10' : 'Show previous'}
+            </button>
+          )}
+        </div>
       </div>
+      
+      {/* Horizontal line */}
+      <hr className="border-gray-700" />
     </div>
   );
 };

@@ -236,18 +236,6 @@ const ReviewPage = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Go Back
-          </button>
-        </div>
 
         {/* Main Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -449,9 +437,12 @@ const ReviewPage = () => {
               {/* Movie Title and Year */}
               {review?.movieSimplified && (
                 <div className="mb-4">
-                  <h1 className="text-4xl font-bold tracking-wider text-white mb-2">
+                  <button
+                    onClick={() => navigate(`/movie/${review.movieSimplified.movieId}`)}
+                    className="text-4xl font-bold tracking-wider text-white mb-2 hover:text-green-400 transition-colors cursor-pointer"
+                  >
                     {review.movieSimplified.title}
-                  </h1>
+                  </button>
                 </div>
               )}
 
@@ -502,7 +493,7 @@ const ReviewPage = () => {
               </div>
 
               {/* Review Text */}
-              <div className="mb-6">
+              <div className="mb-30">
                 <div className="text-gray-300 leading-relaxed text-base whitespace-pre-wrap">
                   {review.content || review.text || review.reviewText || 'No review content available.'}
                 </div>
@@ -513,9 +504,8 @@ const ReviewPage = () => {
 
             {/* Comments Section */}
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Comments</h2>
               <CommentSection
-                initialComments={[]}
+                reviewId={reviewId}
                 onAddComment={handleAddComment}
               />
             </div>

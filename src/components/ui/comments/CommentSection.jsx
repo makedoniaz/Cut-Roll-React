@@ -1,48 +1,157 @@
 import CommentHeader from "./CommentHeader";
 import CommentList from "./CommentList";
 import CommentForm from "../forms/CommentForm";
+import { CommentService } from "../../../services/commentService";
+import { useAuthStore } from "../../../stores/authStore";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const CommentSection = ({ initialComments = [], onAddComment }) => {
-  const [comments, setComments] = useState(initialComments);
+const CommentSection = ({ reviewId, onAddComment }) => {
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [showPrevious, setShowPrevious] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMoreComments, setHasMoreComments] = useState(true);
+  const { isAuthenticated, user } = useAuthStore();
 
-  const handleAddComment = (commentText) => {
-    const newComment = {
-      id: Date.now(),
-      author: {
-        name: 'makedoniaz', // В реальном приложении берем из контекста пользователя
-        avatar: '/api/placeholder/32/32',
-        timeAgo: 'now'
-      },
-      text: commentText,
-      timestamp: new Date()
-    };
+  // Fetch comments when reviewId changes
+  useEffect(() => {
+    if (reviewId) {
+      fetchComments();
+    }
+  }, [reviewId]);
+
+  const fetchComments = async (resetPage = false) => {
+    if (!reviewId) return;
     
-    setComments(prev => [...prev, newComment]);
-    onAddComment?.(newComment);
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const currentPage = resetPage ? 1 : page;
+      
+      const response = await CommentService.getCommentsByReview({
+        reviewId: reviewId,
+        page: currentPage,
+        pageSize: 10
+      });
+      
+      if (resetPage || currentPage === 1) {
+        setComments(response.data || []);
+        setPage(1);
+      } else {
+        setComments(prev => [...prev, ...(response.data || [])]);
+      }
+      
+      setHasMoreComments(response.hasNextPage || false);
+    } catch (err) {
+      console.error('Error fetching comments:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddComment = async (commentText) => {
+    if (!isAuthenticated || !user?.id || !reviewId) {
+      return;
+    }
+
+    try {
+      await CommentService.createComment({
+        userId: user.id,
+        reviewId: reviewId,
+        content: commentText
+      });
+      
+      // Refetch comments to get the latest data with proper structure
+      await fetchComments(true);
+      
+      // Call the callback if provided
+      onAddComment?.();
+    } catch (err) {
+      console.error('Error creating comment:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleUpdateComment = async (commentId, newContent) => {
+    if (!isAuthenticated || !user?.id || !reviewId) {
+      return;
+    }
+
+    try {
+      await CommentService.updateComment({
+        userId: user.id,
+        reviewId: reviewId,
+        content: newContent
+      });
+      
+      // Refetch comments to get the latest data
+      await fetchComments(true);
+    } catch (err) {
+      console.error('Error updating comment:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!isAuthenticated || !user?.id || !reviewId) {
+      return;
+    }
+
+    try {
+      await CommentService.deleteComment(reviewId);
+      
+      // Refetch comments to get the latest data
+      await fetchComments(true);
+    } catch (err) {
+      console.error('Error deleting comment:', err);
+      setError(err.message);
+    }
   };
 
   const handleShowPrevious = () => {
-    setShowPrevious(!showPrevious);
+    if (showPrevious) {
+      setShowPrevious(false);
+    } else {
+      setShowPrevious(true);
+      if (hasMoreComments && page === 1) {
+        setPage(prev => prev + 1);
+        fetchComments();
+      }
+    }
   };
 
-  const visibleComments = showPrevious ? comments : comments.slice(-20);
-  const hasMoreComments = true;
+  const visibleComments = showPrevious ? comments : comments.slice(0, 10);
 
   return (
-    <div className="bg-gray-800 rounded-lg text-white">
+    <div className="text-white">
       <CommentHeader 
         totalComments={comments.length}
         hasMore={hasMoreComments}
         showPrevious={showPrevious}
         onTogglePrevious={handleShowPrevious}
+        loading={loading}
       />
       
-      <CommentList comments={visibleComments} />
+      {error && (
+        <div className=" bg-red-900/20 border border-red-500/30 rounded-lg mb-4">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
       
-      <CommentForm onSubmit={handleAddComment} />
+      <CommentList 
+        comments={visibleComments} 
+        onUpdateComment={handleUpdateComment}
+        onDeleteComment={handleDeleteComment}
+        currentUserId={user?.id}
+      />
+      
+      {isAuthenticated && (
+        <CommentForm onSubmit={handleAddComment} />
+      )}
     </div>
   );
 };
