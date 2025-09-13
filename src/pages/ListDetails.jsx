@@ -329,6 +329,17 @@ const ListDetails = () => {
         setError(null);
     };
 
+    // Validation helpers
+    const isTitleValid = () => {
+        const trimmedTitle = editTitle.trim();
+        return trimmedTitle !== '' && trimmedTitle !== (list.title || '');
+    };
+
+    const isDescriptionValid = () => {
+        const trimmedDescription = editDescription.trim();
+        return trimmedDescription !== '' && trimmedDescription !== (list.description || '');
+    };
+
     // Like functionality
     const checkIfLiked = async () => {
         if (!isAuthenticated || !user?.id || !list?.id) return;
@@ -594,8 +605,12 @@ const ListDetails = () => {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={handleSaveTitle}
-                                                disabled={isUpdating}
-                                                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                disabled={isUpdating || !isTitleValid()}
+                                                className={`px-3 py-2 rounded-lg transition-colors ${
+                                                    isUpdating || !isTitleValid()
+                                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                        : 'bg-green-600 text-white hover:bg-green-700'
+                                                }`}
                                             >
                                                 {isUpdating ? 'Saving...' : 'Save'}
                                             </button>
@@ -657,8 +672,12 @@ const ListDetails = () => {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={handleSaveDescription}
-                                                disabled={isUpdating}
-                                                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                disabled={isUpdating || !isDescriptionValid()}
+                                                className={`px-3 py-2 rounded-lg transition-colors ${
+                                                    isUpdating || !isDescriptionValid()
+                                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                        : 'bg-green-600 text-white hover:bg-green-700'
+                                                }`}
                                             >
                                                 {isUpdating ? 'Saving...' : 'Save'}
                                             </button>
