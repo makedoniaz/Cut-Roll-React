@@ -275,16 +275,18 @@ const Lists = () => {
       {/* Header with Create List Button */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">Movie Lists</h1>
-        <button
-          onClick={() => navigate('/lists/create')}
-          className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200 group relative"
-        >
-          <Plus className="w-5 h-5" />
-          {/* Tooltip */}
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-            Create List
-          </div>
-        </button>
+        {isAuthenticated && (
+          <button
+            onClick={() => navigate('/lists/create')}
+            className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200 group relative"
+          >
+            <Plus className="w-5 h-5" />
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+              Create List
+            </div>
+          </button>
+        )}
       </div>
 
       {/* Tab Navigation */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit2, Trash2, Share2 } from 'lucide-react';
+import { Trash2, Share2 } from 'lucide-react';
 import ListMovieGrid from "../components/ui/movies/ListMovieGrid";
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import CommentSection from "../components/ui/comments/CommentSection";
@@ -437,18 +437,6 @@ const ListDetails = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
-            {/* Header with Back Button */}
-            <div className="flex items-center gap-4 mb-8">
-                <button
-                    onClick={handleBackToLists}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                >
-                    ← Back to Lists
-                </button>
-                <div className="h-6 w-px bg-gray-700"></div>
-                <h1 className="text-3xl font-bold text-white">List Details</h1>
-            </div>
-
             {/* Error Display */}
             {error && (
                 <div className="mb-6 p-4 bg-red-900/20 border border-red-600/30 rounded-lg">
@@ -465,7 +453,7 @@ const ListDetails = () => {
                             {/* Left side: Caption with Delete button */}
                             <div className="flex items-center gap-4">
                                 {list.userSimplified && (
-                                    <div className="text-sm text-gray-400">
+                                    <div className="text-lg text-gray-400">
                                         List by <span className="font-bold text-white">{list.userSimplified.userName}</span>
                                     </div>
                                 )}
@@ -585,7 +573,7 @@ const ListDetails = () => {
                                         type="text"
                                         value={editTitle}
                                         onChange={(e) => setEditTitle(e.target.value)}
-                                        className="text-4xl md:text-6xl font-bold text-white bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 outline-none focus:border-blue-500"
+                                        className="text-3xl md:text-4xl font-bold text-white bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 outline-none focus:border-blue-500"
                                         placeholder="Enter list title..."
                                         maxLength={100}
                                     />
@@ -606,17 +594,33 @@ const ListDetails = () => {
                                     </div>
                                 </div>
                                                          ) : (
-                                 <div className="group relative inline-block">
-                                     <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
+                                 <div className="group relative inline-flex items-center">
+                                     <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
                                          {list.title || 'Untitled List'}
                                      </h1>
                                      {isOwner && (
                                          <button
                                              onClick={handleEditTitle}
-                                             className="absolute -right-12 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg"
-                                             title="Edit title"
+                                             className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-yellow-400 rounded-lg group relative"
                                          >
-                                             <Edit2 className="h-5 w-5" />
+                                             <svg
+                                                 xmlns="http://www.w3.org/2000/svg"
+                                                 className="h-5 w-5 transition-transform duration-200"
+                                                 fill="none"
+                                                 viewBox="0 0 24 24"
+                                                 stroke="currentColor"
+                                             >
+                                                 <path
+                                                     strokeLinecap="round"
+                                                     strokeLinejoin="round"
+                                                     strokeWidth={2}
+                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                 />
+                                             </svg>
+                                             {/* Tooltip */}
+                                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                                 Edit Title
+                                             </div>
                                          </button>
                                      )}
                                  </div>
@@ -657,17 +661,33 @@ const ListDetails = () => {
                                     </div>
                                 </div>
                                                          ) : (
-                                 <div className="group relative inline-block">
+                                 <div className="group relative inline-flex items-center">
                                      <p className="text-lg md:text-xl text-gray-300 max-w-4xl leading-relaxed">
                                          {list.description || 'No description available'}
                                      </p>
                                                                            {isOwner && (
                                           <button
                                               onClick={handleEditDescription}
-                                              className="absolute -right-12 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg"
-                                              title="Edit description"
+                                              className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-yellow-400 rounded-lg group relative"
                                           >
-                                              <Edit2 className="h-5 w-5" />
+                                              <svg
+                                                  xmlns="http://www.w3.org/2000/svg"
+                                                  className="h-5 w-5 transition-transform duration-200"
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                              >
+                                                  <path
+                                                      strokeLinecap="round"
+                                                      strokeLinejoin="round"
+                                                      strokeWidth={2}
+                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                  />
+                                              </svg>
+                                              {/* Tooltip */}
+                                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                                  Edit Description
+                                              </div>
                                           </button>
                                       )}
                                  </div>
@@ -675,7 +695,21 @@ const ListDetails = () => {
                         </div>
 
                         {/* Like Count Display */}
-                        <div className="mt-4">
+                        <div className="mt-4 flex items-center gap-2">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 text-green-400"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                />
+                            </svg>
                             <span className="text-sm text-gray-400">
                                 {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                             </span>
@@ -685,7 +719,7 @@ const ListDetails = () => {
             </div>
 
             {/* Movies Grid */}
-            <div className="mb-10">
+            <div className="mb-6">
                 {moviesLoading ? (
                     <div className="text-center py-8">
                         <div className="text-white text-lg">Loading movies...</div>
