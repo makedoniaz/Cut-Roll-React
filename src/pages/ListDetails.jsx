@@ -17,6 +17,18 @@ const ListDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
+    // Movies state
+    const [movies, setMovies] = useState([]);
+    const [moviesLoading, setMoviesLoading] = useState(false);
+    const [moviesError, setMoviesError] = useState(null);
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPreviousPage, setHasPreviousPage] = useState(false);
+    
     // Edit states
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -62,6 +74,37 @@ const ListDetails = () => {
         }
     }, [isAuthenticated, user?.id, list?.id]);
 
+    // Fetch movies from list when list is loaded
+    useEffect(() => {
+        const fetchMovies = async () => {
+            if (!list?.id) return;
+
+            try {
+                setMoviesLoading(true);
+                setMoviesError(null);
+                const moviesData = await ListsService.getMoviesFromList({
+                    listId: list.id,
+                    page: currentPage,
+                    pageSize: 12 // Show 12 movies per page (2 rows of 6)
+                });
+                
+                // Update movies and pagination data
+                setMovies(moviesData.data || []);
+                setTotalCount(moviesData.totalCount || 0);
+                setTotalPages(moviesData.totalPages || 1);
+                setHasNextPage(moviesData.hasNextPage || false);
+                setHasPreviousPage(moviesData.hasPreviousPage || false);
+            } catch (err) {
+                console.error('Error fetching movies from list:', err);
+                setMoviesError(err.message || 'Failed to fetch movies');
+            } finally {
+                setMoviesLoading(false);
+            }
+        };
+
+        fetchMovies();
+    }, [list?.id, currentPage]);
+
     const handleBackToLists = () => {
         navigate('/lists');
     };
@@ -74,15 +117,53 @@ const ListDetails = () => {
         setIsAddMoviesModalOpen(true);
     };
 
-    const handleMoviesAdded = (addedMovies) => {
+    const handleMoviesAdded = async (addedMovies) => {
         console.log('Movies added to list:', addedMovies);
-        // Here you could update the local list state or refetch the list
-        // For now, we'll just log the added movies
-        // TODO: Update the movies list in the component state
+        // Refresh the movies list after adding new movies
+        try {
+            setMoviesLoading(true);
+            setMoviesError(null);
+            const moviesData = await ListsService.getMoviesFromList({
+                listId: list.id,
+                page: currentPage,
+                pageSize: 12
+            });
+            
+            // Update movies and pagination data
+            setMovies(moviesData.data || []);
+            setTotalCount(moviesData.totalCount || 0);
+            setTotalPages(moviesData.totalPages || 1);
+            setHasNextPage(moviesData.hasNextPage || false);
+            setHasPreviousPage(moviesData.hasPreviousPage || false);
+        } catch (err) {
+            console.error('Error refreshing movies after adding:', err);
+            setMoviesError(err.message || 'Failed to refresh movies');
+        } finally {
+            setMoviesLoading(false);
+        }
     };
 
     const handleCloseAddMoviesModal = () => {
         setIsAddMoviesModalOpen(false);
+    };
+
+    // Pagination handlers
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (hasNextPage) {
+            setCurrentPage(prev => prev + 1);
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if (hasPreviousPage) {
+            setCurrentPage(prev => prev - 1);
+        }
     };
 
     const handleDeleteList = async () => {
@@ -352,8 +433,7 @@ const ListDetails = () => {
         }
     ];
 
-    // Get movies from list data or use empty array if list has no movies
-    const movies = list?.movies || [];
+    // Movies are now fetched separately using getMoviesFromList method
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -380,6 +460,123 @@ const ListDetails = () => {
             <div className="relative overflow-hidden mb-10">
                 <div className="py-16">
                     <div>
+                        {/* Action Buttons Section */}
+                        <div className="flex items-center justify-between mb-6">
+                            {/* Left side: Caption with Delete button */}
+                            <div className="flex items-center gap-4">
+                                {list.userSimplified && (
+                                    <div className="text-sm text-gray-400">
+                                        List by <span className="font-bold text-white">{list.userSimplified.userName}</span>
+                                    </div>
+                                )}
+                                
+                                {/* Delete Button - Only show for list owner */}
+                                {isOwner && (
+                                    <button
+                                        onClick={handleDeleteList}
+                                        disabled={isUpdating}
+                                        className={`cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative ${
+                                            isUpdating 
+                                                ? 'text-gray-500 cursor-not-allowed' 
+                                                : 'text-gray-400 hover:text-red-400'
+                                        }`}
+                                    >
+                                        {isUpdating ? (
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+                                        ) : (
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-5 w-5 transition-transform duration-200"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                />
+                                            </svg>
+                                        )}
+                                        {/* Tooltip */}
+                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                            Delete
+                                        </div>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Right side: Share and Like buttons */}
+                            <div className="flex items-center space-x-3">
+                                {/* Like Button */}
+                                {isAuthenticated && (
+                                    <button
+                                        onClick={handleLikeToggle}
+                                        disabled={isLikeLoading}
+                                        className={`cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative ${
+                                            isLikeLoading
+                                                ? 'text-gray-500 cursor-not-allowed' 
+                                                : isLiked
+                                                    ? 'text-green-400 hover:text-green-500'
+                                                    : 'text-gray-400 hover:text-green-400'
+                                        }`}
+                                    >
+                                        {isLikeLoading ? (
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+                                        ) : (
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-5 w-5 transition-transform duration-200"
+                                                fill={isLiked ? "currentColor" : "none"}
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                                />
+                                            </svg>
+                                        )}
+                                        {/* Tooltip */}
+                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                            {isLikeLoading ? 'Processing...' : (isLiked ? 'Unlike' : 'Like')}
+                                        </div>
+                                    </button>
+                                )}
+
+                                {/* Share Button */}
+                                <button
+                                    onClick={handleShareList}
+                                    className="cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative text-gray-400 hover:text-green-400"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5 transition-transform duration-200 group-hover:-rotate-12"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                                        />
+                                    </svg>
+                                    {/* Tooltip */}
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                        Share
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Horizontal Line */}
+                        <hr className="border-t border-gray-700 mb-6" />
+
                         {/* Editable Title */}
                         <div className="mb-6">
                             {isEditingTitle ? (
@@ -477,84 +674,11 @@ const ListDetails = () => {
                              )}
                         </div>
 
-                        {list.userSimplified && (
-                            <div className="mt-4 flex items-center gap-3">
-                                <div className="text-sm text-gray-400">
-                                    Created by: {list.userSimplified.userName}
-                                </div>
-                                {isOwner && (
-                                    <div className="px-2 py-1 bg-blue-600/20 border border-blue-600/30 rounded text-xs text-blue-400">
-                                        Your List
-                                    </div>
-                                )}
-                                {!isOwner && isAuthenticated && (
-                                    <div className="px-2 py-1 bg-gray-600/20 border border-gray-600/30 rounded text-xs text-gray-400">
-                                        Not Your List
-                                    </div>
-                                )}
-                                {!isAuthenticated && (
-                                    <div className="px-2 py-1 bg-red-600/20 border border-red-600/30 rounded text-xs text-red-400">
-                                        Not Logged In
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="mt-4 flex items-center gap-4 flex-wrap">
-                            {/* Like Button and Count */}
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={handleLikeToggle}
-                                    disabled={!isAuthenticated || isLikeLoading}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                                        isLiked 
-                                            ? 'bg-red-600 hover:bg-red-700 text-white' 
-                                            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                    title={!isAuthenticated ? 'Sign in to like this list' : ''}
-                                >
-                                    <svg 
-                                        className={`w-5 h-5 ${isLiked ? 'fill-current' : 'fill-none'}`} 
-                                        stroke="currentColor" 
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path 
-                                            strokeLinecap="round" 
-                                            strokeLinejoin="round" 
-                                            strokeWidth={2} 
-                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-                                        />
-                                    </svg>
-                                    {isLikeLoading ? '...' : (isLiked ? 'Liked' : 'Like')}
-                                </button>
-                                <span className="text-sm text-gray-400">
-                                    {likeCount} {likeCount === 1 ? 'like' : 'likes'}
-                                </span>
-                            </div>
-
-                            {/* Share Button */}
-                            <button
-                                onClick={handleShareList}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                                title="Share this list"
-                            >
-                                <Share2 className="h-5 w-5" />
-                                Share
-                            </button>
-
-                            {/* Delete Button - Only show for list owner */}
-                            {isOwner && (
-                                <button
-                                    onClick={handleDeleteList}
-                                    disabled={isUpdating}
-                                    className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Delete this list"
-                                >
-                                    <Trash2 className="h-5 w-5" />
-                                    {isUpdating ? 'Deleting...' : 'Delete'}
-                                </button>
-                            )}
+                        {/* Like Count Display */}
+                        <div className="mt-4">
+                            <span className="text-sm text-gray-400">
+                                {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -562,15 +686,103 @@ const ListDetails = () => {
 
             {/* Movies Grid */}
             <div className="mb-10">
-                <ListMovieGrid 
-                    heading={`Movies in this List (${list.moviesCount || 0})`}
-                    rows={Math.ceil(movies.length / 6)} 
-                    itemsPerRow={6} 
-                    movies={movies} 
-                    CardComponent={SmallMovieCard}
-                    onAddMoviesClick={isOwner ? handleAddMovies : null}
-                    showAddMovies={isOwner}
-                />
+                {moviesLoading ? (
+                    <div className="text-center py-8">
+                        <div className="text-white text-lg">Loading movies...</div>
+                    </div>
+                ) : moviesError ? (
+                    <div className="text-center py-8">
+                        <div className="text-red-400 text-lg mb-4">{moviesError}</div>
+                        <button
+                            onClick={() => {
+                                // Retry fetching movies
+                                const fetchMovies = async () => {
+                                    if (!list?.id) return;
+                                    try {
+                                        setMoviesLoading(true);
+                                        setMoviesError(null);
+                                        const moviesData = await ListsService.getMoviesFromList({
+                                            listId: list.id,
+                                            page: currentPage,
+                                            pageSize: 12
+                                        });
+                                        
+                                        // Update movies and pagination data
+                                        setMovies(moviesData.data || []);
+                                        setTotalCount(moviesData.totalCount || 0);
+                                        setTotalPages(moviesData.totalPages || 1);
+                                        setHasNextPage(moviesData.hasNextPage || false);
+                                        setHasPreviousPage(moviesData.hasPreviousPage || false);
+                                    } catch (err) {
+                                        console.error('Error fetching movies from list:', err);
+                                        setMoviesError(err.message || 'Failed to fetch movies');
+                                    } finally {
+                                        setMoviesLoading(false);
+                                    }
+                                };
+                                fetchMovies();
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                ) : (
+                    <ListMovieGrid 
+                        heading={`Movies in this List (${totalCount})`}
+                        rows={Math.ceil(movies.length / 6)} 
+                        itemsPerRow={6} 
+                        movies={movies} 
+                        CardComponent={SmallMovieCard}
+                        onAddMoviesClick={isOwner ? handleAddMovies : null}
+                        showAddMovies={isOwner}
+                    />
+                )}
+                
+                {/* Pagination Controls */}
+                {!moviesLoading && !moviesError && totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-4 mt-8">
+                        <button
+                            onClick={handlePreviousPage}
+                            disabled={!hasPreviousPage}
+                            className={`px-4 py-2 rounded-lg transition-colors ${
+                                hasPreviousPage
+                                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                                    : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                            }`}
+                        >
+                            Previous
+                        </button>
+                        
+                        <div className="flex items-center gap-2">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => handlePageChange(page)}
+                                    className={`px-3 py-2 rounded-lg transition-colors ${
+                                        page === currentPage
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                        </div>
+                        
+                        <button
+                            onClick={handleNextPage}
+                            disabled={!hasNextPage}
+                            className={`px-4 py-2 rounded-lg transition-colors ${
+                                hasNextPage
+                                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                                    : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                            }`}
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
             </div>
 
 
