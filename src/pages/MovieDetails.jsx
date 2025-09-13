@@ -1321,7 +1321,7 @@ const MovieDetails = () => {
                               )}
                             </div>
                             
-                            <p className="text-white text-base leading-relaxed mb-4">
+                            <p className="text-white text-base leading-relaxed mb-4 whitespace-pre-wrap">
                               {review.text || review.content || review.reviewText || 'No review text available'}
                             </p>
                             
