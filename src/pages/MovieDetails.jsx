@@ -14,6 +14,7 @@ import { WatchService } from '../services/watchService';
 import { MovieLikeService } from '../services/movieLikeService';
 import { WatchedService } from '../services/watchedService';
 import { ReviewService } from '../services/reviewService';
+import { ReviewLikeService } from '../services/reviewLikeService';
 
 const MovieDetails = () => {
   const { id } = useParams();
@@ -44,6 +45,8 @@ const MovieDetails = () => {
   const [showAllVideos, setShowAllVideos] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
+  const [reviewLikes, setReviewLikes] = useState({}); // Track which reviews are liked by current user
+  const [reviewLikeLoading, setReviewLikeLoading] = useState({}); // Track loading state for each review like
   
   // Update active review tab when authentication status changes
   useEffect(() => {
@@ -218,6 +221,40 @@ const MovieDetails = () => {
 
     fetchAverageRating();
   }, [movie?.id]);
+
+  // Check like status for all reviews when reviews or user changes
+  useEffect(() => {
+    const checkReviewLikes = async () => {
+      if (!reviews.length || !isAuthenticated || !user?.id) {
+        setReviewLikes({});
+        return;
+      }
+
+      try {
+        const likePromises = reviews.map(async (review) => {
+          try {
+            const isLiked = await ReviewLikeService.isLiked(user.id, review.id);
+            return { reviewId: review.id, isLiked };
+          } catch (err) {
+            console.error(`Error checking like status for review ${review.id}:`, err);
+            return { reviewId: review.id, isLiked: false };
+          }
+        });
+
+        const likeResults = await Promise.all(likePromises);
+        const likesMap = {};
+        likeResults.forEach(({ reviewId, isLiked }) => {
+          likesMap[reviewId] = isLiked;
+        });
+        
+        setReviewLikes(likesMap);
+      } catch (err) {
+        console.error('Error checking review likes:', err);
+      }
+    };
+
+    checkReviewLikes();
+  }, [reviews, isAuthenticated, user?.id]);
 
   // Handle watch button click
   const handleWatchClick = async () => {
@@ -567,6 +604,70 @@ const MovieDetails = () => {
     } finally {
       setDeletingReviewId(null);
       setReviewToDelete(null);
+    }
+  };
+
+  // Handle review like button click
+  const handleReviewLikeClick = async (reviewId) => {
+    if (!isAuthenticated || !user?.id) {
+      // Redirect to login if not authenticated
+      navigate('/login');
+      return;
+    }
+
+    if (!reviewId) return;
+
+    // Set loading state for this specific review
+    setReviewLikeLoading(prev => ({ ...prev, [reviewId]: true }));
+
+    try {
+      const isCurrentlyLiked = reviewLikes[reviewId] || false;
+      
+      if (isCurrentlyLiked) {
+        // Unlike the review
+        await ReviewLikeService.unlikeReview({
+          userId: user.id,
+          reviewId: reviewId
+        });
+        setReviewLikes(prev => ({ ...prev, [reviewId]: false }));
+        
+        // Decrement like count
+        setReviews(prev => prev.map(review => 
+          review.id === reviewId 
+            ? { 
+                ...review, 
+                likes: Math.max(0, (review.likes || review.likeCount || review.likesCount || 0) - 1),
+                likeCount: Math.max(0, (review.likes || review.likeCount || review.likesCount || 0) - 1),
+                likesCount: Math.max(0, (review.likes || review.likeCount || review.likesCount || 0) - 1)
+              }
+            : review
+        ));
+      } else {
+        // Like the review
+        await ReviewLikeService.likeReview({
+          userId: user.id,
+          reviewId: reviewId
+        });
+        setReviewLikes(prev => ({ ...prev, [reviewId]: true }));
+        
+        // Increment like count
+        setReviews(prev => prev.map(review => 
+          review.id === reviewId 
+            ? { 
+                ...review, 
+                likes: (review.likes || review.likeCount || review.likesCount || 0) + 1,
+                likeCount: (review.likes || review.likeCount || review.likesCount || 0) + 1,
+                likesCount: (review.likes || review.likeCount || review.likesCount || 0) + 1
+              }
+            : review
+        ));
+      }
+    } catch (err) {
+      console.error('Error updating review like status:', err);
+      // You could add a toast notification here
+    } finally {
+      // Clear loading state for this specific review
+      setReviewLikeLoading(prev => ({ ...prev, [reviewId]: false }));
     }
   };
 
@@ -1228,14 +1329,28 @@ const MovieDetails = () => {
                             {/* Like and Comment buttons - Only show for authenticated users */}
                             {isAuthenticated && (
                               <div className="flex items-center gap-4 mb-3">
-                                <button className="flex items-center cursor-pointer gap-2 text-gray-400 hover:text-gray-300 transition-colors group relative">
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                  </svg>
+                                <button 
+                                  onClick={() => handleReviewLikeClick(review.id)}
+                                  disabled={reviewLikeLoading[review.id]}
+                                  className={`flex items-center gap-2 transition-colors group relative ${
+                                    reviewLikeLoading[review.id] 
+                                      ? 'opacity-50 cursor-not-allowed text-gray-500' 
+                                      : reviewLikes[review.id] 
+                                        ? 'text-green-500 hover:text-green-400' 
+                                        : 'text-gray-400 hover:text-gray-300'
+                                  }`}
+                                >
+                                  {reviewLikeLoading[review.id] ? (
+                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                  ) : (
+                                    <svg className="w-4 h-4" fill={reviewLikes[review.id] ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                  )}
                                   <span className="text-sm">{review.likes || review.likeCount || review.likesCount || 0}</span>
                                   {/* Tooltip */}
                                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                    Like Review
+                                    {reviewLikes[review.id] ? 'Unlike Review' : 'Like Review'}
                                   </div>
                                 </button>
                                 <button 

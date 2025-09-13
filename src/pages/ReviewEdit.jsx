@@ -105,7 +105,7 @@ const ReviewEdit = () => {
       };
 
       await ReviewService.updateReview(reviewData);
-      navigate(`/movie/${movieId}`);
+      navigate(`/review/${reviewId}`);
     } catch (e) {
       console.error('Failed to update review:', e);
       setError(e.message || 'Failed to update review. Please try again.');

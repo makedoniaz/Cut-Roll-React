@@ -108,9 +108,13 @@ const ReviewCreate = () => {
 
       console.log('Creating review:', reviewData);
       
-      const createdReview = await ReviewService.createReview(reviewData);
+      const createdReviewId = await ReviewService.createReview(reviewData);
       
-      console.log('Review created successfully:', createdReview);
+      console.log('Review created successfully with ID:', createdReviewId);
+      
+      if (!createdReviewId) {
+        throw new Error('Review was created but no ID was returned');
+      }
       
       // Mark movie as watched after successful review creation
       try {
@@ -125,8 +129,8 @@ const ReviewCreate = () => {
         // You could optionally show a warning message here
       }
       
-      // Navigate back to the movie details page
-      navigate(`/movie/${movieId}`);
+      // Navigate to the created review page
+      navigate(`/review/${createdReviewId}`);
       
     } catch (error) {
       console.error('Failed to create review:', error);

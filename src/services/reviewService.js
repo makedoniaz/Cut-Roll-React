@@ -34,8 +34,10 @@ export class ReviewService {
             throw new Error(errorMessage || 'Failed to create review');
         }
 
-        const data = await response.json();
-        return data;
+        // The API returns the created review ID as a plain string
+        const createdReviewId = await response.text();
+        // Remove any surrounding quotes and whitespace that might be in the response
+        return createdReviewId.trim().replace(/^["']|["']$/g, '');
     }
 
     /**
