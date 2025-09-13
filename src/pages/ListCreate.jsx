@@ -38,13 +38,18 @@ const ListCreate = () => {
       return;
     }
 
+    if (title.length > 150) {
+      setError('Title must be 150 characters or less.');
+      return;
+    }
+
     if (!description.trim()) {
       setError('Please enter a description for your list.');
       return;
     }
 
-    if (description.length > 350) {
-      setError('Description must be 350 characters or less.');
+    if (description.length > 1000) {
+      setError('Description must be 1000 characters or less.');
       return;
     }
 
@@ -68,14 +73,6 @@ const ListCreate = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleSaveDraft = () => {
-    console.log('Draft saved:', { 
-      title, 
-      description
-    });
-    alert('Draft saved successfully!');
   };
 
   return (
@@ -109,6 +106,8 @@ const ListCreate = () => {
             placeholder="Enter your list title..."
             required
             disabled={!isAuthenticated}
+            maxLength={150}
+            showCharCount={true}
           />
 
           <TextArea
@@ -118,7 +117,8 @@ const ListCreate = () => {
             placeholder="Describe your list..."
             required
             rows={6}
-            maxLength={350}
+            maxLength={1000}
+            showCharCount={true}
             disabled={!isAuthenticated}
           />
 
@@ -128,18 +128,6 @@ const ListCreate = () => {
             </div>
             
             <div className="flex space-x-3">
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                disabled={!isAuthenticated}
-                className={`cursor-pointer px-6 py-2 rounded-lg transition-colors ${
-                  isAuthenticated 
-                    ? 'bg-gray-600 text-white hover:bg-gray-500' 
-                    : 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                }`}
-              >
-                Save Draft
-              </button>
               <button
                 type="button"
                 onClick={handleCreateList}

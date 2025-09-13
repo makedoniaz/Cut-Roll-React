@@ -229,18 +229,28 @@ const ListDetails = () => {
     });
 
     const handleEditTitle = () => {
+        // Cancel description editing if active
+        if (isEditingDescription) {
+            setIsEditingDescription(false);
+            setEditDescription(list.description || '');
+        }
         setIsEditingTitle(true);
         setEditTitle(list.title || '');
     };
 
     const handleEditDescription = () => {
+        // Cancel title editing if active
+        if (isEditingTitle) {
+            setIsEditingTitle(false);
+            setEditTitle(list.title || '');
+        }
         setIsEditingDescription(true);
         setEditDescription(list.description || '');
     };
 
     const handleSaveTitle = async () => {
-        if (!editTitle.trim()) {
-            setError('Title cannot be empty');
+        if (editTitle.length > 150) {
+            setError('Title must be 150 characters or less');
             return;
         }
 
@@ -278,8 +288,8 @@ const ListDetails = () => {
             return;
         }
 
-        if (editDescription.length > 350) {
-            setError('Description must be 350 characters or less');
+        if (editDescription.length > 1000) {
+            setError('Description must be 1000 characters or less');
             return;
         }
 
@@ -568,29 +578,34 @@ const ListDetails = () => {
                         {/* Editable Title */}
                         <div className="mb-6">
                             {isEditingTitle ? (
-                                <div className="flex items-center gap-3">
+                                <div className="space-y-3">
                                     <input
                                         type="text"
                                         value={editTitle}
                                         onChange={(e) => setEditTitle(e.target.value)}
-                                        className="text-3xl md:text-4xl font-bold text-white bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 outline-none focus:border-blue-500"
+                                        className="w-full text-3xl md:text-4xl font-bold text-white bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 outline-none focus:border-blue-500"
                                         placeholder="Enter list title..."
-                                        maxLength={100}
+                                        maxLength={150}
                                     />
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handleSaveTitle}
-                                            disabled={isUpdating}
-                                            className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                                        >
-                                            {isUpdating ? 'Saving...' : 'Save'}
-                                        </button>
-                                        <button
-                                            onClick={handleCancelEdit}
-                                            className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-sm text-gray-400">
+                                            {editTitle.length}/150 characters
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleSaveTitle}
+                                                disabled={isUpdating}
+                                                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                                            >
+                                                {isUpdating ? 'Saving...' : 'Save'}
+                                            </button>
+                                            <button
+                                                onClick={handleCancelEdit}
+                                                className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                                          ) : (
@@ -617,10 +632,6 @@ const ListDetails = () => {
                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                                  />
                                              </svg>
-                                             {/* Tooltip */}
-                                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                                 Edit Title
-                                             </div>
                                          </button>
                                      )}
                                  </div>
@@ -637,11 +648,11 @@ const ListDetails = () => {
                                         className="w-full text-lg md:text-xl text-gray-300 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 outline-none focus:border-blue-500 resize-vertical"
                                         placeholder="Enter list description..."
                                         rows={4}
-                                        maxLength={350}
+                                        maxLength={1000}
                                     />
                                     <div className="flex items-center justify-between">
                                         <div className="text-sm text-gray-400">
-                                            {editDescription.length}/350 characters
+                                            {editDescription.length}/1000 characters
                                         </div>
                                         <div className="flex gap-2">
                                             <button
@@ -661,35 +672,31 @@ const ListDetails = () => {
                                     </div>
                                 </div>
                                                          ) : (
-                                 <div className="group relative inline-flex items-center">
-                                     <p className="text-lg md:text-xl text-gray-300 max-w-4xl leading-relaxed">
+                                 <div className="group relative flex items-start w-full">
+                                     <p className="text-lg md:text-xl text-gray-300 leading-relaxed whitespace-pre-wrap flex-1">
                                          {list.description || 'No description available'}
                                      </p>
-                                                                           {isOwner && (
-                                          <button
-                                              onClick={handleEditDescription}
-                                              className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-yellow-400 rounded-lg group relative"
-                                          >
-                                              <svg
-                                                  xmlns="http://www.w3.org/2000/svg"
-                                                  className="h-5 w-5 transition-transform duration-200"
-                                                  fill="none"
-                                                  viewBox="0 0 24 24"
-                                                  stroke="currentColor"
-                                              >
-                                                  <path
-                                                      strokeLinecap="round"
-                                                      strokeLinejoin="round"
-                                                      strokeWidth={2}
-                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                                  />
-                                              </svg>
-                                              {/* Tooltip */}
-                                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                                  Edit Description
-                                              </div>
-                                          </button>
-                                      )}
+                                     {isOwner && (
+                                         <button
+                                             onClick={handleEditDescription}
+                                             className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-yellow-400 rounded-lg group relative flex-shrink-0"
+                                         >
+                                             <svg
+                                                 xmlns="http://www.w3.org/2000/svg"
+                                                 className="h-5 w-5 transition-transform duration-200"
+                                                 fill="none"
+                                                 viewBox="0 0 24 24"
+                                                 stroke="currentColor"
+                                             >
+                                                 <path
+                                                     strokeLinecap="round"
+                                                     strokeLinejoin="round"
+                                                     strokeWidth={2}
+                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                 />
+                                             </svg>
+                                         </button>
+                                     )}
                                  </div>
                              )}
                         </div>

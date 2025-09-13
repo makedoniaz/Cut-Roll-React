@@ -23,7 +23,7 @@ const TextInput = ({
         placeholder={placeholder}
         required={required}
         maxLength={maxLength}
-        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+        className="w-full px-4 py-2 rounded-lg bg-gray-900 outline-none transition-all text-white placeholder-gray-400"
         {...props}
       />
       {showCharCount && maxLength && (

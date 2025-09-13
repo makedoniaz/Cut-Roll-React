@@ -7,6 +7,7 @@ const TextArea = ({
   className = "",
   rows = 4,
   maxLength,
+  showCharCount = false,
   ...props 
 }) => {
   return (
@@ -26,6 +27,11 @@ const TextArea = ({
         className="w-full px-4 py-2 rounded-lg bg-gray-900 outline-none transition-all resize-vertical"
         {...props}
       />
+      {showCharCount && maxLength && (
+        <div className="text-xs text-gray-400">
+          {value.length}/{maxLength} characters
+        </div>
+      )}
     </div>
   );
 };

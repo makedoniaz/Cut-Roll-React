@@ -94,7 +94,6 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
         }
 
         console.log('✅ Successfully added movies to list');
-        alert(`Successfully added ${selectedMovies.length} movie(s) to the list!`);
 
         // Reset state and close modal
         setSelectedMovies([]);
