@@ -83,7 +83,7 @@ const Register = () => {
             <Film className="w-12 h-12 text-green-500" />
           </div>
           <h2 className="mt-6 text-3xl font-bold text-white">
-            Join CutRoll
+            Join Cut-N-Roll
           </h2>
         </div>
         

@@ -5,7 +5,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">About CutRoll</h3>
+            <h3 className="text-lg font-semibold mb-4">About Cut-N-Roll</h3>
             <p className="text-gray-400 text-sm">
               Discover, rate, and review movies. Keep track of what you've watched and create lists of your favorites.
             </p>
@@ -43,7 +43,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400 text-sm">
-          <p>&copy; 2025 CutRoll. All rights reserved.</p>
+          <p>&copy; 2025 Cut-N-Roll. All rights reserved.</p>
         </div>
       </div>
     </footer>

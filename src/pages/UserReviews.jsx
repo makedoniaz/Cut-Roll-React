@@ -129,15 +129,9 @@ const UserReviews = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(`/profile/${username}`)}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             View Profile
-          </button>
-          <button
-            onClick={() => navigate('/reviews')}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Back to Reviews
           </button>
         </div>
       </div>
@@ -203,20 +197,6 @@ const UserReviews = () => {
             <p className="text-gray-400 mb-4">
               {user.username} hasn't written any reviews yet.
             </p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => navigate(`/profile/${username}`)}
-                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
-              >
-                View Profile
-              </button>
-              <button
-                onClick={() => navigate('/reviews')}
-                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
-              >
-                Browse All Reviews
-              </button>
-            </div>
           </div>
         )}
       </div>

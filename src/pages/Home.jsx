@@ -211,7 +211,7 @@ const Home = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-8">
-        {isAuthenticated && user ? `Welcome back, ${user.username}` : "Welcome to CutRoll"}
+        {isAuthenticated && user ? `Welcome back, ${user.username}` : "Welcome to Cut-N-Roll"}
       </h1>
 
       {/* New Releases Section */}

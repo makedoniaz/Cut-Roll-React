@@ -39,7 +39,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <Film className="w-8 h-8 text-green-500" />
-            <span className="text-xl font-bold">CutRoll</span>
+            <span className="text-xl font-bold">Cut-N-Roll</span>
           </Link>
 
           {/* Navigation */}
