@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { UserPlus, UserMinus } from 'lucide-react';
 import { UserService } from '../services/userService.js';
 import { FollowService } from '../services/followService.js';
 import { useAuth } from '../hooks/useStores';
@@ -18,6 +19,7 @@ const Profile = () => {
   const [followingCount, setFollowingCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [refreshFollowers, setRefreshFollowers] = useState(0);
   const [stats, setStats] = useState({
     reviewCount: 0,
     watchedCount: 0,
@@ -70,6 +72,7 @@ const Profile = () => {
 
   const fetchFollowData = async (userId) => {
     try {
+      console.log('📤 Fetching follow data for userId:', userId, 'currentUser:', currentUser.id);
       // Fetch counts
       const [followers, following, followStatus] = await Promise.all([
         FollowService.getFollowersCount(userId),
@@ -77,11 +80,13 @@ const Profile = () => {
         FollowService.isFollowing(currentUser.id, userId)
       ]);
       
+      console.log('📥 Follow data received:', { followers, following, followStatus });
+      
       setFollowersCount(followers);
       setFollowingCount(following);
       setIsFollowing(followStatus);
     } catch (err) {
-      console.error('Failed to fetch follow data:', err);
+      console.error('❌ Failed to fetch follow data:', err);
     }
   };
 
@@ -129,18 +134,31 @@ const Profile = () => {
 
     try {
       setFollowLoading(true);
+      console.log('🔄 Follow toggle started. Current state:', { isFollowing, currentUser: currentUser.id, targetUser: user.id });
       
       if (isFollowing) {
+        console.log('📤 Unfollowing user...');
         await FollowService.unfollow(currentUser.id, user.id);
         setIsFollowing(false);
         setFollowersCount(prev => Math.max(0, prev - 1));
+        console.log('✅ Unfollow successful');
       } else {
+        console.log('📤 Following user...');
         await FollowService.follow(currentUser.id, user.id);
         setIsFollowing(true);
         setFollowersCount(prev => prev + 1);
+        console.log('✅ Follow successful');
       }
+      
+      // Trigger refresh of followers list
+      console.log('🔄 Triggering followers refresh...');
+      setRefreshFollowers(prev => {
+        const newValue = prev + 1;
+        console.log('🔄 Refresh trigger updated to:', newValue);
+        return newValue;
+      });
     } catch (err) {
-      console.error('Failed to toggle follow:', err);
+      console.error('❌ Failed to toggle follow:', err);
     } finally {
       setFollowLoading(false);
     }
@@ -265,25 +283,22 @@ const Profile = () => {
                         </svg>
                       </Link>
                     )}
-                  </div>
-                  <p className="text-gray-400 mb-4">{user.email}</p>
-                  
-                  {/* Follow Button */}
-                  {!isOwnProfile && currentUser && (
-                    <div className="mb-4">
+                    {/* Follow Button */}
+                    {!isOwnProfile && currentUser && (
                       <button
                         onClick={handleFollowToggle}
                         disabled={followLoading}
-                        className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                           isFollowing
                             ? 'bg-gray-600 hover:bg-gray-700 text-white'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
-                        } disabled:opacity-50`}
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <p className="text-gray-400 mb-4">{user.email}</p>
                   
                   {/* Status Badges */}
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start">
@@ -297,11 +312,6 @@ const Profile = () => {
                         Muted
                       </span>
                     )}
-                    {!user.isBanned && !user.isMuted && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -311,7 +321,7 @@ const Profile = () => {
                 <h2 className="text-xl font-semibold text-white mb-6">Profile Statistics</h2>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
                   <div 
-                    className="bg-gray-700 rounded-lg p-3 text-center cursor-pointer hover:bg-gray-600 transition-colors"
+                    className="border border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-gray-600 transition-colors"
                     onClick={handleReviewsClick}
                   >
                     <div className="text-xl font-bold text-green-400 mb-1">
@@ -324,7 +334,7 @@ const Profile = () => {
                     <div className="text-xs text-gray-300">Reviews</div>
                   </div>
                   <div 
-                    className="bg-gray-700 rounded-lg p-3 text-center cursor-pointer hover:bg-gray-600 transition-colors"
+                    className="border border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-gray-600 transition-colors"
                     onClick={handleWatchedClick}
                   >
                     <div className="text-xl font-bold text-green-400 mb-1">
@@ -337,7 +347,7 @@ const Profile = () => {
                     <div className="text-xs text-gray-300">Watched</div>
                   </div>
                   <div 
-                    className="bg-gray-700 rounded-lg p-3 text-center cursor-pointer hover:bg-gray-600 transition-colors"
+                    className="border border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-gray-600 transition-colors"
                     onClick={handleWantToWatchClick}
                   >
                     <div className="text-xl font-bold text-green-400 mb-1">
@@ -350,7 +360,7 @@ const Profile = () => {
                     <div className="text-xs text-gray-300">Want to Watch</div>
                   </div>
                   <div 
-                    className="bg-gray-700 rounded-lg p-3 text-center cursor-pointer hover:bg-gray-600 transition-colors"
+                    className="border border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-gray-600 transition-colors"
                     onClick={handleLikedClick}
                   >
                     <div className="text-xl font-bold text-green-400 mb-1">
@@ -363,7 +373,7 @@ const Profile = () => {
                     <div className="text-xs text-gray-300">Liked Movies</div>
                   </div>
                   <div 
-                    className="bg-gray-700 rounded-lg p-3 text-center cursor-pointer hover:bg-gray-600 transition-colors"
+                    className="border border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-gray-600 transition-colors"
                     onClick={handleListsClick}
                   >
                     <div className="text-xl font-bold text-green-400 mb-1">
@@ -379,7 +389,7 @@ const Profile = () => {
 
                 {/* Average Rating */}
                 <div className="mt-6 mb-8">
-                  <div className="bg-gray-700 rounded-lg p-4 text-center">
+                  <div className="border border-gray-700 rounded-lg p-4 text-center">
                     <div className="flex items-center justify-center space-x-2 mb-2">
                       <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -410,10 +420,12 @@ const Profile = () => {
             <FollowersList 
               userId={user.id} 
               onCountChange={setFollowersCount}
+              refreshTrigger={refreshFollowers}
             />
             <FollowingList 
               userId={user.id} 
               onCountChange={setFollowingCount}
+              refreshTrigger={refreshFollowers}
             />
           </div>
         </div>

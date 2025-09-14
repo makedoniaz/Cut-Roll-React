@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FollowService } from '../../services/followService.js';
 import { FollowType } from '../../constants/follow.js';
 
-const FollowingList = ({ userId, onCountChange }) => {
+const FollowingList = ({ userId, onCountChange, refreshTrigger }) => {
   const [following, setFollowing] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -11,8 +11,14 @@ const FollowingList = ({ userId, onCountChange }) => {
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
+    if (refreshTrigger !== undefined) {
+      // Reset pagination when refresh is triggered
+      setPage(1);
+      setFollowing([]);
+      setHasMore(true);
+    }
     fetchFollowing();
-  }, [userId]);
+  }, [userId, refreshTrigger]);
 
   const fetchFollowing = async (pageNum = 1) => {
     if (!userId) return;
@@ -89,28 +95,24 @@ const FollowingList = ({ userId, onCountChange }) => {
       {following.length === 0 ? (
         <div className="text-center text-gray-400 py-4">Not following anyone yet</div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-3">
           {following.map((followedUser) => (
-            <div key={followedUser.id} className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg">
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-600">
-                <img
-                  src={followedUser.avatarPath || '/default-avatar.png'}
-                  alt={`${followedUser.username}'s avatar`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = '/default-avatar.png';
-                  }}
-                />
-              </div>
-              <div className="flex-1">
-                <Link
-                  to={`/profile/${followedUser.username}`}
-                  className="text-white hover:text-blue-400 font-medium"
-                >
-                  {followedUser.username}
-                </Link>
-                <p className="text-sm text-gray-400">{followedUser.email}</p>
-              </div>
+            <div key={followedUser.id} className="flex flex-col items-center text-center">
+              <Link to={`/profile/${followedUser.userName}`} className="group">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-600 group-hover:border-green-400 transition-colors">
+                  <img
+                    src={followedUser.avatarPath || '/default-avatar.png'}
+                    alt={`${followedUser.userName}'s avatar`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = '/default-avatar.png';
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-white group-hover:text-green-400 font-medium mt-1 transition-colors truncate w-full">
+                  {followedUser.userName}
+                </p>
+              </Link>
             </div>
           ))}
           

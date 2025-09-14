@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FollowService } from '../../services/followService.js';
 import { FollowType } from '../../constants/follow.js';
 
-const FollowersList = ({ userId, onCountChange }) => {
+const FollowersList = ({ userId, onCountChange, refreshTrigger }) => {
   const [followers, setFollowers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -11,15 +11,25 @@ const FollowersList = ({ userId, onCountChange }) => {
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
+    console.log('🔄 FollowersList useEffect triggered:', { userId, refreshTrigger });
+    if (refreshTrigger !== undefined) {
+      // Reset pagination when refresh is triggered
+      console.log('🔄 Resetting followers list due to refresh trigger');
+      setPage(1);
+      setFollowers([]);
+      setHasMore(true);
+    }
     fetchFollowers();
-  }, [userId]);
+  }, [userId, refreshTrigger]);
 
   const fetchFollowers = async (pageNum = 1) => {
     if (!userId) return;
 
     try {
+      console.log('📤 Fetching followers for userId:', userId, 'page:', pageNum);
       setLoading(true);
       const response = await FollowService.getFollowByUser(userId, pageNum, 10, FollowType.FOLLOWERS);
+      console.log('📥 Followers response:', response);
       
       if (pageNum === 1) {
         setFollowers(response.data || []);
@@ -32,9 +42,11 @@ const FollowersList = ({ userId, onCountChange }) => {
       
       // Notify parent component about count change
       if (onCountChange && response.totalCount !== undefined) {
+        console.log('📊 Updating followers count to:', response.totalCount);
         onCountChange(response.totalCount);
       }
     } catch (err) {
+      console.error('❌ Error fetching followers:', err);
       setError(err.message || 'Failed to load followers');
     } finally {
       setLoading(false);
@@ -89,28 +101,24 @@ const FollowersList = ({ userId, onCountChange }) => {
       {followers.length === 0 ? (
         <div className="text-center text-gray-400 py-4">No followers yet</div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-3">
           {followers.map((follower) => (
-            <div key={follower.id} className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg">
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-600">
-                <img
-                  src={follower.avatarPath || '/default-avatar.png'}
-                  alt={`${follower.username}'s avatar`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = '/default-avatar.png';
-                  }}
-                />
-              </div>
-              <div className="flex-1">
-                <Link
-                  to={`/profile/${follower.username}`}
-                  className="text-white hover:text-blue-400 font-medium"
-                >
-                  {follower.username}
-                </Link>
-                <p className="text-sm text-gray-400">{follower.email}</p>
-              </div>
+            <div key={follower.id} className="flex flex-col items-center text-center">
+              <Link to={`/profile/${follower.userName}`} className="group">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-600 group-hover:border-green-400 transition-colors">
+                  <img
+                    src={follower.avatarPath || '/default-avatar.png'}
+                    alt={`${follower.userName}'s avatar`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = '/default-avatar.png';
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-white group-hover:text-green-400 font-medium mt-1 transition-colors truncate w-full">
+                  {follower.userName}
+                </p>
+              </Link>
             </div>
           ))}
           

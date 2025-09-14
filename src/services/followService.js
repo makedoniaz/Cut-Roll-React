@@ -25,7 +25,18 @@ export class FollowService {
             throw new Error(errorMessage || 'Failed to follow user');
         }
 
-        return await response.json();
+        // Try to parse as JSON, fallback to text if it fails
+        try {
+            const text = await response.text();
+            if (text.trim()) {
+                return JSON.parse(text);
+            }
+            return { success: true };
+        } catch (parseError) {
+            // If JSON parsing fails, return success since the request was successful
+            console.log('Follow response was not JSON, treating as success');
+            return { success: true };
+        }
     }
 
     /**
@@ -51,7 +62,18 @@ export class FollowService {
             throw new Error(errorMessage || 'Failed to unfollow user');
         }
 
-        return await response.json();
+        // Try to parse as JSON, fallback to text if it fails
+        try {
+            const text = await response.text();
+            if (text.trim()) {
+                return JSON.parse(text);
+            }
+            return { success: true };
+        } catch (parseError) {
+            // If JSON parsing fails, return success since the request was successful
+            console.log('Unfollow response was not JSON, treating as success');
+            return { success: true };
+        }
     }
 
     /**
