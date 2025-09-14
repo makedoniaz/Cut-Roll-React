@@ -147,6 +147,12 @@ function ArticlePage() {
         setShowDeleteConfirmation(false);
     };
 
+    const handleAuthorClick = () => {
+        if (article?.author?.userName) {
+            navigate(`/profile/${article.author.userName}`);
+        }
+    };
+
     // Loading state
     if (loading) {
         return (
@@ -391,13 +397,16 @@ function ArticlePage() {
             <div className="flex items-center gap-4 mb-6 text-sm text-gray-400">
                 {/* Author info with avatar */}
                 {article.author && (
-                    <div className="flex items-center gap-3">
+                    <div 
+                        className="flex items-center gap-3 cursor-pointer group/author"
+                        onClick={handleAuthorClick}
+                    >
                         <img
                             src={article.author.avatarPath || '/poster-placeholder.png'}
                             alt={article.author.userName}
                             className="w-8 h-8 rounded-full object-cover"
                         />
-                        <span className="text-white font-medium">{article.author.userName}</span>
+                        <span className="text-white font-medium group-hover/author:text-green-400 transition-colors">{article.author.userName}</span>
                     </div>
                 )}
                 <span>•</span>

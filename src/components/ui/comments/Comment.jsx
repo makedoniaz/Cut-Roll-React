@@ -2,11 +2,13 @@ import Avatar from "../users/Avatar"
 import CommentAuthor from "./CommentAuthor"
 import CommentText from "./CommentText";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Comment = ({ comment, onUpdateComment, onDeleteComment, currentUserId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content || comment.text || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const navigate = useNavigate();
   
   const MAX_LENGTH = 500;
 
@@ -84,6 +86,13 @@ const Comment = ({ comment, onUpdateComment, onDeleteComment, currentUserId }) =
            null;
   };
 
+  const handleAuthorClick = () => {
+    const userName = getCommentUserName();
+    if (userName && userName !== 'Anonymous') {
+      navigate(`/profile/${userName}`);
+    }
+  };
+
   const isNearLimit = editContent.length > MAX_LENGTH * 0.8;
   const isAtLimit = editContent.length >= MAX_LENGTH;
 
@@ -97,7 +106,12 @@ const Comment = ({ comment, onUpdateComment, onDeleteComment, currentUserId }) =
       
       <div className="flex-1 min-w-0 overflow-hidden">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-white font-medium text-sm">{getCommentUserName()}</span>
+          <span 
+            className="text-white font-medium text-sm cursor-pointer group/author hover:text-green-400 transition-colors"
+            onClick={handleAuthorClick}
+          >
+            {getCommentUserName()}
+          </span>
           <span className="text-gray-400 text-xs">{getCommentDate()}</span>
           
           {/* Edit and Delete buttons - Only show for authenticated users who are the author */}

@@ -171,6 +171,13 @@ const ReviewPage = () => {
     }
   };
 
+  const handleAuthorClick = () => {
+    const userName = getReviewUserName();
+    if (userName && userName !== 'Anonymous') {
+      navigate(`/profile/${userName}`);
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -289,11 +296,27 @@ const ReviewPage = () => {
               {/* Header with avatar, "Review by", edit/delete icons, and like/share buttons */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold">
-                    {getReviewUserName().charAt(0).toUpperCase()}
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
+                    {review?.userSimplified?.avatarPath ? (
+                      <img
+                        src={review.userSimplified.avatarPath}
+                        alt={getReviewUserName()}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className="w-full h-full flex items-center justify-center text-white font-semibold" style={{ display: review?.userSimplified?.avatarPath ? 'none' : 'flex' }}>
+                      {getReviewUserName().charAt(0).toUpperCase()}
+                    </div>
                   </div>
-                  <span className="text-gray-400 text-sm">
-                    Review by <span className="text-white font-medium">{getReviewUserName()}</span>
+                  <span 
+                    className="text-gray-400 text-sm cursor-pointer group/author"
+                    onClick={handleAuthorClick}
+                  >
+                    Review by <span className="text-white font-medium group-hover/author:text-green-400 transition-colors">{getReviewUserName()}</span>
                   </span>
                   
                   {/* Edit and Delete buttons - Only show for authenticated users who are the author */}

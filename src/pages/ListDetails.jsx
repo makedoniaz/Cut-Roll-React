@@ -383,6 +383,12 @@ const ListDetails = () => {
         }
     };
 
+    const handleAuthorClick = () => {
+        if (list?.userSimplified?.userName) {
+            navigate(`/profile/${list.userSimplified.userName}`);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -474,8 +480,11 @@ const ListDetails = () => {
                             {/* Left side: Caption with Delete button */}
                             <div className="flex items-center gap-4">
                                 {list.userSimplified && (
-                                    <div className="text-lg text-gray-400">
-                                        List by <span className="font-bold text-white">{list.userSimplified.userName}</span>
+                                    <div 
+                                        className="text-lg text-gray-400 cursor-pointer group/author"
+                                        onClick={handleAuthorClick}
+                                    >
+                                        List by <span className="font-bold text-white group-hover/author:text-green-400 transition-colors">{list.userSimplified.userName}</span>
                                     </div>
                                 )}
                                 

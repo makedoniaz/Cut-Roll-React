@@ -6,25 +6,36 @@ import MovieListPoster from "./MovieListPoster";
 const MovieListCard = ({ list }) => {
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  const handleListClick = () => {
     navigate(`/lists/${list.id}`);
   };
 
-  return (
-    <div 
-      className="group cursor-pointer flex flex-col h-full"
-      onClick={handleClick}
-    >
-      <div className="">
-        <MovieListPoster images={list.coverImages} title={list.title} />
-      </div>
+  const handleAuthorClick = (e) => {
+    e.stopPropagation(); // Prevent list click
+    navigate(`/profile/${list.author.name}`);
+  };
 
-      <h3 className="text-white font-semibold text-lg leading-tight group-hover:text-blue-400 transition-colors w-60">
-        {list.title}
-      </h3>
+  return (
+    <div className="group flex flex-col h-full">
+      {/* Clickable poster and title section */}
+      <div 
+        className="cursor-pointer group/list-section"
+        onClick={handleListClick}
+      >
+        <div className="">
+          <MovieListPoster images={list.coverImages} title={list.title} />
+        </div>
+
+        <h3 className="text-white font-semibold text-lg leading-tight group-hover/list-section:text-green-400 transition-colors w-60">
+          {list.title}
+        </h3>
+      </div>
     
       <div className="mt-auto space-y-2">
-        <AuthorInfo author={list.author} />
+        {/* Clickable author section */}
+        <div onClick={handleAuthorClick} className="cursor-pointer">
+          <AuthorInfo author={list.author} />
+        </div>
         
         <ListStats 
           films={list.stats.films}

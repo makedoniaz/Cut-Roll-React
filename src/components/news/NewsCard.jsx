@@ -90,6 +90,11 @@ const NewsCard = ({ article, showAuthor = true, showActions = false, onDelete })
     navigate(`/news/${article.id}`);
   };
 
+  const handleAuthorClick = (e) => {
+    e.stopPropagation(); // Prevent article click
+    navigate(`/profile/${article.author.name}`);
+  };
+
     return (
     <div
       className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden transition-transform transition-colors duration-300 hover:scale-105 h-full flex flex-col"
@@ -108,13 +113,16 @@ const NewsCard = ({ article, showAuthor = true, showActions = false, onDelete })
         {/* Author and Date */}
         <div className="flex items-center justify-between mb-3">
           {showAuthor && (
-            <div className="flex items-center gap-2">
+            <div 
+              className="flex items-center gap-2 cursor-pointer group/author"
+              onClick={handleAuthorClick}
+            >
               <Avatar 
                 src={article.author.avatar} 
                 alt={article.author.name} 
                 size="sm" 
               />
-              <span className="text-sm text-gray-300">{article.author.name}</span>
+              <span className="text-sm text-gray-300 group-hover/author:text-green-400 transition-colors">{article.author.name}</span>
             </div>
           )}
           
