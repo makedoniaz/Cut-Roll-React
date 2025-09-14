@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Plus } from 'lucide-react';
 import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
 import { useAuthStore } from "../stores/authStore";
 import { ListsService } from "../services/listsService";
@@ -86,25 +87,34 @@ const MyLists = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-white">My Lists</h1>
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-top sm:justify-between mb-8">
+          <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-white">My Lists</h1>
+          </div>
+
+        {/* Action Buttons */}
+        <div className="mt-4 sm:mt-0 flex items-top gap-3">
           <button
             onClick={() => navigate('/lists/create')}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200 group relative"
           >
-            Create List
-          </button>
-          <button
-            onClick={() => navigate('/lists')}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Back to Lists
+            <Plus className="w-5 h-5" />
+            {/* Custom Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+              Create List
+            </div>
           </button>
         </div>
       </div>
 
       {/* Content */}
+      {/* List Description */}
+      <div className="mb-8">
+        <p className="text-lg text-gray-300 max-w-4xl leading-relaxed">
+            Manage and organize your movie lists
+        </p>
+      </div>
+
       <div className="min-h-96">
         {loading ? (
           <div className="text-center p-8">
@@ -171,12 +181,6 @@ const MyLists = () => {
                 className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
               >
                 Create Your First List
-              </button>
-              <button
-                onClick={() => navigate('/lists')}
-                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
-              >
-                Browse Lists
               </button>
             </div>
           </div>

@@ -9,13 +9,19 @@ export const useNavigation = () => {
   const goToMovie = (id) => navigate(`/movie/${id}`);
   const goToProfile = (username) => navigate(`/profile/${username}`);
   const goToLists = () => navigate(ROUTES.LISTS);
-  const goToReviews = () => navigate(ROUTES.REVIEWS);
   const goToSearch = (query) => navigate(`${ROUTES.SEARCH}?q=${query}`);
   const goToNewsSearch = (query, filters = null) => {
     if (filters) {
       navigate(ROUTES.NEWS_SEARCH, { state: { prefillFilters: filters } });
     } else {
       navigate(`${ROUTES.NEWS_SEARCH}?q=${query}`);
+    }
+  };
+  const goToUserSearch = (query) => {
+    if (query) {
+      navigate(`${ROUTES.USER_SEARCH}?q=${query}`);
+    } else {
+      navigate(ROUTES.USER_SEARCH);
     }
   };
   const goToLogin = () => navigate(ROUTES.LOGIN);
@@ -29,9 +35,9 @@ export const useNavigation = () => {
     goToMovie,
     goToProfile,
     goToLists,
-    goToReviews,
     goToSearch,
     goToNewsSearch,
+    goToUserSearch,
     goToLogin,
     goToRegister,
     goBack,

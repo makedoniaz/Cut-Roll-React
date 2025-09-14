@@ -7,6 +7,7 @@ import Settings from '../pages/Settings';
 import MovieSearch from '../pages/MovieSearch';
 import SearchHub from '../pages/SearchHub';
 import NewsSearch from '../pages/NewsSearch';
+import UserSearch from '../pages/UserSearch';
 import ListsSearch from '../pages/ListsSearch';
 import ReviewsSearch from '../pages/ReviewsSearch';
 import Login from '../pages/Login';
@@ -34,7 +35,6 @@ import LikedLists from '../pages/LikedLists'
 import MyLists from '../pages/MyLists'
 import UserLists from '../pages/UserLists'
 import ActionLists from '../pages/ActionLists'
-import Reviews from '../pages/Reviews'
 import UserReviews from '../pages/UserReviews'
 import MyReviews from '../pages/MyReviews'
 import ReviewCreate from '../pages/ReviewCreate'
@@ -75,7 +75,6 @@ const AppRouter = () => {
               </ProtectedRoute>
             } />
             <Route path="review/:reviewId" element={<ReviewPage />} />
-            <Route path="reviews" element={<Reviews />} />
             <Route path="reviews/my" element={
               <ProtectedRoute>
                 <MyReviews />
@@ -84,6 +83,7 @@ const AppRouter = () => {
             <Route path="reviews/:username" element={<UserReviews />} />
             <Route path="search" element={<SearchHub />} />
             <Route path="search/movies" element={<MovieSearch />} />
+            <Route path="search/users" element={<UserSearch />} />
             <Route path="search/lists" element={<ListsSearch />} />
             <Route path="search/news" element={<NewsSearch />} />
             <Route path="search/reviews" element={<ReviewsSearch />} />

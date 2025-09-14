@@ -6,12 +6,21 @@ const Avatar = ({ src, alt, size = "md" }) => {
   };
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden flex-shrink-0`}>
-      <img
-        src={src}
-        alt={alt}
-        className="w-full h-full object-cover"
-      />
+    <div className={`${sizeClasses[size]} rounded-full overflow-hidden flex-shrink-0 bg-gray-700 flex items-center justify-center`}>
+      {src ? (
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
+        />
+      ) : null}
+      <div className={`w-full h-full flex items-center justify-center text-white font-semibold ${src ? 'hidden' : 'flex'}`}>
+        {(alt || 'U').charAt(0).toUpperCase()}
+      </div>
     </div>
   );
 };

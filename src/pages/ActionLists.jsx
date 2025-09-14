@@ -132,21 +132,11 @@ const ActionLists = () => {
         }
     };
 
-    const handleBackToMovies = () => {
-        navigate('/movies');
-    };
-
     if (!config) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="text-red-400 text-xl mb-4">Invalid list type</div>
-                    <button
-                        onClick={handleBackToMovies}
-                        className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors"
-                    >
-                        Back to Movies
-                    </button>
                 </div>
             </div>
         );
@@ -168,12 +158,6 @@ const ActionLists = () => {
                         >
                             Retry
                         </button>
-                        <button
-                            onClick={handleBackToMovies}
-                            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors"
-                        >
-                            Back to Movies
-                        </button>
                     </div>
                 </div>
             </div>
@@ -182,15 +166,8 @@ const ActionLists = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
-            {/* Header with Back Button */}
-            <div className="flex items-center gap-4 mb-8">
-                <button
-                    onClick={handleBackToMovies}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                >
-                    ← Back to Movies
-                </button>
-                <div className="h-6 w-px bg-gray-700"></div>
+            {/* Header */}
+            <div className="mb-8">
                 <h1 className="text-3xl font-bold text-white">{config.title}</h1>
             </div>
 
@@ -214,6 +191,7 @@ const ActionLists = () => {
                         itemsPerRow={6} 
                         movies={movies} 
                         CardComponent={SmallMovieCard}
+                        showMore={false}
                     />
                     
                     {/* Load More Button */}
