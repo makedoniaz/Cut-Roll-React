@@ -10,7 +10,10 @@ const ListMovieGrid = ({
     CardComponent = MovieCard,  // Default to MovieCard if not provided
     loading = false,
     onAddMoviesClick,
-    showAddMovies = true
+    showAddMovies = true,
+    listId,
+    isOwner,
+    onMovieRemoved
 }) => {
     return ( 
         <div className="py-2">
@@ -35,7 +38,7 @@ const ListMovieGrid = ({
                                 items={movies}
                                 itemsPerRow={itemsPerRow}
                                 rows={rows}
-                                renderItem={(movie) => <CardComponent movie={movie} />}
+                                renderItem={(movie) => <CardComponent movie={movie} listId={listId} isOwner={isOwner} onMovieRemoved={onMovieRemoved} />}
                                 itemHeight="h-64"
                                 gap="gap-6"
                             />

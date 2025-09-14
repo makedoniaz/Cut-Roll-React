@@ -225,6 +225,9 @@ export class FollowService {
             fromDate: fromDate || new Date().toISOString()
         };
 
+        console.log('FollowService.getFollowFeed sending data:', feedData);
+        console.log('API endpoint:', API_ENDPOINTS.FEED);
+
         const response = await api.post(API_ENDPOINTS.FEED, feedData);
         
         if (!response.ok) {

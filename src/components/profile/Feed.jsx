@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FollowService } from '../../services/followService.js';
 import { ActivityType } from '../../constants/follow.js';
 import MovieLikeFeedCard from './MovieLikeFeedCard.jsx';
+import { useAuth } from '../../hooks/useStores';
 
-const Feed = ({ userId }) => {
+const Feed = () => {
+  const { user: currentUser } = useAuth();
   const [selectedType, setSelectedType] = useState(ActivityType.MOVIE_LIKE);
   const [selectedTimeFilter, setSelectedTimeFilter] = useState('all');
   const [feedData, setFeedData] = useState([]);
@@ -30,10 +32,12 @@ const Feed = ({ userId }) => {
   };
 
   useEffect(() => {
-    if (userId) {
+    // Use authenticated user's ID for the feed, not the profile user's ID
+    const feedUserId = currentUser?.id;
+    if (feedUserId) {
       fetchFeed();
     }
-  }, [userId, selectedType, selectedTimeFilter]);
+  }, [currentUser?.id, selectedType, selectedTimeFilter]);
 
   const getFromDate = () => {
     if (selectedTimeFilter === 'all') {
@@ -62,14 +66,17 @@ const Feed = ({ userId }) => {
   };
 
   const fetchFeed = async (pageNum = 1) => {
-    if (!userId) return;
+    const feedUserId = currentUser?.id;
+    if (!feedUserId) return;
 
     try {
       setLoading(true);
       setError('');
       
+      console.log('Feed.fetchFeed called with authenticated userId:', feedUserId, 'page:', pageNum, 'type:', selectedType);
+      
       const response = await FollowService.getFollowFeed(
-        userId,
+        feedUserId,
         pageNum,
         10,
         selectedType,
@@ -171,6 +178,21 @@ const Feed = ({ userId }) => {
     }
   };
 
+  // Show message if user is not authenticated
+  if (!currentUser) {
+    return (
+      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div className="text-center text-gray-400 py-8">
+          <svg className="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+          </svg>
+          <p className="text-lg font-medium mb-2">Activity Feed</p>
+          <p>Please log in to view your activity feed</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
       <div className="flex items-center justify-between mb-6">
@@ -178,7 +200,7 @@ const Feed = ({ userId }) => {
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
           </svg>
-          Activity Feed
+          Your Activity Feed
         </h2>
         
         {/* Filter Controls */}

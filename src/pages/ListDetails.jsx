@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Trash2, Share2 } from 'lucide-react';
 import ListMovieGrid from "../components/ui/movies/ListMovieGrid";
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
+import RemovableMovieCard from '../components/ui/movies/RemovableMovieCard';
 import CommentSection from "../components/ui/comments/CommentSection";
 import AddMoviesModal from "../components/ui/forms/AddMoviesModal";
 import { ListsService } from '../services/listsService';
@@ -137,6 +138,32 @@ const ListDetails = () => {
             setHasPreviousPage(moviesData.hasPreviousPage || false);
         } catch (err) {
             console.error('Error refreshing movies after adding:', err);
+            setMoviesError(err.message || 'Failed to refresh movies');
+        } finally {
+            setMoviesLoading(false);
+        }
+    };
+
+    const handleMovieRemoved = async (removedMovieId) => {
+        console.log('Movie removed from list:', removedMovieId);
+        // Refresh the movies list after removing a movie
+        try {
+            setMoviesLoading(true);
+            setMoviesError(null);
+            const moviesData = await ListsService.getMoviesFromList({
+                listId: list.id,
+                page: currentPage,
+                pageSize: 12
+            });
+            
+            // Update movies and pagination data
+            setMovies(moviesData.data || []);
+            setTotalCount(moviesData.totalCount || 0);
+            setTotalPages(moviesData.totalPages || 1);
+            setHasNextPage(moviesData.hasNextPage || false);
+            setHasPreviousPage(moviesData.hasPreviousPage || false);
+        } catch (err) {
+            console.error('Error refreshing movies after removal:', err);
             setMoviesError(err.message || 'Failed to refresh movies');
         } finally {
             setMoviesLoading(false);
@@ -802,9 +829,12 @@ const ListDetails = () => {
                         rows={Math.ceil(movies.length / 6)} 
                         itemsPerRow={6} 
                         movies={movies} 
-                        CardComponent={SmallMovieCard}
+                        CardComponent={RemovableMovieCard}
                         onAddMoviesClick={isOwner ? handleAddMovies : null}
                         showAddMovies={isOwner}
+                        listId={list.id}
+                        isOwner={isOwner}
+                        onMovieRemoved={handleMovieRemoved}
                     />
                 )}
                 

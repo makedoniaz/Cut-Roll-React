@@ -494,7 +494,8 @@ const Profile = () => {
                 </div>
 
                 {/* Activity Feed */}
-                <Feed userId={user.id} />
+                {console.log('Profile rendering Feed for authenticated user:', currentUser?.id, 'viewing profile:', user.username)}
+                <Feed />
               </div>
             </div>
           </div>
