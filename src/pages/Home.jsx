@@ -6,6 +6,7 @@ import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import SectionHeading from "../components/ui/common/SectionHeading";
 import PaginatedGridContainer from "../components/layout/PaginatedGridContainer";
+import ReviewGrid from "../components/ui/reviews/ReviewGrid";
 import { useAuthStore } from "../stores/authStore";
 import { MovieService } from "../services/movieService";
 import { ListsService } from "../services/listsService";
@@ -326,6 +327,11 @@ const Home = () => {
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Recent Reviews Section */}
+      <div className="mb-12">
+        <ReviewGrid />
       </div>
       
       {/* Popular Lists Section */}

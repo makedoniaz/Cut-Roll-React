@@ -29,7 +29,7 @@ const Grid = ({
       {itemsByRows.map((rowItems, rowIndex) => (
         <div 
           key={rowIndex}
-          className={`flex justify-between items-start`}
+          className={`flex items-start ${gap}`}
         >
           {rowItems.map((item, itemIndex) => {
             const globalIndex = rowIndex * itemsPerRow + itemIndex;

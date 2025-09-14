@@ -149,6 +149,22 @@ const ReviewsSearch = () => {
 
   const [filterValues, setFilterValues] = useState(getInitialFilterValues());
 
+  // Handle location state for pre-filled filters
+  useEffect(() => {
+    if (location.state?.prefillFilters) {
+      const prefillFilters = location.state.prefillFilters;
+      setFilterValues(prev => ({
+        ...prev,
+        ...prefillFilters
+      }));
+      
+      // Auto-search if requested
+      if (location.state.autoSearch) {
+        setHasSearched(true);
+      }
+    }
+  }, [location.state]);
+
   // Check if there are any active filters
   const hasActiveFilters = useCallback(() => {
     return Object.entries(filterValues).some(([key, value]) => {
@@ -256,14 +272,14 @@ const ReviewsSearch = () => {
 
   // Auto-trigger search when there are active filters
   useEffect(() => {
-    if (hasActiveFilters()) {
+    if (hasActiveFilters() || hasSearched) {
       const timer = setTimeout(() => {
         searchReviews(1);
       }, 100);
       
       return () => clearTimeout(timer);
     }
-  }, [hasActiveFilters, searchReviews]);
+  }, [hasActiveFilters, searchReviews, hasSearched]);
 
   // Disable body scroll when sidebar is open
   useEffect(() => {
