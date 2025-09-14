@@ -32,8 +32,11 @@ import ListDetails from '../pages/ListDetails'
 import ListCreate from '../pages/ListCreate'
 import LikedLists from '../pages/LikedLists'
 import MyLists from '../pages/MyLists'
+import UserLists from '../pages/UserLists'
 import ActionLists from '../pages/ActionLists'
 import Reviews from '../pages/Reviews'
+import UserReviews from '../pages/UserReviews'
+import MyReviews from '../pages/MyReviews'
 import ReviewCreate from '../pages/ReviewCreate'
 import ReviewEdit from '../pages/ReviewEdit'
 import ReviewPage from '../pages/ReviewPage'
@@ -73,6 +76,12 @@ const AppRouter = () => {
             } />
             <Route path="review/:reviewId" element={<ReviewPage />} />
             <Route path="reviews" element={<Reviews />} />
+            <Route path="reviews/my" element={
+              <ProtectedRoute>
+                <MyReviews />
+              </ProtectedRoute>
+            } />
+            <Route path="reviews/:username" element={<UserReviews />} />
             <Route path="search" element={<SearchHub />} />
             <Route path="search/movies" element={<MovieSearch />} />
             <Route path="search/lists" element={<ListsSearch />} />
@@ -111,6 +120,7 @@ const AppRouter = () => {
                 <MyLists />
               </ProtectedRoute>
             } />
+            <Route path="lists/:username" element={<UserLists />} />
             <Route path="lists/:id" element={<ListDetails />} />
             <Route path="action-lists/:type" element={
               <ProtectedRoute>

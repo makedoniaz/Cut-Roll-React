@@ -171,6 +171,32 @@ const Profile = () => {
     navigate('/action-lists/recently-liked');
   };
 
+  const handleListsClick = () => {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    
+    if (isOwnProfile) {
+      navigate('/lists/my');
+    } else {
+      navigate(`/lists/${username}`);
+    }
+  };
+
+  const handleReviewsClick = () => {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    
+    if (isOwnProfile) {
+      navigate('/reviews/my');
+    } else {
+      navigate(`/reviews/${username}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -284,7 +310,10 @@ const Profile = () => {
               <div className="mt-8 pt-8 border-t border-gray-700">
                 <h2 className="text-xl font-semibold text-white mb-6">Profile Statistics</h2>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-                  <div className="bg-gray-700 rounded-lg p-3 text-center">
+                  <div 
+                    className="bg-gray-700 rounded-lg p-3 text-center cursor-pointer hover:bg-gray-600 transition-colors"
+                    onClick={handleReviewsClick}
+                  >
                     <div className="text-xl font-bold text-green-400 mb-1">
                       {statsLoading ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-400 mx-auto"></div>
@@ -333,7 +362,10 @@ const Profile = () => {
                     </div>
                     <div className="text-xs text-gray-300">Liked Movies</div>
                   </div>
-                  <div className="bg-gray-700 rounded-lg p-3 text-center">
+                  <div 
+                    className="bg-gray-700 rounded-lg p-3 text-center cursor-pointer hover:bg-gray-600 transition-colors"
+                    onClick={handleListsClick}
+                  >
                     <div className="text-xl font-bold text-green-400 mb-1">
                       {statsLoading ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-400 mx-auto"></div>

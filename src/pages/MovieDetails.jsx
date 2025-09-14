@@ -1236,9 +1236,22 @@ const MovieDetails = () => {
                      <div className="rounded-lg">
                                                {(isAuthenticated && activeReviewTab === 'MY REVIEW' ? [userReview] : (isAuthenticated ? otherReviews : reviews)).filter(Boolean).map((review, index) => (
                                                  <div key={review.id} className={`flex gap-4 ${index === 0 ? 'pt-0 pb-6' : index === (isAuthenticated && activeReviewTab === 'MY REVIEW' ? 0 : reviews.length - 1) ? 'pt-6 pb-0' : 'py-6'} border-b border-gray-800 last:border-b-0`}>
-                          <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                            {(review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author) ? 
-                              (review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author).charAt(0).toUpperCase() : 'U'}
+                          <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden">
+                            {review.userSimplified?.avatarPath ? (
+                              <img 
+                                src={review.userSimplified.avatarPath} 
+                                alt={review.userSimplified.userName || 'User'}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-full h-full flex items-center justify-center ${review.userSimplified?.avatarPath ? 'hidden' : 'flex'}`}>
+                              {(review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author) ? 
+                                (review.userSimplified?.userName || review.userName || review.username || review.authorName || review.author).charAt(0).toUpperCase() : 'U'}
+                            </div>
                           </div>
                           
                           <div className="flex-1 min-w-0">
