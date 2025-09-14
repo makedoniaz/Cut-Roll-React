@@ -3,6 +3,7 @@ import Layout from '../components/layout/Layout';
 import Home from '../pages/Home';
 import Movies from '../pages/Movies';
 import Profile from '../pages/Profile';
+import Settings from '../pages/Settings';
 import MovieSearch from '../pages/MovieSearch';
 import SearchHub from '../pages/SearchHub';
 import NewsSearch from '../pages/NewsSearch';
@@ -143,6 +144,16 @@ const AppRouter = () => {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+
+            {/* Protected Settings Route */}
+            <Route 
+                path="settings" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
                   </ProtectedRoute>
                 } 
               />

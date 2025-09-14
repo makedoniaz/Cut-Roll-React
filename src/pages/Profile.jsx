@@ -1,240 +1,151 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { UserService } from '../services/userService.js';
 import { useAuth } from '../hooks/useStores';
-import { AuthService } from '../services/authService.js';
-import ProfileTabNavigation from '../components/profile/ProfileTabNavigation';
-import ProfileInfoTab from '../components/profile/tabs/ProfileInfoTab';
-import ProfileSecurityTab from '../components/profile/tabs/ProfileSecurityTab';
-import ProfilePreferencesTab from '../components/profile/tabs/ProfilePreferencesTab';
-import ProfileNotificationsTab from '../components/profile/tabs/ProfileNotificationsTab';
-import { PROFILE_TABS } from '../constants/profile';
 
 const Profile = () => {
-  const { user, refreshToken, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState('info');
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [isEditingPassword, setIsEditingPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    username: user.username,
-    email: user.email,
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [localLoading, setLocalLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const { username } = useParams();
+  const { user: currentUser } = useAuth();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Check if this is the current user's own profile
+  const isOwnProfile = currentUser && username === currentUser.username;
 
-  const showMessage = (message, isError = false) => {
-    if (isError) {
-      setErrorMessage(message);
-      setSuccessMessage('');
-    } else {
-      setSuccessMessage(message);
-      setErrorMessage('');
-    }
-    setTimeout(() => {
-      setSuccessMessage('');
-      setErrorMessage('');
-    }, 6000);
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleUsernameUpdate = async () => {
-    if (formData.username.trim() === user.username) {
-      showMessage('Username is the same as current username', true);
-      return;
-    }
-    
-    if (!formData.username.trim()) {
-      showMessage('Username cannot be empty', true);
-      return;
-    }
-    
-    setLocalLoading(true);
-    
-    try {
-      const profileData = {
-        userName: formData.username.trim(),
-        email: null,
-        refresh: refreshToken || null
-      };
-
-      const result = await AuthService.updateProfile(profileData);
-      console.log("Updating token")
-      await AuthService.refreshToken(refreshToken)
-      console.log("token updated")
-      
-      if (result.success) {
-        setIsEditingUsername(false);
-        showMessage('Username updated successfully!');
-      } else {
-        showMessage(result.error || 'Failed to update username', true);
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!username) {
+        setError('Username is required');
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      showMessage('An error occurred while updating username', true);
-    } finally {
-      setLocalLoading(false);
-    }
-  };
 
-  const handleEmailUpdate = async () => {
-    if (formData.email.trim().toLowerCase() === user.email.toLowerCase()) {
-      showMessage('Email is the same as current email', true);
-      return;
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      showMessage('Please enter a valid email address', true);
-      return;
-    }
-    
-    setLocalLoading(true);
-    
-    try {
-      const profileData = {
-        userName: null,
-        email: formData.email.trim().toLowerCase(),
-        refresh: refreshToken || null
-      };
-
-      const result = await AuthService.updateProfile(profileData);
-      
-      if (result.success) {
-        setIsEditingEmail(false);
-        showMessage('Email updated successfully!');
-      } else {
-        showMessage(result.error || 'Failed to update email', true);
+      try {
+        setLoading(true);
+        const userData = await UserService.getUserByUsername(username);
+        setUser(userData);
+        setError('');
+      } catch (err) {
+        setError(err.message || 'Failed to load user profile');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      showMessage('An error occurred while updating email', true);
-    } finally {
-      setLocalLoading(false);
-    }
-  };
+    };
 
-  const handlePasswordUpdate = async () => {
-    if (formData.newPassword !== formData.confirmPassword) {
-      showMessage('New passwords do not match', true);
-      return;
-    }
-    if (formData.newPassword.length < 6) {
-      showMessage('Password must be at least 6 characters long', true);
-      return;
-    }
-    
-    setLocalLoading(true);
-    try {
-      // Note: Password change might need a different endpoint
-      // For now, this is a placeholder - you may need to create a separate password change method
-      console.log('Password change would be implemented here');
-      showMessage('Password functionality needs to be implemented in your backend', true);
-      
-      setFormData({
-        ...formData,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      setIsEditingPassword(false);
-    } catch (error) {
-      showMessage('An error occurred while updating password', true);
-    } finally {
-      setLocalLoading(false);
-    }
-  };
+    fetchUser();
+  }, [username]);
 
-  const cancelEdit = () => {
-    setIsEditingEmail(false);
-    setIsEditingUsername(false);
-    setIsEditingPassword(false);
-    setFormData({
-      username: user.username,
-      email: user.email,
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-    setSuccessMessage('');
-    setErrorMessage('');
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-lg">Loading profile...</div>
+      </div>
+    );
+  }
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'info':
-        return (
-          <ProfileInfoTab
-            user={user}
-            isEditingUsername={isEditingUsername}
-            isEditingEmail={isEditingEmail}
-            formData={formData}
-            isLoading={isLoading}
-            localLoading={localLoading}
-            setIsEditingUsername={setIsEditingUsername}
-            setIsEditingEmail={setIsEditingEmail}
-            handleInputChange={handleInputChange}
-            handleUsernameUpdate={handleUsernameUpdate}
-            handleEmailUpdate={handleEmailUpdate}
-            cancelEdit={cancelEdit}
-          />
-        );
-      case 'security':
-        return (
-          <ProfileSecurityTab
-            isEditingPassword={isEditingPassword}
-            formData={formData}
-            isLoading={isLoading}
-            localLoading={localLoading}
-            setIsEditingPassword={setIsEditingPassword}
-            handleInputChange={handleInputChange}
-            handlePasswordUpdate={handlePasswordUpdate}
-            cancelEdit={cancelEdit}
-          />
-        );
-      case 'preferences':
-        return <ProfilePreferencesTab />;
-      case 'notifications':
-        return <ProfileNotificationsTab />;
-      default:
-        return null;
-    }
-  };
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 text-lg mb-4">{error}</div>
+          <Link to="/" className="text-blue-400 hover:text-blue-300">
+            Return to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-lg">User not found</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Profile Settings</h1>
-          <p className="text-gray-400">Manage your account information and preferences</p>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
+          {/* Profile Header */}
+          <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-600">
+                <img
+                  src={user.avatarPath || '/default-avatar.png'}
+                  alt={`${user.username}'s avatar`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = '/default-avatar.png';
+                  }}
+                />
+              </div>
+            </div>
 
-        {/* Success/Error Messages */}
-        {(successMessage || errorMessage) && (
-          <div className={`mb-6 p-4 rounded-md ${successMessage ? 'bg-green-900/50 border border-green-500' : 'bg-red-900/50 border border-red-500'}`}>
-            <p className={`text-sm ${successMessage ? 'text-green-300' : 'text-red-300'}`}>
-              {successMessage || errorMessage}
-            </p>
+            {/* User Info */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-white">{user.username}</h1>
+                {isOwnProfile && (
+                  <Link
+                    to="/settings"
+                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                    title="Account Settings"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </Link>
+                )}
+              </div>
+              <p className="text-gray-400 mb-4">{user.email}</p>
+              
+              {/* Status Badges */}
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                {user.isBanned && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Banned
+                  </span>
+                )}
+                {user.isMuted && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Muted
+                  </span>
+                )}
+                {!user.isBanned && !user.isMuted && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Active
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-        )}
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Navigation */}
-          <ProfileTabNavigation 
-            tabs={PROFILE_TABS}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          />
-
-          {/* Main Content Area */}
-          <div className="flex-1">
-            {renderContent()}
+          {/* Profile Stats */}
+          <div className="mt-8 pt-8 border-t border-gray-700">
+            <h2 className="text-xl font-semibold text-white mb-6">Profile Statistics</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-700 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-blue-400 mb-1">-</div>
+                <div className="text-sm text-gray-300">Reviews</div>
+              </div>
+              <div className="bg-gray-700 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-green-400 mb-1">-</div>
+                <div className="text-sm text-gray-300">Watched</div>
+              </div>
+              <div className="bg-gray-700 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-purple-400 mb-1">-</div>
+                <div className="text-sm text-gray-300">Liked Movies</div>
+              </div>
+              <div className="bg-gray-700 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-orange-400 mb-1">-</div>
+                <div className="text-sm text-gray-300">Lists</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
