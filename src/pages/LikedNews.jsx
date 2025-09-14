@@ -62,7 +62,7 @@ const LikedNews = () => {
       </div>
 
       {/* Content */}
-      <div className="min-h-96">
+      <div>
         <LikedNewsFeed 
           loading={loading}
           setLoading={setLoading}
@@ -180,46 +180,59 @@ const LikedNewsFeed = ({ loading, setLoading }) => {
     );
   }
 
+  // Create rows dynamically based on actual news count
+  const itemsPerRow = 3; // 3 items per row on large screens
+  const rows = [];
+  
+  for (let i = 0; i < news.length; i += itemsPerRow) {
+    const rowItems = news.slice(i, i + itemsPerRow);
+    rows.push(rowItems);
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {news.map((article) => (
-        <div key={article.id} className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-colors duration-200">
-          {/* Article Image */}
-          {article.photo && (
-            <div className="aspect-video bg-gray-800">
-              <img
-                src={article.photo}
-                alt={article.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
+    <div className="space-y-6">
+      {rows.map((rowItems, rowIndex) => (
+        <div key={rowIndex} className="flex flex-wrap gap-6">
+          {rowItems.map((article, itemIndex) => (
+            <div key={article.id} className="w-full md:w-1/2 lg:w-1/3 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-colors duration-200">
+              {/* Article Image */}
+              {article.photo && (
+                <div className="aspect-video bg-gray-800">
+                  <img
+                    src={article.photo}
+                    alt={article.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Article Content */}
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
+                  {article.title}
+                </h3>
+                
+                <p className="text-gray-400 text-sm mb-4 line-clamp-3">
+                  {article.content}
+                </p>
+                
+                {/* Article Meta */}
+                <div className="flex items-center justify-between text-sm text-gray-500">
+                  <span>{article.author}</span>
+                  <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+                </div>
+                
+                {/* Likes */}
+                <div className="flex items-center gap-2 mt-3 text-red-500">
+                  <Heart className="w-4 h-4 fill-current" />
+                  <span className="text-sm">{article.likes} likes</span>
+                </div>
+              </div>
             </div>
-          )}
-          
-          {/* Article Content */}
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
-              {article.title}
-            </h3>
-            
-            <p className="text-gray-400 text-sm mb-4 line-clamp-3">
-              {article.content}
-            </p>
-            
-            {/* Article Meta */}
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span>{article.author}</span>
-              <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
-            </div>
-            
-            {/* Likes */}
-            <div className="flex items-center gap-2 mt-3 text-red-500">
-              <Heart className="w-4 h-4 fill-current" />
-              <span className="text-sm">{article.likes} likes</span>
-            </div>
-          </div>
+          ))}
         </div>
       ))}
     </div>

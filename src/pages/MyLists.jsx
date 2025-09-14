@@ -115,7 +115,7 @@ const MyLists = () => {
         </p>
       </div>
 
-      <div className="min-h-96">
+      <div>
         {loading ? (
           <div className="text-center p-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>

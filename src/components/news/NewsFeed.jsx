@@ -75,11 +75,11 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
       
       try {
         if (type === 'all') {
-          // Fetch first 10 news articles using filter
+          // Fetch first 6 news articles using filter (2 rows max)
           console.log('Fetching recent news with filter...');
           const newsData = await NewsService.filterNews({
-            page: 0,
-            pageSize: 10
+            page: 1,
+            pageSize: 6
           });
           console.log('Recent news data received:', newsData);
           
@@ -104,7 +104,7 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
         } else if (type === 'user' && userId) {
           // Fetch user's news articles
           console.log('Fetching user news for userId:', userId);
-          const userNews = await NewsService.getUserNews(userId, 1, 10);
+          const userNews = await NewsService.getUserNews(userId, 1, 6);
           console.log('User news data received:', userNews);
           
           // Handle the new API response structure
@@ -185,8 +185,8 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
                 try {
                   if (type === 'all') {
                     const newsData = await NewsService.filterNews({
-                      page: 0,
-                      pageSize: 10
+                      page: 1,
+                      pageSize: 6
                     });
                     let articles = [];
                     if (newsData && Array.isArray(newsData.data)) {
@@ -196,7 +196,7 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
                     }
                     setNews(articles);
                   } else if (type === 'user' && userId) {
-                    const userNews = await NewsService.getUserNews(userId, 1, 10);
+                    const userNews = await NewsService.getUserNews(userId, 1, 6);
                     let articles = [];
                     if (userNews && Array.isArray(userNews.data)) {
                       articles = userNews.data;
@@ -257,18 +257,37 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
     setNews(prevNews => prevNews.filter(article => article.id !== deletedArticleId));
   };
 
+  // Create rows dynamically based on actual news count
+  const itemsPerRow = 3; // 3 items per row on large screens
+  const rows = [];
+  
+  console.log('NewsFeed: Total news articles:', news.length);
+  
+  for (let i = 0; i < news.length; i += itemsPerRow) {
+    const rowItems = news.slice(i, i + itemsPerRow);
+    console.log(`Row ${Math.floor(i/itemsPerRow)}:`, rowItems.length, 'items');
+    rows.push(rowItems);
+  }
+  
+  console.log('NewsFeed: Total rows created:', rows.length);
+
   return (
-    <div className="min-h-screen text-white">
-      {/* News Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {news.map((article) => (
-          <NewsCard
-            key={article.id}
-            article={article}
-            showAuthor={type === 'all'}
-            showActions={type === 'user'}
-            onDelete={handleArticleDelete}
-          />
+    <div className="text-white">
+      {/* News Grid - Dynamic rows based on actual content */}
+      <div className="space-y-6">
+        {rows.map((rowItems, rowIndex) => (
+          <div key={rowIndex} className="flex flex-wrap gap-6">
+            {rowItems.map((article, itemIndex) => (
+              <div key={article.id} className="w-full md:w-1/2 lg:w-1/3">
+                <NewsCard
+                  article={article}
+                  showAuthor={type === 'all'}
+                  showActions={type === 'user'}
+                  onDelete={handleArticleDelete}
+                />
+              </div>
+            ))}
+          </div>
         ))}
       </div>
     </div>

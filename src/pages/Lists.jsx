@@ -320,7 +320,7 @@ const Lists = () => {
       />
 
       {/* Content based on active tab */}
-      <div className="min-h-96">
+      <div>
         {activeTab === 'popular' && (
           loading ? (
             <div className="text-center p-8">

@@ -16,7 +16,7 @@ const NewsFeed = () => {
         setError(null);
         
         // Fetch recent news using pagination with 6 items
-        const newsData = await NewsService.getNewsByPagination(0, 6);
+        const newsData = await NewsService.getNewsByPagination(1, 6);
         setNewsItems(newsData.data || []);
       } catch (err) {
         console.error('Error fetching recent news:', err);
@@ -81,21 +81,35 @@ const NewsFeed = () => {
     );
   }
 
+  // Create rows dynamically based on actual news count
+  const itemsPerRow = 3; // 3 items per row on large screens
+  const rows = [];
+  
+  for (let i = 0; i < newsItems.length; i += itemsPerRow) {
+    const rowItems = newsItems.slice(i, i + itemsPerRow);
+    rows.push(rowItems);
+  }
+
   return (
     <div className="text-white">
-      {/* News Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {newsItems.map((item) => (
-          <NewsCard
-            key={item.id}
-            image={item.photoUrl || item.photo || "/news-placeholder.jpg"}
-            category={item.authorName || "News"}
-            categoryIcon="📰"
-            title={item.title}
-            description={item.content}
-            hasVideo={false}
-            onReadMore={() => handleReadMore(item.id)}
-          />
+      {/* News Grid - Dynamic rows based on actual content */}
+      <div className="space-y-6">
+        {rows.map((rowItems, rowIndex) => (
+          <div key={rowIndex} className="flex flex-wrap gap-6">
+            {rowItems.map((item, itemIndex) => (
+              <div key={item.id} className="w-full md:w-1/2 lg:w-1/3">
+                <NewsCard
+                  image={item.photoUrl || item.photo || "/news-placeholder.jpg"}
+                  category={item.authorName || "News"}
+                  categoryIcon="📰"
+                  title={item.title}
+                  description={item.content}
+                  hasVideo={false}
+                  onReadMore={() => handleReadMore(item.id)}
+                />
+              </div>
+            ))}
+          </div>
         ))}
       </div>
     </div>

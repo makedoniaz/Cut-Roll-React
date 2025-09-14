@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { UserPlus, UserMinus } from 'lucide-react';
+import { UserPlus, UserMinus, Camera } from 'lucide-react';
 import { UserService } from '../services/userService.js';
 import { FollowService } from '../services/followService.js';
+import { AuthService } from '../services/authService.js';
 import { useAuth } from '../hooks/useStores';
 import FollowersList from '../components/profile/FollowersList.jsx';
 import FollowingList from '../components/profile/FollowingList.jsx';
 import Feed from '../components/profile/Feed.jsx';
+import Modal from '../components/layout/Modal.jsx';
 
 const Profile = () => {
   const { username } = useParams();
@@ -30,6 +32,11 @@ const Profile = () => {
   });
   const [statsLoading, setStatsLoading] = useState(true);
   const [isFetchingStats, setIsFetchingStats] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
   
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && username === currentUser.username;
@@ -215,6 +222,71 @@ const Profile = () => {
     }
   };
 
+  // Avatar upload functions
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    setAvatarError('');
+    
+    if (file) {
+      // Validate file type (only JPG and PNG)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        setAvatarError('Please select a JPG or PNG image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setAvatarError('File size must be less than 5MB');
+        return;
+      }
+      
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!selectedFile) return;
+    
+    try {
+      setAvatarUploading(true);
+      setAvatarError('');
+      
+      const updatedUser = await AuthService.updateAvatar(selectedFile);
+      
+      // Update the user state with new avatar
+      setUser(prev => ({
+        ...prev,
+        avatarPath: updatedUser.avatarPath
+      }));
+      
+      // Close modal and reset state
+      setIsAvatarModalOpen(false);
+      setSelectedFile(null);
+      setAvatarPreview(null);
+      
+    } catch (error) {
+      console.error('Failed to upload avatar:', error);
+      setAvatarError('Failed to upload avatar. Please try again.');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const openAvatarModal = () => {
+    setIsAvatarModalOpen(true);
+    setSelectedFile(null);
+    setAvatarPreview(null);
+    setAvatarError('');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -255,7 +327,7 @@ const Profile = () => {
               <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
                 {/* Avatar */}
                 <div className="flex-shrink-0">
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-600">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-600 group">
                     <img
                       src={user.avatarPath || '/default-avatar.png'}
                       alt={`${user.username}'s avatar`}
@@ -264,6 +336,18 @@ const Profile = () => {
                         e.target.src = '/default-avatar.png';
                       }}
                     />
+                    {/* Hover overlay for own profile */}
+                    {isOwnProfile && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <button
+                          onClick={openAvatarModal}
+                          className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-full transition-colors"
+                          title="Change Avatar"
+                        >
+                          <Camera className="w-6 h-6" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -430,6 +514,75 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Avatar Upload Modal */}
+      <Modal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)}>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-6">Change Avatar</h2>
+          
+          {/* Error Message */}
+          {avatarError && (
+            <div className="mb-4 p-3 bg-orange-500 text-white rounded-lg text-sm">
+              {avatarError}
+            </div>
+          )}
+          
+          {/* File Input */}
+          <div className="mb-6">
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="avatar-upload"
+            />
+            <label
+              htmlFor="avatar-upload"
+              className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg cursor-pointer transition-colors"
+            >
+              <Camera className="w-5 h-5 mr-2" />
+              Choose Image
+            </label>
+          </div>
+
+          {/* Preview */}
+          {avatarPreview && (
+            <div className="mb-6">
+              <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-green-500">
+                <img
+                  src={avatarPreview}
+                  alt="Avatar preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <p className="text-gray-300 text-sm mt-2">Preview</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => setIsAvatarModalOpen(false)}
+              className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAvatarUpload}
+              disabled={!selectedFile || avatarUploading || avatarError}
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            >
+              {avatarUploading ? 'Uploading...' : 'Save Avatar'}
+            </button>
+          </div>
+
+          {/* File Requirements */}
+          <div className="mt-6 text-sm text-gray-400">
+            <p>Supported formats: JPG, PNG</p>
+            <p>Maximum file size: 5MB</p>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -80,6 +80,21 @@ export class AuthService {
     return updatedUser;
   }
 
+  static async updateAvatar(avatarFile) {
+    const formData = new FormData();
+    formData.append('avatar', avatarFile);
+
+    const response = await api.put('/identity/api/User/Avatar', formData);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Avatar update failed');
+    }
+    
+    const updatedUser = await response.json();
+    return updatedUser;
+  }
+
   static isTokenExpired(token) {
     return isTokenExpired(token);
   }
