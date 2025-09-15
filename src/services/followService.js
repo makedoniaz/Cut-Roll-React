@@ -222,7 +222,7 @@ export class FollowService {
             page,
             pageSize,
             filterByType: filterByType !== null ? filterByType : 0,
-            fromDate: fromDate || new Date().toISOString()
+            fromDate: fromDate
         };
 
         console.log('FollowService.getFollowFeed sending data:', feedData);

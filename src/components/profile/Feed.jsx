@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { FollowService } from '../../services/followService.js';
 import { ActivityType } from '../../constants/follow.js';
 import MovieLikeFeedCard from './MovieLikeFeedCard.jsx';
+import MovieWatchedFeedCard from './MovieWatchedFeedCard.jsx';
+import MovieWantToWatchFeedCard from './MovieWantToWatchFeedCard.jsx';
+import MovieReviewFeedCard from './MovieReviewFeedCard.jsx';
+import ReviewLikedFeedCard from './ReviewLikedFeedCard.jsx';
+import ListCreatedFeedCard from './ListCreatedFeedCard.jsx';
+import ListLikedFeedCard from './ListLikedFeedCard.jsx';
 import { useAuth } from '../../hooks/useStores';
 import FeedSectionHeading from '../ui/common/FeedSectionHeading';
 
@@ -127,53 +133,17 @@ const Feed = ({ showHeading = true }) => {
       case ActivityType.MOVIE_LIKE:
         return <MovieLikeFeedCard key={activity.id} activity={activity} />;
       case ActivityType.MOVIE_REVIEW:
-        return (
-          <div key={activity.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
-            <div className="text-center text-gray-400 py-4">
-              Movie Review card - Coming soon
-            </div>
-          </div>
-        );
+        return <MovieReviewFeedCard key={activity.id} activity={activity} />;
       case ActivityType.MOVIE_WATCHED:
-        return (
-          <div key={activity.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
-            <div className="text-center text-gray-400 py-4">
-              Movie Watched card - Coming soon
-            </div>
-          </div>
-        );
+        return <MovieWatchedFeedCard key={activity.id} activity={activity} />;
       case ActivityType.WANT_TO_WATCH:
-        return (
-          <div key={activity.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
-            <div className="text-center text-gray-400 py-4">
-              Want to Watch card - Coming soon
-            </div>
-          </div>
-        );
+        return <MovieWantToWatchFeedCard key={activity.id} activity={activity} />;
       case ActivityType.LIST_CREATED:
-        return (
-          <div key={activity.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
-            <div className="text-center text-gray-400 py-4">
-              List Created card - Coming soon
-            </div>
-          </div>
-        );
+        return <ListCreatedFeedCard key={activity.id} activity={activity} />;
       case ActivityType.LIST_LIKED:
-        return (
-          <div key={activity.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
-            <div className="text-center text-gray-400 py-4">
-              List Liked card - Coming soon
-            </div>
-          </div>
-        );
+        return <ListLikedFeedCard key={activity.id} activity={activity} />;
       case ActivityType.REVIEW_LIKED:
-        return (
-          <div key={activity.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
-            <div className="text-center text-gray-400 py-4">
-              Review Liked card - Coming soon
-            </div>
-          </div>
-        );
+        return <ReviewLikedFeedCard key={activity.id} activity={activity} />;
       default:
         return null;
     }
