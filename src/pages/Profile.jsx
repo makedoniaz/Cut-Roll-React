@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { UserPlus, UserMinus, Camera } from 'lucide-react';
+import { UserPlus, UserMinus, Camera, Shuffle } from 'lucide-react';
 import { UserService } from '../services/userService.js';
 import { FollowService } from '../services/followService.js';
 import { AuthService } from '../services/authService.js';
+import { RecommendationsService } from '../services/recommendationsService.js';
 import { useAuth } from '../hooks/useStores';
 import FollowersList from '../components/profile/FollowersList.jsx';
 import FollowingList from '../components/profile/FollowingList.jsx';
@@ -36,6 +37,8 @@ const Profile = () => {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState('');
+  const [createMixLoading, setCreateMixLoading] = useState(false);
+  const [mixError, setMixError] = useState('');
   
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && username === currentUser.username;
@@ -286,6 +289,47 @@ const Profile = () => {
     setAvatarError('');
   };
 
+  const handleCreateMix = async () => {
+    if (!currentUser || !user || createMixLoading) return;
+
+    try {
+      setCreateMixLoading(true);
+      setMixError('');
+      
+      const recommendations = await RecommendationsService.getFriendRecommendations({
+        userId1: currentUser.id,
+        userId2: user.id,
+        limit: 20,
+        preferredGenres: null,
+        minRating: null,
+        minVoteCount: null,
+        minReleaseDate: null,
+        maxReleaseDate: null
+      });
+
+      console.log('Friend recommendations:', recommendations);
+      
+      // Navigate to MovieMix page with the recommendations data
+      navigate('/movie-mix', {
+        state: {
+          recommendations: recommendations,
+          mixData: {
+            user1Name: currentUser.username,
+            user2Name: user.username,
+            user1Id: currentUser.id,
+            user2Id: user.id
+          }
+        }
+      });
+      
+    } catch (err) {
+      console.error('Failed to create mix:', err);
+      setMixError(err.message || 'Failed to create mix');
+    } finally {
+      setCreateMixLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -352,36 +396,60 @@ const Profile = () => {
 
                 {/* User Info */}
                 <div className="flex-1 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-white">{user.username}</h1>
-                    {isOwnProfile && (
-                      <Link
-                        to="/settings"
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                        title="Account Settings"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </Link>
-                    )}
-                    {/* Follow Button */}
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-4 mb-2">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-3xl font-bold text-white">{user.username}</h1>
+                      {isOwnProfile && (
+                        <Link
+                          to="/settings"
+                          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                          title="Account Settings"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </Link>
+                      )}
+                    </div>
+                    
+                    {/* Action Buttons */}
                     {!isOwnProfile && currentUser && (
-                      <button
-                        onClick={handleFollowToggle}
-                        disabled={followLoading}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          isFollowing
-                            ? 'bg-gray-600 hover:bg-gray-700 text-white'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {/* Follow Button */}
+                        <button
+                          onClick={handleFollowToggle}
+                          disabled={followLoading}
+                          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                            isFollowing
+                              ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                              : 'bg-green-600 hover:bg-green-700 text-white'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
+                        </button>
+                        
+                        {/* Create Mix Button */}
+                        <button
+                          onClick={handleCreateMix}
+                          disabled={createMixLoading}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          title="Create Mix"
+                        >
+                          <Shuffle className="w-4 h-4" />
+                          {createMixLoading ? 'Creating...' : 'Create Mix'}
+                        </button>
+                      </div>
                     )}
                   </div>
                   <p className="text-gray-400 mb-4">{user.email}</p>
+                  
+                  {/* Mix Error Display */}
+                  {mixError && (
+                    <div className="mb-4 p-3 bg-red-500 text-white rounded-lg text-sm">
+                      {mixError}
+                    </div>
+                  )}
                   
                   {/* Status Badges */}
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start">

@@ -42,6 +42,7 @@ import ReviewCreate from '../pages/ReviewCreate'
 import ReviewEdit from '../pages/ReviewEdit'
 import ReviewPage from '../pages/ReviewPage'
 import AdminDashboard from '../pages/AdminDashboard'
+import MovieMix from '../pages/MovieMix'
 import DynamicSearchFilterExample from '../components/examples/DynamicSearchFilterExample'
 
 // Redirect component for authenticated users
@@ -192,6 +193,16 @@ const AppRouter = () => {
           <Route 
               path="emailConfirmed" 
               element={<EmailConfirmed />} 
+          />
+
+          {/* Movie Mix Route (without main layout) */}
+          <Route 
+              path="movie-mix" 
+              element={
+                <ProtectedRoute>
+                  <MovieMix />
+                </ProtectedRoute>
+              } 
           />
 
           {/* Auth Routes (without main layout) */}
