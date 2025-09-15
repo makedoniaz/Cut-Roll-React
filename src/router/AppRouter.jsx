@@ -22,6 +22,7 @@ import RegistrationProtectedRoute from '../components/auth/RegistrationProtected
 
 import { useAuth } from '../hooks/useStores';
 import ConfirmEmail from '../pages/ConfirmEmail';
+import EmailConfirmed from '../pages/EmailConfirmed';
 import NewsPage from '../pages/NewsPage';
 import MyNews from '../pages/MyNews';
 import LikedNews from '../pages/LikedNews';
@@ -186,6 +187,11 @@ const AppRouter = () => {
                   <ConfirmEmail />
                 </RegistrationProtectedRoute>
               } 
+          />
+
+          <Route 
+              path="emailConfirmed" 
+              element={<EmailConfirmed />} 
           />
 
           {/* Auth Routes (without main layout) */}
