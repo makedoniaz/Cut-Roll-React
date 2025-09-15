@@ -209,7 +209,7 @@ const Feed = ({ showHeading = true }) => {
           />
         )}
         
-        <div className="p-6">
+        <div>
 
       {/* Feed Content */}
       {loading && feedData.length === 0 ? (
@@ -224,8 +224,10 @@ const Feed = ({ showHeading = true }) => {
           No {activityTypeLabels[selectedType].toLowerCase()} found
         </div>
       ) : (
-        <div className="space-y-4">
-          {feedData.map(renderFeedCard)}
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {feedData.map(renderFeedCard)}
+          </div>
           
           {/* Load More Button */}
           {hasMore && (
