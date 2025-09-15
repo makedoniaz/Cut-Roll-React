@@ -85,7 +85,7 @@ const Feed = ({ showHeading = true }) => {
       const response = await FollowService.getFollowFeed(
         feedUserId,
         pageNum,
-        10,
+        6,
         selectedType,
         getFromDate()
       );

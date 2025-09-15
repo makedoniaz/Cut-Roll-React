@@ -212,7 +212,7 @@ export class FollowService {
      * @param {string} fromDate - From date (ISO string)
      * @returns {Promise<Object>} Follow feed data
      */
-    static async getFollowFeed(userId, page = 0, pageSize = 10, filterByType = null, fromDate = null) {
+    static async getFollowFeed(userId, page = 0, pageSize = 6, filterByType = null, fromDate = null) {
         if (!userId) {
             throw new Error('User ID is required');
         }
