@@ -7,7 +7,7 @@ import { REVIEW_SORT_BY } from '../constants/review';
 import { Filter, X, Search as SearchIcon } from 'lucide-react';
 import RangeFilter from '../components/search/filters/RangeFilter';
 import SelectFilter from '../components/search/filters/SelectFilter';
-import DateFilter from '../components/search/filters/DateFilter';
+import DateRangeFilter from '../components/search/filters/DateRangeFilter';
 import FlexibleSearchInput from '../components/ui/common/FlexibleSearchInput';
 
 const ReviewsSearch = () => {
@@ -83,6 +83,30 @@ const ReviewsSearch = () => {
       defaultValue: null
     },
     {
+      key: 'sortBy',
+      label: 'Sort By',
+      type: 'select',
+      placeholder: 'Sort by...',
+      options: [
+        { value: '', label: 'Sort By' },
+        { value: '0', label: 'Created Date' },
+        { value: '1', label: 'Rating' },
+        { value: '2', label: 'Likes' }
+      ],
+      defaultValue: ''
+    },
+    {
+      key: 'sortDescending',
+      label: 'Sort Order',
+      type: 'select',
+      placeholder: 'Sort order...',
+      options: [
+        { value: true, label: 'Descending (High to Low)' },
+        { value: false, label: 'Ascending (Low to High)' }
+      ],
+      defaultValue: true
+    },
+    {
       key: 'user',
       label: 'User',
       type: 'flexiblesearch',
@@ -100,41 +124,10 @@ const ReviewsSearch = () => {
       defaultValue: [0, 5]
     },
     {
-      key: 'createdAfter',
-      label: 'Created After',
-      type: 'date',
-      placeholder: 'Select start date',
-      defaultValue: ''
-    },
-    {
-      key: 'createdBefore',
-      label: 'Created Before',
-      type: 'date',
-      placeholder: 'Select end date',
-      defaultValue: ''
-    },
-    {
-      key: 'sortBy',
-      label: 'Sort By',
-      type: 'select',
-      placeholder: 'Sort by...',
-      options: [
-        { value: REVIEW_SORT_BY.CREATED_AT, label: 'Created Date' },
-        { value: REVIEW_SORT_BY.RATING, label: 'Rating' },
-        { value: REVIEW_SORT_BY.LIKES, label: 'Likes' }
-      ],
-      defaultValue: REVIEW_SORT_BY.CREATED_AT
-    },
-    {
-      key: 'sortDescending',
-      label: 'Sort Order',
-      type: 'select',
-      placeholder: 'Sort order...',
-      options: [
-        { value: true, label: 'Descending (High to Low)' },
-        { value: false, label: 'Ascending (Low to High)' }
-      ],
-      defaultValue: true
+      key: 'dateRange',
+      label: 'Date Range',
+      type: 'daterange',
+      defaultValue: { from: null, to: null }
     }
   ];
 
@@ -177,8 +170,8 @@ const ReviewsSearch = () => {
       if (filter.type === 'range') {
         return value[0] !== filter.defaultValue[0] || value[1] !== filter.defaultValue[1];
       }
-      if (filter.type === 'date') {
-        return value && value !== '';
+      if (filter.type === 'daterange') {
+        return value.from !== null || value.to !== null;
       }
       if (filter.type === 'select') {
         return value !== filter.defaultValue;
@@ -216,17 +209,18 @@ const ReviewsSearch = () => {
         searchParams.maxRating = filterValues.rating[1];
       }
       
-      // Handle date filters
-      if (filterValues.createdAfter) {
-        searchParams.createdAfter = new Date(filterValues.createdAfter).toISOString();
+      // Handle date range filter
+      if (filterValues.dateRange?.from) {
+        searchParams.createdAfter = new Date(filterValues.dateRange.from).toISOString();
       }
-      if (filterValues.createdBefore) {
-        searchParams.createdBefore = new Date(filterValues.createdBefore).toISOString();
+      if (filterValues.dateRange?.to) {
+        searchParams.createdBefore = new Date(filterValues.dateRange.to).toISOString();
       }
       
       // Handle sort parameters
-      if (filterValues.sortBy !== REVIEW_SORT_BY.CREATED_AT) {
-        searchParams.sortBy = filterValues.sortBy;
+      if (filterValues.sortBy !== '' && filterValues.sortBy !== null && filterValues.sortBy !== undefined) {
+        searchParams.sortBy = parseInt(filterValues.sortBy);
+        console.log('Sort by value:', filterValues.sortBy, 'Parsed:', parseInt(filterValues.sortBy));
       }
       if (filterValues.sortDescending !== true) {
         searchParams.sortDescending = filterValues.sortDescending;
@@ -261,6 +255,7 @@ const ReviewsSearch = () => {
 
   // Handle explicit search button press
   const handleSearchButtonPress = () => {
+    setCurrentPage(1);
     searchReviews(1);
   };
 
@@ -270,16 +265,6 @@ const ReviewsSearch = () => {
     searchReviews(page);
   };
 
-  // Auto-trigger search when there are active filters
-  useEffect(() => {
-    if (hasActiveFilters() || hasSearched) {
-      const timer = setTimeout(() => {
-        searchReviews(1);
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [hasActiveFilters, searchReviews, hasSearched]);
 
   // Disable body scroll when sidebar is open
   useEffect(() => {
@@ -294,15 +279,6 @@ const ReviewsSearch = () => {
     };
   }, [isFiltersSidebarOpen]);
 
-  // Clear filters function
-  const clearFilters = () => {
-    setFilterValues(getInitialFilterValues());
-    setReviews([]);
-    setTotalResults(0);
-    setTotalPages(1);
-    setCurrentPage(1);
-    setHasSearched(false);
-  };
 
   return (
     <div className="relative">
@@ -458,14 +434,6 @@ const ReviewsSearch = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white">Filters</h3>
                 <div className="flex items-center gap-4">
-                  {hasActiveFilters() && (
-                    <button
-                      onClick={clearFilters}
-                      className="text-red-400 hover:text-red-300 text-sm"
-                    >
-                      Clear All
-                    </button>
-                  )}
                   <button
                     onClick={() => setIsFiltersSidebarOpen(false)}
                     className="text-gray-400 hover:text-white transition-colors"
@@ -480,6 +448,11 @@ const ReviewsSearch = () => {
             <div className="flex-1 p-6 overflow-y-auto">
               <div className="space-y-6">
                 {reviewFilters.map((filter) => {
+                  // Skip sort order filter if sort by is not selected
+                  if (filter.key === 'sortDescending' && (!filterValues.sortBy || filterValues.sortBy === '')) {
+                    return null;
+                  }
+
                   const value = filterValues[filter.key] || filter.defaultValue;
 
                   let filterComponent;
@@ -528,6 +501,7 @@ const ReviewsSearch = () => {
                           label={filter.label}
                           value={value}
                           onChange={(newValue) => {
+                            console.log('Filter changed:', filter.key, 'New value:', newValue);
                             const newFilterValues = { ...filterValues, [filter.key]: newValue };
                             setFilterValues(newFilterValues);
                           }}
@@ -536,9 +510,9 @@ const ReviewsSearch = () => {
                         />
                       );
                       break;
-                    case 'date':
+                    case 'daterange':
                       filterComponent = (
-                        <DateFilter
+                        <DateRangeFilter
                           key={filter.key}
                           label={filter.label}
                           value={value}
@@ -546,7 +520,6 @@ const ReviewsSearch = () => {
                             const newFilterValues = { ...filterValues, [filter.key]: newValue };
                             setFilterValues(newFilterValues);
                           }}
-                          placeholder={filter.placeholder}
                         />
                       );
                       break;
@@ -557,6 +530,23 @@ const ReviewsSearch = () => {
                   return filterComponent;
                 })}
               </div>
+            </div>
+            
+            {/* Footer with Clear Button */}
+            <div className="p-6 border-t border-gray-700">
+              <button
+                onClick={() => {
+                  const clearedFilters = {};
+                  reviewFilters.forEach(filter => {
+                    clearedFilters[filter.key] = filter.defaultValue;
+                  });
+                  setFilterValues(clearedFilters);
+                }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-gray-300 hover:text-white transition-colors border border-gray-600 rounded-lg hover:border-gray-500 bg-gray-800 hover:bg-gray-700"
+              >
+                <X className="w-4 h-4" />
+                <span>Clear All Filters</span>
+              </button>
             </div>
           </div>
         </div>

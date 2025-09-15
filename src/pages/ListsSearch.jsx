@@ -21,7 +21,7 @@ const ListsSearch = () => {
       key: 'dateRange',
       label: 'Date Range',
       type: 'daterange',
-      defaultValue: { fromDate: null, toDate: null }
+      defaultValue: { from: null, to: null }
     },
     {
       key: 'author',
@@ -39,7 +39,7 @@ const ListsSearch = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState({
-    dateRange: { fromDate: null, toDate: null },
+    dateRange: { from: null, to: null },
     author: null,
     sortByLikesAscending: searchParamsFromState.sortByLikesAscending || false
   });
@@ -67,7 +67,7 @@ const ListsSearch = () => {
       return authors.map(author => ({
         id: author.id,
         name: author.username, // API returns 'username' not 'userName'
-        description: `User: ${author.username}`,
+        description: author.username,
         image: author.avatarPath || null
       }));
     } catch (error) {
@@ -80,7 +80,7 @@ const ListsSearch = () => {
   const hasActiveFilters = useCallback(() => {
     return Object.entries(filterValues).some(([key, value]) => {
       if (key === 'dateRange') {
-        return value.fromDate !== null || value.toDate !== null;
+        return value.from !== null || value.to !== null;
       }
       if (key === 'author') {
         return value !== null;
@@ -111,12 +111,11 @@ const ListsSearch = () => {
 
     try {
       // Prepare search parameters for listsService
-      // Note: We use user ID if available, otherwise a dummy ID to search across all lists
       const searchParams = {
-        userId: filterValues.author?.id || user?.id || 'public-search', // Use selected author ID, current user ID, or dummy for public search
+        userId: filterValues.author?.id || null, // Only use selected author ID, or null to search all lists
         title: searchQuery.trim() || null,
-        fromDate: filterValues.dateRange.fromDate,
-        toDate: filterValues.dateRange.toDate,
+        fromDate: filterValues.dateRange.from,
+        toDate: filterValues.dateRange.to,
         page: page - 1, // API uses 0-based pages
         pageSize: 20,
         sortByLikesAscending: filterValues.sortByLikesAscending
@@ -132,21 +131,33 @@ const ListsSearch = () => {
         const listsData = response.data || response.items || [];
         
         // Transform API data to match MovieListCard expected structure
-        const transformedLists = listsData.map(list => ({
-          id: list.id,
-          title: list.title,
-          description: list.description,
-          coverImages: [], // MovieListPoster will handle showing 4 posters
-          author: {
-            name: list.userSimplified?.userName || 'Unknown',
-            avatar: list.userSimplified?.avatarPath || '👤'
-          },
-          stats: {
-            films: list.moviesCount || 0,
-            likes: list.likesCount || 0,
-            comments: 0
-          }
-        }));
+        const transformedLists = listsData.map(list => {
+          // Process preview images - construct full URLs for TMDB images
+          const coverImages = (list.preview || []).map(imagePath => {
+            // If the path already starts with http, use it as is
+            if (imagePath.startsWith('http')) {
+              return imagePath;
+            }
+            // Otherwise, construct TMDB URL
+            return `https://image.tmdb.org/t/p/w185${imagePath}`;
+          });
+
+          return {
+            id: list.id,
+            title: list.title,
+            description: list.description,
+            coverImages: coverImages, // Use preview images from API
+            author: {
+              name: list.userSimplified?.userName || 'Unknown',
+              avatar: list.userSimplified?.avatarPath || '👤'
+            },
+            stats: {
+              films: list.moviesCount || 0,
+              likes: list.likesCount || 0,
+              comments: 0
+            }
+          };
+        });
         
         setLists(transformedLists);
         setTotalResults(response.totalCount || transformedLists.length);

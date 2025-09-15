@@ -1224,12 +1224,18 @@ const MovieDetails = () => {
                          <p>No reviews {isAuthenticated ? 'from other users' : 'available'} yet</p>
                        )}
                                                {isAuthenticated && activeReviewTab === 'MY REVIEW' && (
-                          <button 
-                            onClick={() => navigate(userReview ? `/movie/${movie.id}/review/edit/${userReview.id}` : `/movie/${movie.id}/review/create`)}
-                            className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                          >
-                            {userReview ? 'Edit your Review' : 'Write a Review'}
-                          </button>
+                          user?.is_muted ? (
+                            <div className="mt-4 px-6 py-2 bg-gray-600 text-gray-300 rounded-lg text-center">
+                              You are muted and cannot write reviews
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => navigate(userReview ? `/movie/${movie.id}/review/edit/${userReview.id}` : `/movie/${movie.id}/review/create`)}
+                              className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                            >
+                              {userReview ? 'Edit your Review' : 'Write a Review'}
+                            </button>
+                          )
                         )}
                      </div>
                    ) : (
@@ -1521,14 +1527,14 @@ const MovieDetails = () => {
                  )}
                </div>
              </div>
-                                       {isAuthenticated && (
-                <button 
-                  onClick={() => navigate(userReview ? `/movie/${movie.id}/review/edit/${userReview.id}` : `/movie/${movie.id}/review/create`)}
-                  className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm"
-                >
-                  {userReview ? 'Edit your Review' : 'Write a Review'}
-                </button>
-              )}
+                                       {isAuthenticated && !user?.is_muted && (
+                  <button 
+                    onClick={() => navigate(userReview ? `/movie/${movie.id}/review/edit/${userReview.id}` : `/movie/${movie.id}/review/create`)}
+                    className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded transition-colors text-sm"
+                  >
+                    {userReview ? 'Edit your Review' : 'Write a Review'}
+                  </button>
+                )}
               {isAuthenticated && (
                 <button 
                   onClick={handleAddToListsClick}

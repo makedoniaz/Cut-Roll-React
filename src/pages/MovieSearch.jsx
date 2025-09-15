@@ -43,6 +43,29 @@ const MovieSearch = () => {
       defaultValue: []
     },
     {
+      key: 'sortBy',
+      label: 'Sort By',
+      type: 'select',
+      placeholder: 'Sort by...',
+      options: [
+        { value: 'title', label: 'Title' },
+        { value: 'rating', label: 'Rating' },
+        { value: 'releasedate', label: 'Release Date' },
+        { value: 'revenue', label: 'Revenue' }
+      ]
+    },
+    {
+      key: 'sortDescending',
+      label: 'Sort Order',
+      type: 'select',
+      placeholder: 'Sort order...',
+      options: [
+        { value: true, label: 'Descending (High to Low)' },
+        { value: false, label: 'Ascending (Low to High)' }
+      ],
+      defaultValue: true
+    },
+    {
       key: 'director',
       label: 'Crew member',
       type: 'dynamicsearch',
@@ -106,29 +129,6 @@ const MovieSearch = () => {
       max: 10,
       step: 0.5,
       defaultValue: [0, 10]
-    },
-    {
-      key: 'sortBy',
-      label: 'Sort By',
-      type: 'select',
-      placeholder: 'Sort by...',
-      options: [
-        { value: 'title', label: 'Title' },
-        { value: 'rating', label: 'Rating' },
-        { value: 'releasedate', label: 'Release Date' },
-        { value: 'revenue', label: 'Revenue' }
-      ]
-    },
-    {
-      key: 'sortDescending',
-      label: 'Sort Order',
-      type: 'select',
-      placeholder: 'Sort order...',
-      options: [
-        { value: true, label: 'Descending (High to Low)' },
-        { value: false, label: 'Ascending (Low to High)' }
-      ],
-      defaultValue: true
     }
   ];
 
@@ -533,6 +533,12 @@ const MovieSearch = () => {
     if (filters.hasOwnProperty('keyword')) {
       console.log('Keywords changed to:', filters.keyword, 'Type:', typeof filters.keyword);
     }
+    
+    // If sort by is cleared, also reset sort order to default
+    if (filters.hasOwnProperty('sortBy') && (!filters.sortBy || filters.sortBy === '')) {
+      filters.sortDescending = true; // Reset to default value
+    }
+    
     setFilterValues(filters);
     setCurrentPage(1); // Reset to first page
     setHasSearched(false); // Reset search flag when filters change
@@ -739,6 +745,11 @@ const MovieSearch = () => {
               {/* Individual Filters */}
               <div className="space-y-6">
                 {movieFilters.map((filter) => {
+                  // Skip sort order filter if sort by is not selected
+                  if (filter.key === 'sortDescending' && (!filterValues.sortBy || filterValues.sortBy === '')) {
+                    return null;
+                  }
+
                   let value;
                   if (filter.type === 'select' && filter.defaultValue !== undefined) {
                     value = filterValues.hasOwnProperty(filter.key) ? filterValues[filter.key] : filter.defaultValue;
@@ -757,6 +768,12 @@ const MovieSearch = () => {
                     value: value,
                     onChange: (value) => {
                       const newFilterValues = { ...filterValues, [filter.key]: value };
+                      
+                      // If sort by is cleared, also reset sort order to default
+                      if (filter.key === 'sortBy' && (!value || value === '')) {
+                        newFilterValues.sortDescending = true; // Reset to default value
+                      }
+                      
                       setFilterValues(newFilterValues);
                     }
                   };
@@ -773,6 +790,12 @@ const MovieSearch = () => {
                             value={value}
                             onChange={(e) => {
                               const newFilterValues = { ...filterValues, [filter.key]: e.target.value };
+                              
+                              // If sort by is cleared, also reset sort order to default
+                              if (filter.key === 'sortBy' && (!e.target.value || e.target.value === '')) {
+                                newFilterValues.sortDescending = true; // Reset to default value
+                              }
+                              
                               setFilterValues(newFilterValues);
                             }}
                             className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white placeholder-gray-400"
@@ -788,6 +811,12 @@ const MovieSearch = () => {
                           value={value}
                           onChange={(newValue) => {
                             const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            
+                            // If sort by is cleared, also reset sort order to default
+                            if (filter.key === 'sortBy' && (!newValue || newValue === '')) {
+                              newFilterValues.sortDescending = true; // Reset to default value
+                            }
+                            
                             setFilterValues(newFilterValues);
                           }}
                           options={filter.options}
@@ -803,6 +832,12 @@ const MovieSearch = () => {
                           value={value}
                           onChange={(newValue) => {
                             const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            
+                            // If sort by is cleared, also reset sort order to default
+                            if (filter.key === 'sortBy' && (!newValue || newValue === '')) {
+                              newFilterValues.sortDescending = true; // Reset to default value
+                            }
+                            
                             setFilterValues(newFilterValues);
                           }}
                           min={filter.min}
@@ -819,6 +854,12 @@ const MovieSearch = () => {
                           value={value}
                           onChange={(newValue) => {
                             const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            
+                            // If sort by is cleared, also reset sort order to default
+                            if (filter.key === 'sortBy' && (!newValue || newValue === '')) {
+                              newFilterValues.sortDescending = true; // Reset to default value
+                            }
+                            
                             setFilterValues(newFilterValues);
                           }}
                           options={filter.options}
@@ -833,6 +874,12 @@ const MovieSearch = () => {
                           value={value}
                           onChange={(newValue) => {
                             const newFilterValues = { ...filterValues, [filter.key]: newValue };
+                            
+                            // If sort by is cleared, also reset sort order to default
+                            if (filter.key === 'sortBy' && (!newValue || newValue === '')) {
+                              newFilterValues.sortDescending = true; // Reset to default value
+                            }
+                            
                             setFilterValues(newFilterValues);
                           }}
                           placeholder={filter.placeholder}

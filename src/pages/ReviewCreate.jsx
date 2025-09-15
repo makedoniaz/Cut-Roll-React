@@ -25,10 +25,12 @@ const ReviewCreate = () => {
   useEffect(() => {
     if (!isAuthenticated) {
       setError('You must be logged in to create a review. Please log in and try again.');
+    } else if (user?.is_muted) {
+      setError('You are currently muted and cannot create reviews. Please contact support if you believe this is an error.');
     } else {
       setError('');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   // Fetch movie data for display
   useEffect(() => {
@@ -81,6 +83,11 @@ const ReviewCreate = () => {
   const handleSubmit = async () => {
     if (!isAuthenticated) {
       setError('You must be logged in to create a review.');
+      return;
+    }
+
+    if (user?.is_muted) {
+      setError('You are currently muted and cannot create reviews. Please contact support if you believe this is an error.');
       return;
     }
 
@@ -208,7 +215,7 @@ const ReviewCreate = () => {
                 required
                 rows={8}
                 maxLength={MAX_CONTENT_LENGTH}
-                disabled={!isAuthenticated}
+                disabled={!isAuthenticated || user?.is_muted}
               />
 
               {/* Character Count */}
@@ -220,9 +227,9 @@ const ReviewCreate = () => {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !isAuthenticated || !content.trim()}
+                  disabled={isSubmitting || !isAuthenticated || user?.is_muted || !content.trim()}
                   className={`cursor-pointer px-6 py-2 rounded-lg transition-colors ${
-                    isSubmitting || !isAuthenticated || !content.trim()
+                    isSubmitting || !isAuthenticated || user?.is_muted || !content.trim()
                       ? 'bg-gray-500 text-gray-300 cursor-not-allowed' 
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MessageCircle, ThumbsUp, Star } from 'lucide-react';
+import { Calendar, MessageCircle, Star } from 'lucide-react';
 
 const ReviewCard = ({ review }) => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const ReviewCard = ({ review }) => {
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+        <Star key={i} className="w-4 h-4 fill-green-400 text-green-400" />
       );
     }
 
@@ -48,7 +48,7 @@ const ReviewCard = ({ review }) => {
         <div key="half" className="relative">
           <Star className="w-4 h-4 text-gray-600" />
           <div className="absolute inset-0 overflow-hidden w-1/2">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <Star className="w-4 h-4 fill-green-400 text-green-400" />
           </div>
         </div>
       );
@@ -108,7 +108,7 @@ const ReviewCard = ({ review }) => {
           <div className="flex items-center gap-1">
             {renderStars(review.rating)}
           </div>
-          <span className="text-yellow-400 font-semibold text-lg">
+          <span className="text-green-400 font-semibold text-lg">
             {review.rating.toFixed(1)}
           </span>
         </div>
@@ -133,7 +133,9 @@ const ReviewCard = ({ review }) => {
         <div className="flex items-center gap-4">
           {/* Likes */}
           <div className="flex items-center gap-1 text-gray-500 text-sm">
-            <ThumbsUp className="w-4 h-4" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
             <span>{review.likesCount || 0}</span>
           </div>
 

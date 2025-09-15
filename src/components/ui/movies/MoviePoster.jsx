@@ -3,10 +3,15 @@ import { API_CONFIG, IMAGE_SIZES } from '../../../constants';
 const MoviePoster = ({ src, alt, className = "" }) => {
   // Helper function to construct TMDB image URL
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return 'poster-placeholder.png';
+    if (!imagePath) return '/poster-placeholder.png';
     
     // If it's already a full URL, return as is
     if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // If it's a placeholder path (starts with /poster-placeholder), return as is
+    if (imagePath.startsWith('/poster-placeholder')) {
       return imagePath;
     }
     

@@ -5,6 +5,7 @@ import countryService from '../../../services/countryService';
 import languageService from '../../../services/languageService';
 import personService from '../../../services/personService';
 import productionCompanyService from '../../../services/productionCompanyService';
+import { UserService } from '../../../services/userService';
 import { API_CONFIG } from '../../../constants/index.js';
 
 const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyword' }) => {
@@ -14,8 +15,8 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
   // Update selectedItems when value prop changes
   useEffect(() => {
     console.log('DynamicSearchFilter: value prop changed:', value, 'type:', type);
-    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany') {
-      // For countries, languages, actors, directors, and production companies, convert single value to array
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany' || type === 'people') {
+      // For countries, languages, actors, directors, production companies, and people, convert single value to array
       const singleValueArray = value ? [value] : [];
       console.log(`DynamicSearchFilter: Setting selectedItems for ${type} to:`, singleValueArray);
       setSelectedItems(singleValueArray);
@@ -224,6 +225,35 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
          console.error('Production Company search error:', error);
          return [];
        }
+     } else if (type === 'people') {
+       try {
+         const searchResults = await UserService.searchUsers({
+           searchTerm: query,
+           pageNumber: 1,
+           pageSize: 8
+         });
+         
+         console.log('People search response:', searchResults);
+         
+         if (searchResults && searchResults.data) {
+           return searchResults.data.map(user => {
+             console.log('Processing user:', user);
+             console.log('User avatarPath:', user.avatarPath);
+             
+             return {
+               id: user.id,
+               name: user.username || 'Unknown User',
+               description: user.username || 'Unknown User',
+               image: user.avatarPath || null
+             };
+           });
+         }
+         
+         return [];
+       } catch (error) {
+         console.error('People search error:', error);
+         return [];
+       }
      }
     
     return [];
@@ -235,8 +265,8 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     
     setSelectedItems(newSelectedItems);
     
-    // For countries, languages, actors, and directors (single selection), pass the first item or null
-    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany') {
+    // For countries, languages, actors, directors, production companies, and people (single selection), pass the first item or null
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany' || type === 'people') {
       const singleValue = newSelectedItems && newSelectedItems.length > 0 ? newSelectedItems[0] : null;
       console.log(`DynamicSearchFilter: ${type} filter changed:`, singleValue);
       console.log(`DynamicSearchFilter: Calling onChange with ${type} value:`, singleValue);
@@ -253,7 +283,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
     console.log('DynamicSearchFilter: Clearing selectedItems and calling onChange');
     
     setSelectedItems([]);
-    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany') {
+    if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany' || type === 'people') {
       onChange(null);
     } else {
       onChange([]);
@@ -287,7 +317,7 @@ const DynamicSearchFilter = ({ label, value, onChange, placeholder, type = 'keyw
               if (isCompletelyDifferent) {
           console.log('DynamicSearchFilter: Clearing selected items due to completely different input');
           setSelectedItems([]);
-          if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany') {
+          if (type === 'country' || type === 'language' || type === 'actor' || type === 'director' || type === 'productionCompany' || type === 'people') {
             onChange(null);
           } else {
             onChange([]);

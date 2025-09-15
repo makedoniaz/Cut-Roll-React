@@ -4,7 +4,7 @@ const MovieListPoster = ({ images, title }) => {
   // Always show exactly 4 posters - mix of real movie posters and placeholders
   const realImages = images && images.length > 0 ? images.slice(0, 4) : [];
   const placeholdersNeeded = 4 - realImages.length;
-  const placeholders = Array(placeholdersNeeded).fill('poster-placeholder.png');
+  const placeholders = Array(placeholdersNeeded).fill('/poster-placeholder.png');
   const postersToShow = [...realImages, ...placeholders];
 
   return (

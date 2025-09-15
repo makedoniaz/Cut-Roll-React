@@ -4,7 +4,7 @@ import { useAuthStore } from "../../../stores/authStore";
 const CommentForm = ({ onSubmit }) => {
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   
   const MAX_LENGTH = 500;
 
@@ -20,6 +20,16 @@ const CommentForm = ({ onSubmit }) => {
   };
 
   const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      alert('You must be logged in to post comments.');
+      return;
+    }
+
+    if (user?.is_muted) {
+      alert('You are currently muted and cannot post comments. Please contact support if you believe this is an error.');
+      return;
+    }
+
     if (comment.trim() && !isSubmitting) {
       setIsSubmitting(true);
       try {
@@ -47,11 +57,11 @@ const CommentForm = ({ onSubmit }) => {
       <textarea
         value={comment}
         onChange={handleCommentChange}
-        placeholder={`Reply as ${getUserName()}...`}
+        placeholder={user?.is_muted ? 'You are muted and cannot post comments.' : `Reply as ${getUserName()}...`}
         className="w-full bg-gray-700 text-white placeholder-gray-400 p-3 rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 transition-all"
         rows={3}
         onKeyDown={handleKeyPress}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !isAuthenticated || user?.is_muted}
         maxLength={MAX_LENGTH}
       />
       
@@ -63,7 +73,7 @@ const CommentForm = ({ onSubmit }) => {
         
         <button
           onClick={handleSubmit}
-          disabled={!comment.trim() || isSubmitting}
+          disabled={!comment.trim() || isSubmitting || !isAuthenticated || user?.is_muted}
           className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded transition-colors"
         >
           {isSubmitting ? 'POSTING...' : 'POST'}

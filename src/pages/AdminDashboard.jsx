@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useStores';
+import { useNavigate } from 'react-router-dom';
 import { AdminDashboardService } from '../services/adminDashboardService';
 import { Filter, X, Search, Users, Shield, Ban, MicOff, FileText } from 'lucide-react';
 import SelectFilter from '../components/search/filters/SelectFilter';
@@ -10,6 +11,7 @@ import { USER_ROLES } from '../constants/adminDashboard';
 
 const AdminDashboard = () => {
   const { user: _user } = useAuth(); // Renamed to avoid unused variable warning
+  const navigate = useNavigate();
   
   // Filter configuration for admin dashboard
   // Note: searchTerm is handled separately in the main search input above
@@ -43,7 +45,7 @@ const AdminDashboard = () => {
       key: 'registrationDateRange',
       label: 'Registration Date Range',
       type: 'dateRange',
-      defaultValue: { from: '2025-08-01', to: new Date().toISOString().split('T')[0] }
+      defaultValue: { from: null, to: null }
     }
   ];
 
@@ -52,12 +54,9 @@ const AdminDashboard = () => {
     role: null,
     showBannedOnly: false,
     showMutedOnly: false,
-    registrationDateRange: { from: '2025-08-01', to: new Date().toISOString().split('T')[0] }
+    registrationDateRange: { from: null, to: null }
   });
 
-  // Define default date range for comparison
-  const defaultStartDate = '2025-08-01';
-  const defaultEndDate = new Date().toISOString().split('T')[0];
   
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -115,11 +114,11 @@ const AdminDashboard = () => {
         return value !== false; // Simple checkbox is active when not false
       }
       if (key === 'registrationDateRange') {
-        return value && value.from !== defaultStartDate && value.to !== defaultEndDate;
+        return value && (value.from !== null || value.to !== null);
       }
       return false;
     });
-  }, [filterValues, defaultStartDate, defaultEndDate]);
+  }, [filterValues]);
 
   // Search users using admin dashboard service
   const searchUsers = useCallback(async (page = 1) => {
@@ -219,6 +218,11 @@ const AdminDashboard = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     searchUsers(page);
+  };
+
+  // Handle profile navigation
+  const handleProfileClick = (username) => {
+    navigate(`/profile/${username}`);
   };
 
   // Handle user actions
@@ -346,11 +350,11 @@ const AdminDashboard = () => {
       case 'Admin':
         return 'bg-red-600 text-white';
       case 'Publisher':
-        return 'bg-blue-600 text-white';
+        return 'bg-green-600 text-white';
       case 'User':
-        return 'bg-gray-600 text-white';
+        return 'bg-green-500 text-white';
       default:
-        return 'bg-gray-600 text-white';
+        return 'bg-green-500 text-white';
     }
   };
 
@@ -382,7 +386,7 @@ const AdminDashboard = () => {
       return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Banned</span>;
     }
     if (user.isMuted) {
-      return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Muted</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Muted</span>;
     }
     return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>;
   };
@@ -413,7 +417,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <Users className="w-8 h-8 text-blue-400" />
+              <Users className="w-8 h-8 text-green-400" />
               <div>
                 <div className="text-2xl font-bold text-white">{totalUsers}</div>
                 <div className="text-gray-400 text-sm">Total Users</div>
@@ -422,9 +426,9 @@ const AdminDashboard = () => {
           </div>
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <FileText className="w-8 h-8 text-blue-400" />
+              <FileText className="w-8 h-8 text-green-400" />
               <div>
-                <div className="text-2xl font-bold text-blue-400">
+                <div className="text-2xl font-bold text-green-400">
                   {users.filter(u => {
                     const roleLabel = getRoleLabel(u.role);
                     return roleLabel === 'Publisher';
@@ -436,9 +440,9 @@ const AdminDashboard = () => {
           </div>
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <MicOff className="w-8 h-8 text-yellow-400" />
+              <MicOff className="w-8 h-8 text-green-400" />
               <div>
-                <div className="text-2xl font-bold text-yellow-400">
+                <div className="text-2xl font-bold text-green-400">
                   {users.filter(u => u.isMuted).length}
                 </div>
                 <div className="text-gray-400 text-sm">Muted Users</div>
@@ -447,9 +451,9 @@ const AdminDashboard = () => {
           </div>
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <Ban className="w-8 h-8 text-red-400" />
+              <Ban className="w-8 h-8 text-green-400" />
               <div>
-                <div className="text-2xl font-bold text-red-400">
+                <div className="text-2xl font-bold text-green-400">
                   {users.filter(u => u.isBanned).length}
                 </div>
                 <div className="text-gray-400 text-sm">Banned Users</div>
@@ -503,7 +507,7 @@ const AdminDashboard = () => {
           {/* Loading State */}
           {loading && (
             <div className="mt-8 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
               <p className="mt-4 text-gray-400">Searching users...</p>
             </div>
           )}
@@ -524,7 +528,7 @@ const AdminDashboard = () => {
                   <div className="text-gray-300">
                     {users.length > 0 ? (
                       <>
-                        <span className="font-semibold text-blue-400">
+                        <span className="font-semibold text-green-400">
                           Found {totalResults} user{totalResults !== 1 ? 's' : ''}
                         </span>
                         <span className="text-gray-400 ml-2">
@@ -594,7 +598,12 @@ const AdminDashboard = () => {
                             </span>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-white">{user.username}</h4>
+                            <button
+                              onClick={() => handleProfileClick(user.username)}
+                              className="font-semibold text-white hover:text-green-400 transition-colors cursor-pointer"
+                            >
+                              {user.username}
+                            </button>
                             <p className="text-sm text-gray-400">{user.email}</p>
                           </div>
                         </div>
@@ -606,7 +615,7 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-400 mb-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-400 mb-4">
                         <div>
                           <span className="font-medium">Join Date:</span> {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                         </div>
@@ -616,9 +625,6 @@ const AdminDashboard = () => {
                         <div>
                           <span className="font-medium">Status:</span> {user.isBanned ? 'Banned' : user.isMuted ? 'Muted' : 'Active'}
                         </div>
-                        <div>
-                          <span className="font-medium">Avatar:</span> {user.avatarPath ? 'Yes' : 'No'}
-                        </div>
                       </div>
 
                       {/* Action Buttons */}
@@ -627,8 +633,8 @@ const AdminDashboard = () => {
                           onClick={() => handleMuteUser(user.id)}
                           className={`px-3 py-1 text-xs font-medium rounded ${
                             user.isMuted 
-                              ? 'bg-green-600 hover:bg-green-700' 
-                              : 'bg-yellow-600 hover:bg-yellow-700'
+                              ? 'bg-gray-600 hover:bg-gray-700' 
+                              : 'bg-gray-500 hover:bg-gray-600'
                           } transition-colors`}
                         >
                           {user.isMuted ? 'Unmute' : 'Mute'}
@@ -648,7 +654,7 @@ const AdminDashboard = () => {
                         <select
                           value={getRoleLabel(user.role) || ''}
                           onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                          className="px-3 py-1 text-xs font-medium bg-gray-600 border border-gray-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="px-3 py-1 text-xs font-medium bg-gray-600 border border-gray-500 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
                         >
                           <option value="">No Role</option>
                           <option value="User">User</option>
@@ -668,17 +674,17 @@ const AdminDashboard = () => {
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg transition-colors"
+                      className="px-3 py-2 bg-green-700 hover:bg-green-600 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg transition-colors"
                     >
                       Previous
                     </button>
-                    <span className="px-3 py-2 bg-gray-700 rounded-lg">
+                    <span className="px-3 py-2 bg-green-700 rounded-lg">
                       Page {currentPage} of {totalPages}
                     </span>
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg transition-colors"
+                      className="px-3 py-2 bg-green-700 hover:bg-green-600 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg transition-colors"
                     >
                       Next
                     </button>
@@ -832,7 +838,7 @@ const AdminDashboard = () => {
                       } else if (filter.type === 'simpleCheckbox') {
                         clearedFilters[filter.key] = false; // Clear simple checkbox values
                       } else if (filter.type === 'dateRange') {
-                        clearedFilters[filter.key] = { from: defaultStartDate, to: defaultEndDate };
+                        clearedFilters[filter.key] = { from: null, to: null };
                       } else {
                         clearedFilters[filter.key] = '';
                       }
