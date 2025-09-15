@@ -10,7 +10,9 @@ const MovieGrid = ({
     CardComponent = MovieCard,  // Default to MovieCard if not provided
     loading = false,
     onMoreClick,
-    showMore = true
+    showMore = true,
+    emptyStateMessage = null,
+    emptyStateIcon = null
 }) => {
     return ( 
         <div className="py-2">
@@ -35,7 +37,14 @@ const MovieGrid = ({
                                 itemHeight="h-64"
                                 gap="gap-6"
                             />
-                        ) : null
+                        ) : (
+                            emptyStateMessage ? (
+                                <div className="text-center py-8 text-gray-400">
+                                    {emptyStateIcon && <div className="text-4xl mb-2">{emptyStateIcon}</div>}
+                                    <p>{emptyStateMessage}</p>
+                                </div>
+                            ) : null
+                        )
                     )}
                 </div>
             </div>

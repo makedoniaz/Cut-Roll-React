@@ -7,7 +7,6 @@ import { AuthService } from '../services/authService.js';
 import { useAuth } from '../hooks/useStores';
 import FollowersList from '../components/profile/FollowersList.jsx';
 import FollowingList from '../components/profile/FollowingList.jsx';
-import Feed from '../components/profile/Feed.jsx';
 import Modal from '../components/layout/Modal.jsx';
 
 const Profile = () => {
@@ -493,9 +492,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Activity Feed */}
-                {console.log('Profile rendering Feed for authenticated user:', currentUser?.id, 'viewing profile:', user.username)}
-                <Feed />
               </div>
             </div>
           </div>

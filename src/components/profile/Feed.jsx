@@ -3,8 +3,9 @@ import { FollowService } from '../../services/followService.js';
 import { ActivityType } from '../../constants/follow.js';
 import MovieLikeFeedCard from './MovieLikeFeedCard.jsx';
 import { useAuth } from '../../hooks/useStores';
+import FeedSectionHeading from '../ui/common/FeedSectionHeading';
 
-const Feed = () => {
+const Feed = ({ showHeading = true }) => {
   const { user: currentUser } = useAuth();
   const [selectedType, setSelectedType] = useState(ActivityType.MOVIE_LIKE);
   const [selectedTimeFilter, setSelectedTimeFilter] = useState('all');
@@ -194,56 +195,21 @@ const Feed = () => {
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white flex items-center">
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-          </svg>
-          Your Activity Feed
-        </h2>
+    <div className="py-2">
+      <div className="max-w-7xl mx-auto">
+        {showHeading && (
+          <FeedSectionHeading 
+            heading="SUBSCRIPTIONS FEED"
+            selectedTimeFilter={selectedTimeFilter}
+            onTimeFilterChange={handleTimeFilterChange}
+            selectedType={selectedType}
+            onTypeChange={handleTypeChange}
+            timeFilterOptions={timeFilterOptions}
+            activityTypeLabels={activityTypeLabels}
+          />
+        )}
         
-        {/* Filter Controls */}
-        <div className="flex items-center space-x-4">
-          {/* Time Filter Dropdown */}
-          <div className="flex items-center space-x-2">
-            <label htmlFor="time-filter" className="text-sm text-gray-300">
-              Time:
-            </label>
-            <select
-              id="time-filter"
-              value={selectedTimeFilter}
-              onChange={handleTimeFilterChange}
-              className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {Object.entries(timeFilterOptions).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Activity Type Dropdown */}
-          <div className="flex items-center space-x-2">
-            <label htmlFor="activity-type" className="text-sm text-gray-300">
-              Type:
-            </label>
-            <select
-              id="activity-type"
-              value={selectedType}
-              onChange={handleTypeChange}
-              className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {Object.entries(activityTypeLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+        <div className="p-6">
 
       {/* Feed Content */}
       {loading && feedData.length === 0 ? (
@@ -275,6 +241,8 @@ const Feed = () => {
           )}
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

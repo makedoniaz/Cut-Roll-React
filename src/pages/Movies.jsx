@@ -2,6 +2,7 @@ import MovieGrid from "../components/ui/movies/MovieGrid";
 import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import PaginatedGridContainer from "../components/layout/PaginatedGridContainer";
 import ReviewGrid from "../components/ui/reviews/ReviewGrid";
+import Feed from "../components/profile/Feed";
 import { WatchService } from '../services/watchService';
 import { MovieLikeService } from '../services/movieLikeService';
 import { WatchedService } from '../services/watchedService';
@@ -347,8 +348,10 @@ const Movies = () => {
   return (
     <div>
       {/* Recent Reviews Section - displayed for all users */}
-      <div className="mb-8">
-        <ReviewGrid />
+      <div className="py-2">
+        <div className="max-w-7xl mx-auto">
+          <ReviewGrid />
+        </div>
       </div>
       
       {isAuthenticated ? (
@@ -371,6 +374,7 @@ const Movies = () => {
             loading={loadingWantToWatch}
             onMoreClick={wantToWatch.length > 0 ? handleWantToWatchMore : undefined}
             showMore={wantToWatch.length > 0}
+            emptyStateMessage="No movies in your watchlist yet"
           />
           <MovieGrid 
             heading={"RECENTLY WATCHED"} 
@@ -381,6 +385,7 @@ const Movies = () => {
             loading={loadingWatched}
             onMoreClick={recentlyWatched.length > 0 ? handleRecentlyWatchedMore : undefined}
             showMore={recentlyWatched.length > 0}
+            emptyStateMessage="No watched movies yet"
           />
           <MovieGrid 
             heading={"RECENTLY LIKED"} 
@@ -391,211 +396,11 @@ const Movies = () => {
             loading={loadingLiked}
             onMoreClick={recentlyLiked.length > 0 ? handleRecentlyLikedMore : undefined}
             showMore={recentlyLiked.length > 0}
+            emptyStateMessage="No liked movies yet"
           />
           
-          {/* Error and Empty States for Want to Watch */}
-        {errorWantToWatch && (
-          <div className="py-2">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center py-8 text-red-500">
-                <div className="text-4xl mb-2">⚠️</div>
-                <p>{errorWantToWatch}</p>
-                <button 
-                  onClick={() => {
-                    setErrorWantToWatch(null);
-                    // Refetch the data
-                    const fetchWantToWatch = async () => {
-                      if (!isAuthenticated || !user?.id) return;
-                      setLoadingWantToWatch(true);
-                      try {
-                        const response = await WatchService.getWantToWatchByUser({
-                          userId: user.id,
-                          page: 0,
-                          pageSize: 6
-                        });
-                        let wantToWatchMovies = [];
-                        if (response && typeof response === 'object') {
-                          if (Array.isArray(response)) {
-                            wantToWatchMovies = response;
-                          } else if (response.data && Array.isArray(response.data)) {
-                            wantToWatchMovies = response.data;
-                          }
-                        }
-                        const transformedMovies = wantToWatchMovies.map(movie => ({
-                          id: movie.movieId || movie.id,
-                          title: movie.title,
-                          year: movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'TBA',
-                          poster: movie.poster || null,
-                          rating: 0
-                        }));
-                        setWantToWatch(transformedMovies);
-                        setErrorWantToWatch(null);
-                      } catch (error) {
-                        console.error('Error refetching want to watch movies:', error);
-                        setErrorWantToWatch('Failed to fetch want to watch movies');
-                      } finally {
-                        setLoadingWantToWatch(false);
-                      }
-                    };
-                    fetchWantToWatch();
-                  }}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {!loadingWantToWatch && wantToWatch.length === 0 && !errorWantToWatch && isAuthenticated && (
-          <div className="py-2">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">📋</div>
-                <p>No movies in your watchlist yet</p>
-                <p className="text-sm text-gray-600 mt-1">Add movies to your watchlist to see them here!</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error and Empty States for Recently Watched */}
-        {errorWatched && (
-          <div className="py-2">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center py-8 text-red-500">
-                <div className="text-4xl mb-2">⚠️</div>
-                <p>{errorWatched}</p>
-                <button 
-                  onClick={() => {
-                    setErrorWatched(null);
-                    // Refetch the data
-                    const fetchRecentlyWatched = async () => {
-                      if (!isAuthenticated || !user?.id) return;
-                      setLoadingWatched(true);
-                      try {
-                        const response = await WatchedService.getWatchedByUser({
-                          userId: user.id,
-                          page: 0,
-                          pageSize: 6
-                        });
-                        let watchedMovies = [];
-                        if (response && typeof response === 'object') {
-                          if (Array.isArray(response)) {
-                            watchedMovies = response;
-                          } else if (response.data && Array.isArray(response.data)) {
-                            watchedMovies = response.data;
-                          }
-                        }
-                        const transformedMovies = watchedMovies.map(watchedItem => {
-                          const movie = watchedItem.movie || watchedItem;
-                          return {
-                            id: movie.movieId || movie.id,
-                            title: movie.title,
-                            year: movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'TBA',
-                            poster: movie.poster,
-                            rating: 0
-                          };
-                        });
-                        setRecentlyWatched(transformedMovies);
-                        setErrorWatched(null);
-                      } catch (error) {
-                        console.error('Error refetching watched movies:', error);
-                        setErrorWatched('Failed to fetch watched movies');
-                      } finally {
-                        setLoadingWatched(false);
-                      }
-                    };
-                    fetchRecentlyWatched();
-                  }}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {!loadingWatched && recentlyWatched.length === 0 && !errorWatched && isAuthenticated && (
-          <div className="py-2">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">👁️</div>
-                <p>No watched movies yet</p>
-                <p className="text-sm text-gray-600 mt-1">Watch some movies to see them here!</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error and Empty States for Recently Liked */}
-        {errorLiked && (
-          <div className="py-2">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center py-8 text-red-500">
-                <div className="text-4xl mb-2">⚠️</div>
-                <p>{errorLiked}</p>
-                <button 
-                  onClick={() => {
-                    setErrorLiked(null);
-                    // Refetch the data
-                    const fetchRecentlyLiked = async () => {
-                      if (!isAuthenticated || !user?.id) return;
-                      setLoadingLiked(true);
-                      try {
-                        const response = await MovieLikeService.getLikedByUser({
-                          userId: user.id,
-                          page: 0,
-                          pageSize: 6
-                        });
-                        let likedMovies = [];
-                        if (response && typeof response === 'object') {
-                          if (Array.isArray(response)) {
-                            likedMovies = response;
-                          } else if (response.movies && Array.isArray(response.movies)) {
-                            likedMovies = response.movies;
-                          } else if (response.data && Array.isArray(response.data)) {
-                            likedMovies = response.data;
-                          }
-                        }
-                        const transformedMovies = likedMovies.map(movie => ({
-                          id: movie.movieId || movie.id,
-                          title: movie.title,
-                          year: movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'TBA',
-                          poster: movie.poster || null,
-                          rating: 0
-                        }));
-                        setRecentlyLiked(transformedMovies);
-                        setErrorLiked(null);
-                      } catch (error) {
-                        console.error('Error refetching liked movies:', error);
-                        setErrorLiked('Failed to fetch liked movies');
-                      } finally {
-                        setLoadingLiked(false);
-                      }
-                    };
-                    fetchRecentlyLiked();
-                  }}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {!loadingLiked && recentlyLiked.length === 0 && !errorLiked && isAuthenticated && (
-          <div className="py-2">
-            <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-2">💚</div>
-              <p>No liked movies yet</p>
-              <p className="text-sm text-gray-600 mt-1">Like some movies to see them here!</p>
-            </div>
-          </div>
-        )}
+          {/* Activity Feed */}
+          <Feed showHeading={true} />
         </div>
       ) : (
         // Unauthenticated user content (from Home page)
