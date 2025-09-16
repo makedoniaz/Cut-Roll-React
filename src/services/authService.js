@@ -13,6 +13,15 @@ export class AuthService {
     
     if (!response.ok) {
       let errorMessage = await response.text();
+      
+      // Try to parse as JSON first, if it fails, use as plain text
+      try {
+        const errorJson = JSON.parse(errorMessage);
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        // If parsing fails, errorMessage remains as plain text
+      }
+      
       throw new Error(errorMessage || 'Login failed');
     }
 
@@ -45,6 +54,15 @@ export class AuthService {
     const response = await api.post(API_ENDPOINTS.REGISTER, registrationData, { skipAuth: true });
     if (!response.ok) {
       let errorMessage = await response.text();
+      
+      // Try to parse as JSON first, if it fails, use as plain text
+      try {
+        const errorJson = JSON.parse(errorMessage);
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        // If parsing fails, errorMessage remains as plain text
+      }
+      
       throw new Error(errorMessage || 'Registration failed');
     }
 
