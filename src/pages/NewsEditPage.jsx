@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { NewsService } from '../services/newsService';
 import { useAuthStore } from '../stores/authStore';
+import { USER_ROLES } from '../constants/adminDashboard';
 
 function NewsEditPage() {
     const [article, setArticle] = useState(null);
@@ -16,6 +17,22 @@ function NewsEditPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
+
+    // Helper function to check if user can edit articles
+    const canEditArticle = (articleData) => {
+        if (!isAuthenticated || !user || !articleData) return false;
+        
+        // Handle both string and numeric role values
+        const userRole = user.role;
+        
+        // Admin can edit any article (check both numeric and string values)
+        if (userRole === USER_ROLES.ADMIN || userRole === 'Admin') return true;
+        
+        // User must be the author AND be a publisher to edit their own article
+        if (user.id === articleData.authorId && (userRole === USER_ROLES.PUBLISHER || userRole === 'Publisher')) return true;
+        
+        return false;
+    };
 
     useEffect(() => {
         const fetchArticle = async () => {
@@ -33,7 +50,7 @@ function NewsEditPage() {
                 console.log('Article data received:', articleData);
                 
                 // Check if user is authorized to edit this article
-                if (!isAuthenticated || user?.id !== articleData.authorId) {
+                if (!canEditArticle(articleData)) {
                     setError('You are not authorized to edit this article');
                     setLoading(false);
                     return;

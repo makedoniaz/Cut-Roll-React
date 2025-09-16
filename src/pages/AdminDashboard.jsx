@@ -233,7 +233,6 @@ const AdminDashboard = () => {
       searchUsers(currentPage);
     } catch (error) {
       console.error('Failed to toggle mute status:', error);
-      alert('Failed to update user mute status');
     }
   };
 
@@ -244,7 +243,6 @@ const AdminDashboard = () => {
       searchUsers(currentPage);
     } catch (error) {
       console.error('Failed to toggle ban status:', error);
-      alert('Failed to update user ban status');
     }
   };
 
@@ -294,7 +292,6 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('❌ Failed to change user role:', error);
-      alert('Failed to update user role');
     }
   };
 

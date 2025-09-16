@@ -471,6 +471,17 @@ const Profile = () => {
                   
                   {/* Status Badges */}
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    {/* Role Badge */}
+                    {user.role === 2 && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Publisher
+                      </span>
+                    )}
+                    {user.role === 0 && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Admin
+                      </span>
+                    )}
                     {user.isBanned && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         Banned

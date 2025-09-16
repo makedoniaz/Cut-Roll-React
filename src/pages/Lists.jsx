@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
 import TabNav from "../components/ui/common/TabNav";
 import { useAuthStore } from "../stores/authStore";
@@ -275,18 +275,31 @@ const Lists = () => {
       {/* Header with Create List Button */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">Movie Lists</h1>
-        {isAuthenticated && (
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/lists/create')}
+            onClick={() => navigate('/search/lists')}
             className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200 group relative"
           >
-            <Plus className="w-5 h-5" />
+            <Search className="w-5 h-5" />
             {/* Tooltip */}
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-              Create List
+              Search Lists
             </div>
           </button>
-        )}
+          
+          {isAuthenticated && (
+            <button
+              onClick={() => navigate('/lists/create')}
+              className="flex items-center justify-center p-3 text-white hover:text-green-400 rounded-lg transition-colors duration-200 group relative"
+            >
+              <Plus className="w-5 h-5" />
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                Create List
+              </div>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab Navigation */}

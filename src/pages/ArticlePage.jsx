@@ -6,6 +6,7 @@ import { useAuthStore } from "../stores/authStore";
 import Modal from "../components/layout/Modal";
 import MediaUploader from "../components/ui/forms/MediaUploader";
 import { Edit3 } from "lucide-react";
+import { USER_ROLES } from "../constants/adminDashboard";
 
 function ArticlePage() {
     const [copied, setCopied] = useState(false);
@@ -24,6 +25,22 @@ function ArticlePage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
+
+    // Helper function to check if user can edit/delete articles
+    const canEditArticle = () => {
+        if (!isAuthenticated || !user || !article) return false;
+        
+        // Handle both string and numeric role values
+        const userRole = user.role;
+        
+        // Admin can edit any article (check both numeric and string values)
+        if (userRole === USER_ROLES.ADMIN || userRole === 'Admin') return true;
+        
+        // User must be the author AND be a publisher to edit their own article
+        if (user.id === article.authorId && (userRole === USER_ROLES.PUBLISHER || userRole === 'Publisher')) return true;
+        
+        return false;
+    };
 
     useEffect(() => {
         const fetchArticle = async () => {
@@ -132,7 +149,7 @@ function ArticlePage() {
     };
 
     const handleDeleteConfirm = async () => {
-        if (!article || !isAuthenticated || user?.id !== article.authorId) return;
+        if (!article || !canEditArticle()) return;
         
         setIsDeleting(true);
         try {
@@ -181,13 +198,20 @@ function ArticlePage() {
         setImageUpdateError('');
 
         try {
-            const updatedArticle = await NewsService.updateArticlePhoto(article.id, selectedImage.file);
+            await NewsService.updateArticlePhoto(article.id, selectedImage.file);
             
-            // Update the article state with the new photo path
-            setArticle(prev => ({
-                ...prev,
-                photoPath: updatedArticle.photoPath || updatedArticle.photo || prev.photoPath
-            }));
+            // Add a delay to ensure the blob storage image is available
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Fetch the updated article data to ensure we have the latest information
+            const updatedArticleData = await NewsService.getNewsById(article.id);
+            setArticle(updatedArticleData);
+            
+            // Re-parse content with references if needed
+            if (updatedArticleData.content) {
+                const parsed = parseContentWithReferences(updatedArticleData.content, updatedArticleData.newsReferences || []);
+                setParsedContent(parsed);
+            }
 
             // Close modal and reset state
             setIsImageModalOpen(false);
@@ -282,8 +306,8 @@ function ArticlePage() {
             <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <h1 className="text-3xl font-bold">{article.title}</h1>
-                    {/* Edit and Delete buttons - Only show for authenticated users who are the author */}
-                    {isAuthenticated && user?.id === article.authorId && (
+                    {/* Edit and Delete buttons - Only show for users who can edit articles */}
+                    {canEditArticle() && (
                         <div className="flex items-center space-x-2">
                             {/* Edit Button */}
                             <button
@@ -479,8 +503,8 @@ function ArticlePage() {
                     alt={article.title}
                     className="w-full rounded-lg mb-6 object-cover max-h-96"
                 />
-                {/* Hover overlay with edit button - Only show for authenticated users who are the author */}
-                {isAuthenticated && user?.id === article.authorId && (
+                {/* Hover overlay with edit button - Only show for users who can edit articles */}
+                {canEditArticle() && (
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <button
                             onClick={handleImageUpdateClick}

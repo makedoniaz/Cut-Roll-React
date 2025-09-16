@@ -473,7 +473,7 @@ export class NewsService {
         const formData = new FormData();
         formData.append('photo', photoFile);
 
-        const response = await api.patch(`news/${newsId}/photo`, formData, {
+        const response = await api.patch(`news/news/${newsId}/photo`, formData, {
             headers: {
                 // Don't set Content-Type header - let the browser set it with boundary for FormData
             }

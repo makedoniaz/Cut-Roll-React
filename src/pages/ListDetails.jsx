@@ -9,6 +9,7 @@ import AddMoviesModal from "../components/ui/forms/AddMoviesModal";
 import { ListsService } from '../services/listsService';
 import { ListsLikeService } from '../services/listsLikeService';
 import { useAuthStore } from '../stores/authStore';
+import { USER_ROLES } from '../constants/adminDashboard';
 
 const ListDetails = () => {
     const { id } = useParams();
@@ -44,6 +45,34 @@ const ListDetails = () => {
     
     // Add Movies Modal state
     const [isAddMoviesModalOpen, setIsAddMoviesModalOpen] = useState(false);
+    
+    // Delete confirmation state
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Helper function to check if user can edit lists (only owners, not admins)
+    const canEditList = () => {
+        if (!isAuthenticated || !user || !list) return false;
+        
+        // Only list owners can edit (admins cannot edit due to backend issues)
+        return list.userSimplified?.id === user.id;
+    };
+
+    // Helper function to check if user can delete lists (owners and admins)
+    const canDeleteList = () => {
+        if (!isAuthenticated || !user || !list) return false;
+        
+        // Handle both string and numeric role values
+        const userRole = user.role;
+        
+        // Admin can delete any list (check both numeric and string values)
+        if (userRole === USER_ROLES.ADMIN || userRole === 'Admin') return true;
+        
+        // User must be the owner to delete their own list
+        if (list.userSimplified?.id === user.id) return true;
+        
+        return false;
+    };
 
     useEffect(() => {
         const fetchList = async () => {
@@ -193,17 +222,15 @@ const ListDetails = () => {
         }
     };
 
-    const handleDeleteList = async () => {
-        if (!list?.id) return;
+    const handleDeleteClick = () => {
+        setShowDeleteConfirmation(true);
+    };
 
-        const confirmDelete = window.confirm(
-            `Are you sure you want to delete "${list.title}"? This action cannot be undone.`
-        );
-
-        if (!confirmDelete) return;
+    const handleDeleteConfirm = async () => {
+        if (!list?.id || !canDeleteList()) return;
 
         try {
-            setIsUpdating(true);
+            setIsDeleting(true);
             setError(null);
 
             await ListsService.deleteList(list.id);
@@ -214,8 +241,13 @@ const ListDetails = () => {
             console.error('Error deleting list:', err);
             setError(err.message || 'Failed to delete list');
         } finally {
-            setIsUpdating(false);
+            setIsDeleting(false);
+            setShowDeleteConfirmation(false);
         }
+    };
+
+    const handleDeleteCancel = () => {
+        setShowDeleteConfirmation(false);
     };
 
     const handleShareList = async () => {
@@ -287,7 +319,7 @@ const ListDetails = () => {
             
             const updateData = {
                 id: list.id,
-                userId: user.id,
+                userId: list.userSimplified?.id, // Use original creator's ID, not current user's ID
                 title: editTitle.trim(),
                 description: list.description // Keep existing description
             };
@@ -326,7 +358,7 @@ const ListDetails = () => {
             
             const updateData = {
                 id: list.id,
-                userId: user.id,
+                userId: list.userSimplified?.id, // Use original creator's ID, not current user's ID
                 title: list.title, // Keep existing title
                 description: editDescription.trim()
             };
@@ -515,18 +547,18 @@ const ListDetails = () => {
                                     </div>
                                 )}
                                 
-                                {/* Delete Button - Only show for list owner */}
-                                {isOwner && (
+                                {/* Delete Button - Only show for users who can delete lists */}
+                                {canDeleteList() && (
                                     <button
-                                        onClick={handleDeleteList}
-                                        disabled={isUpdating}
+                                        onClick={handleDeleteClick}
+                                        disabled={isDeleting}
                                         className={`cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative ${
-                                            isUpdating 
+                                            isDeleting 
                                                 ? 'text-gray-500 cursor-not-allowed' 
                                                 : 'text-gray-400 hover:text-red-400'
                                         }`}
                                     >
-                                        {isUpdating ? (
+                                        {isDeleting ? (
                                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
                                         ) : (
                                             <svg
@@ -664,7 +696,7 @@ const ListDetails = () => {
                                      <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
                                          {list.title || 'Untitled List'}
                                      </h1>
-                                     {isOwner && (
+                                     {canEditList() && (
                                          <button
                                              onClick={handleEditTitle}
                                              className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-yellow-400 rounded-lg group relative"
@@ -731,7 +763,7 @@ const ListDetails = () => {
                                      <p className="text-lg md:text-xl text-gray-300 leading-relaxed whitespace-pre-wrap flex-1">
                                          {list.description || 'No description available'}
                                      </p>
-                                     {isOwner && (
+                                     {canEditList() && (
                                          <button
                                              onClick={handleEditDescription}
                                              className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-yellow-400 rounded-lg group relative flex-shrink-0"
@@ -830,10 +862,10 @@ const ListDetails = () => {
                         itemsPerRow={6} 
                         movies={movies} 
                         CardComponent={RemovableMovieCard}
-                        onAddMoviesClick={isOwner ? handleAddMovies : null}
-                        showAddMovies={isOwner}
+                        onAddMoviesClick={canEditList() ? handleAddMovies : null}
+                        showAddMovies={canEditList()}
                         listId={list.id}
-                        isOwner={isOwner}
+                        isOwner={canEditList()}
                         onMovieRemoved={handleMovieRemoved}
                     />
                 )}
@@ -884,6 +916,37 @@ const ListDetails = () => {
                 )}
             </div>
 
+
+            {/* Delete Confirmation */}
+            {showDeleteConfirmation && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                        <div className="text-center">
+                            <div className="text-6xl mb-4">🗑️</div>
+                            <h3 className="text-xl font-semibold text-white mb-2">Delete List</h3>
+                            <p className="text-gray-400 mb-6">
+                                Are you sure you want to delete "{list?.title}"? This action cannot be undone.
+                            </p>
+                            <div className="flex justify-center space-x-3">
+                                <button
+                                    onClick={handleDeleteCancel}
+                                    disabled={isDeleting}
+                                    className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteConfirm}
+                                    disabled={isDeleting}
+                                    className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-500 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200"
+                                >
+                                    {isDeleting ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Add Movies Modal */}
             <AddMoviesModal 
