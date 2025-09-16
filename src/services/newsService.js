@@ -449,6 +449,39 @@ export class NewsService {
         return data;
     }
 
+    static async getUserLikedNews(userId, page = 1, pageSize = 10) {
+        if (!userId) {
+            throw new Error('User ID is required');
+        }
+
+        if (page < 1) {
+            throw new Error('Page must be 1 or greater');
+        }
+
+        if (pageSize < 1 || pageSize > 100) {
+            throw new Error('Page size must be between 1 and 100');
+        }
+
+        // Build query parameters
+        const queryParams = new URLSearchParams({
+            page: page.toString(),
+            pageSize: pageSize.toString()
+        });
+
+        // Construct the endpoint with userId and query parameters
+        const endpoint = `news/users/${userId}/liked-news?${queryParams.toString()}`;
+        
+        const response = await api.get(endpoint);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to fetch user liked news articles');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
     static async updateArticlePhoto(newsId, photoFile) {
         if (!newsId) {
             throw new Error('News ID is required');
