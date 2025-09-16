@@ -36,6 +36,7 @@ import LikedLists from '../pages/LikedLists'
 import MyLists from '../pages/MyLists'
 import UserLists from '../pages/UserLists'
 import ActionLists from '../pages/ActionLists'
+import UsersActionLists from '../pages/UsersActionLists'
 import UserReviews from '../pages/UserReviews'
 import MyReviews from '../pages/MyReviews'
 import ReviewCreate from '../pages/ReviewCreate'
@@ -122,11 +123,16 @@ const AppRouter = () => {
                 <MyLists />
               </ProtectedRoute>
             } />
-            <Route path="lists/:id" element={<ListDetails />} />
             <Route path="lists/:username" element={<UserLists />} />
+            <Route path="lists/:id" element={<ListDetails />} />
             <Route path="action-lists/:type" element={
               <ProtectedRoute>
                 <ActionLists />
+              </ProtectedRoute>
+            } />
+            <Route path="users/:username/action-lists/:type" element={
+              <ProtectedRoute>
+                <UsersActionLists />
               </ProtectedRoute>
             } />
 

@@ -181,7 +181,12 @@ const Profile = () => {
       navigate('/login');
       return;
     }
-    navigate('/action-lists/recently-watched');
+    
+    if (isOwnProfile) {
+      navigate('/action-lists/recently-watched');
+    } else {
+      navigate(`/users/${username}/action-lists/recently-watched`);
+    }
   };
 
   const handleWantToWatchClick = () => {
@@ -189,7 +194,12 @@ const Profile = () => {
       navigate('/login');
       return;
     }
-    navigate('/action-lists/want-to-watch');
+    
+    if (isOwnProfile) {
+      navigate('/action-lists/want-to-watch');
+    } else {
+      navigate(`/users/${username}/action-lists/want-to-watch`);
+    }
   };
 
   const handleLikedClick = () => {
@@ -197,7 +207,12 @@ const Profile = () => {
       navigate('/login');
       return;
     }
-    navigate('/action-lists/recently-liked');
+    
+    if (isOwnProfile) {
+      navigate('/action-lists/recently-liked');
+    } else {
+      navigate(`/users/${username}/action-lists/recently-liked`);
+    }
   };
 
   const handleListsClick = () => {

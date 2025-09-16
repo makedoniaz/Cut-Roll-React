@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import MovieListsGrid from "../components/ui/movie-lists/MovieListsGrid";
 import { ListsService } from "../services/listsService";
 import { UserService } from "../services/userService";
@@ -140,8 +140,18 @@ const UserLists = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">{user.username}'s Lists</h1>
-          <p className="text-gray-400 mt-2">Lists created by {user.username}</p>
+          <h1 className="text-3xl font-bold text-white">
+            {user.username}'s Lists
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Lists created by{' '}
+            <Link 
+              to={`/profile/${user.username}`}
+              className="text-green-400 hover:text-green-300 transition-colors duration-200"
+            >
+              {user.username}
+            </Link>
+          </p>
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -172,7 +182,13 @@ const UserLists = () => {
             <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
               <div className="text-gray-300">
                 <span className="font-semibold text-green-400">
-                  Found {totalResults} list{totalResults !== 1 ? 's' : ''} created by {user.username}
+                  Found {totalResults} list{totalResults !== 1 ? 's' : ''} created by{' '}
+                  <Link 
+                    to={`/profile/${user.username}`}
+                    className="text-green-400 hover:text-green-300 transition-colors duration-200"
+                  >
+                    {user.username}
+                  </Link>
                 </span>
               </div>
             </div>
@@ -218,7 +234,13 @@ const UserLists = () => {
               No Lists Created
             </h3>
             <p className="text-gray-400 mb-4">
-              {user.username} hasn't created any lists yet.
+              <Link 
+                to={`/profile/${user.username}`}
+                className="text-green-400 hover:text-green-300 transition-colors duration-200"
+              >
+                {user.username}
+              </Link>
+              {' '}hasn't created any lists yet.
             </p>
             <div className="flex justify-center gap-4">
               <button

@@ -549,38 +549,60 @@ const ListDetails = () => {
                                 
                                 {/* Delete Button - Only show for users who can delete lists */}
                                 {canDeleteList() && (
-                                    <button
-                                        onClick={handleDeleteClick}
-                                        disabled={isDeleting}
-                                        className={`cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative ${
-                                            isDeleting 
-                                                ? 'text-gray-500 cursor-not-allowed' 
-                                                : 'text-gray-400 hover:text-red-400'
-                                        }`}
-                                    >
-                                        {isDeleting ? (
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
-                                        ) : (
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-5 w-5 transition-transform duration-200"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
+                                    <div className="flex items-center space-x-2">
+                                        {!showDeleteConfirmation ? (
+                                            <button
+                                                onClick={handleDeleteClick}
+                                                disabled={isDeleting}
+                                                className={`cursor-pointer p-2 rounded-lg transition-all duration-200 transform hover:scale-105 group relative ${
+                                                    isDeleting 
+                                                        ? 'text-gray-500 cursor-not-allowed' 
+                                                        : 'text-gray-400 hover:text-red-400'
+                                                }`}
                                             >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                />
-                                            </svg>
+                                                {isDeleting ? (
+                                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+                                                ) : (
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-5 w-5 transition-transform duration-200"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                        />
+                                                    </svg>
+                                                )}
+                                                {/* Tooltip */}
+                                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                                    Delete
+                                                </div>
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center space-x-2">
+                                                <span className="text-red-400 text-sm font-medium">Are you sure?</span>
+                                                <button
+                                                    onClick={handleDeleteConfirm}
+                                                    disabled={isDeleting}
+                                                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {isDeleting ? 'Deleting...' : 'Yes'}
+                                                </button>
+                                                <button
+                                                    onClick={handleDeleteCancel}
+                                                    disabled={isDeleting}
+                                                    className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
                                         )}
-                                        {/* Tooltip */}
-                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                            Delete
-                                        </div>
-                                    </button>
+                                    </div>
                                 )}
                             </div>
 
@@ -916,37 +938,6 @@ const ListDetails = () => {
                 )}
             </div>
 
-
-            {/* Delete Confirmation */}
-            {showDeleteConfirmation && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                        <div className="text-center">
-                            <div className="text-6xl mb-4">🗑️</div>
-                            <h3 className="text-xl font-semibold text-white mb-2">Delete List</h3>
-                            <p className="text-gray-400 mb-6">
-                                Are you sure you want to delete "{list?.title}"? This action cannot be undone.
-                            </p>
-                            <div className="flex justify-center space-x-3">
-                                <button
-                                    onClick={handleDeleteCancel}
-                                    disabled={isDeleting}
-                                    className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleDeleteConfirm}
-                                    disabled={isDeleting}
-                                    className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-500 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200"
-                                >
-                                    {isDeleting ? 'Deleting...' : 'Delete'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Add Movies Modal */}
             <AddMoviesModal 
