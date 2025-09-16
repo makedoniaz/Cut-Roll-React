@@ -84,7 +84,7 @@ export class AuthService {
     const formData = new FormData();
     formData.append('avatar', avatarFile);
 
-    const response = await api.patch('/identity/api/User/Avatar', formData, {
+    const response = await api.put('identity/api/User/Avatar', formData, {
       headers: {
         // Don't set Content-Type header - let the browser set it with boundary for FormData
       }

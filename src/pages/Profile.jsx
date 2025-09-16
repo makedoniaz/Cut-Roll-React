@@ -6,6 +6,7 @@ import { FollowService } from '../services/followService.js';
 import { AuthService } from '../services/authService.js';
 import { RecommendationsService } from '../services/recommendationsService.js';
 import { useAuth } from '../hooks/useStores';
+import { useAuthStore } from '../stores/authStore';
 import FollowersList from '../components/profile/FollowersList.jsx';
 import FollowingList from '../components/profile/FollowingList.jsx';
 import Modal from '../components/layout/Modal.jsx';
@@ -263,11 +264,21 @@ const Profile = () => {
       
       const updatedUser = await AuthService.updateAvatar(selectedFile);
       
+      console.log('Avatar update response:', updatedUser);
+      console.log('New avatar path:', updatedUser.avatarPath);
+      
       // Update the user state with new avatar
       setUser(prev => ({
         ...prev,
         avatarPath: updatedUser.avatarPath
       }));
+      
+      // Also update the auth store if this is the current user's profile
+      if (isOwnProfile && currentUser) {
+        console.log('Updating auth store with new avatar path');
+        const { updateProfile } = useAuthStore.getState();
+        await updateProfile({ ...currentUser, avatarPath: updatedUser.avatarPath });
+      }
       
       // Close modal and reset state
       setIsAvatarModalOpen(false);
@@ -376,12 +387,15 @@ const Profile = () => {
                       alt={`${user.username}'s avatar`}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.src = '/default-avatar.png';
+                        // Prevent infinite loop by checking if we're already showing the default avatar
+                        if (e.target.src !== window.location.origin + '/default-avatar.png') {
+                          e.target.src = '/default-avatar.png';
+                        }
                       }}
                     />
                     {/* Hover overlay for own profile */}
                     {isOwnProfile && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                         <button
                           onClick={openAvatarModal}
                           className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-full transition-colors"

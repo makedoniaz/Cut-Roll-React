@@ -14,7 +14,8 @@ export class MovieService {
             actor: searchParams.actor || null,
             director: searchParams.director || null,
             keywords: searchParams.keyword || null,
-            year: searchParams.year || null,
+            minYear: searchParams.minYear || 1950,
+            maxYear: searchParams.maxYear || 2025,
             minRating: searchParams.minRating || null,
             maxRating: searchParams.maxRating || null,
             country: searchParams.country || null,
@@ -25,8 +26,16 @@ export class MovieService {
         
 
         // Валидация параметров
-        if (searchData.year && (searchData.year < 1950 || searchData.year > 2025)) {
-            throw new Error('Year must be between 1950 and 2025');
+        if (searchData.minYear && (searchData.minYear < 1950 || searchData.minYear > 2025)) {
+            throw new Error('minYear must be between 1950 and 2025');
+        }
+        
+        if (searchData.maxYear && (searchData.maxYear < 1950 || searchData.maxYear > 2025)) {
+            throw new Error('maxYear must be between 1950 and 2025');
+        }
+        
+        if (searchData.minYear && searchData.maxYear && searchData.minYear > searchData.maxYear) {
+            throw new Error('minYear cannot be greater than maxYear');
         }
         
         if (searchData.minRating && (searchData.minRating < 0 || searchData.minRating > 10)) {

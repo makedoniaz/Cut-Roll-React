@@ -592,8 +592,22 @@ const AdminDashboard = () => {
                     <div key={user.id} className="bg-gray-800 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-                            <span className="text-lg font-semibold">
+                          <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center overflow-hidden">
+                            {user.avatarPath ? (
+                              <img
+                                src={user.avatarPath}
+                                alt={`${user.username}'s avatar`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Fallback to initials if image fails to load
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <span 
+                              className={`text-lg font-semibold ${user.avatarPath ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
+                            >
                               {user.username.charAt(0).toUpperCase()}
                             </span>
                           </div>

@@ -310,7 +310,8 @@ const MovieSearch = () => {
         actor: filterValues.actor ? filterValues.actor.name : null,
         director: filterValues.director ? filterValues.director.name : null,
         keyword: filterValues.keyword && filterValues.keyword.length > 0 ? filterValues.keyword.map(k => k.name) : null,
-        year: filterValues.year[1] !== 2025 ? filterValues.year[1] : null, // Use max year if not default
+        minYear: filterValues.year[0] !== 1950 ? filterValues.year[0] : null, // Use min year if not default
+        maxYear: filterValues.year[1] !== 2025 ? filterValues.year[1] : null, // Use max year if not default
         minRating: filterValues.rating[0] !== 0 ? filterValues.rating[0] : null,
         maxRating: filterValues.rating[1] !== 10 ? filterValues.rating[1] : null,
         country: filterValues.country ? filterValues.country.name : null,

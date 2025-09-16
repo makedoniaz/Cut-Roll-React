@@ -98,13 +98,14 @@ const ListsSearch = () => {
     console.log('🔍 List search triggered with:', { searchQuery, hasActiveFilters: hasActive, page });
     console.log('Current filter values:', filterValues);
     
-    if (!searchQuery.trim() && !hasActive) {
-      console.log('No search query and no active filters, clearing results');
-      setLists([]);
-      setTotalResults(0);
-      setTotalPages(1);
-      return;
-    }
+    // Allow search even without filters - this will show all lists
+    // if (!searchQuery.trim() && !hasActive) {
+    //   console.log('No search query and no active filters, clearing results');
+    //   setLists([]);
+    //   setTotalResults(0);
+    //   setTotalPages(1);
+    //   return;
+    // }
 
     setLoading(true);
     setError(null);
@@ -114,11 +115,11 @@ const ListsSearch = () => {
       const searchParams = {
         userId: filterValues.author?.id || null, // Only use selected author ID, or null to search all lists
         title: searchQuery.trim() || null,
-        fromDate: filterValues.dateRange.from,
-        toDate: filterValues.dateRange.to,
+        fromDate: filterValues.dateRange.from || null,
+        toDate: filterValues.dateRange.to || null,
         page: page - 1, // API uses 0-based pages
         pageSize: 20,
-        sortByLikesAscending: filterValues.sortByLikesAscending
+        sortByLikesAscending: filterValues.sortByLikesAscending || false
       };
 
       console.log('Final search parameters being sent:', searchParams);
@@ -304,7 +305,7 @@ const ListsSearch = () => {
         {!loading && !error && (
           <>
             {/* Results Count */}
-            {hasSearched && (searchQuery.trim() || hasActiveFilters()) && (
+            {hasSearched && (
               <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
                 <div className="text-gray-300">
                   {lists.length > 0 ? (
@@ -317,17 +318,16 @@ const ListsSearch = () => {
                           for "{searchQuery.trim()}"
                         </span>
                       )}
-                      {hasActiveFilters() && (
-                        <span className="text-gray-400 ml-2">
-                          with applied filters
-                        </span>
-                      )}
+                      <span className="text-gray-400 ml-2">
+                        with applied filters
+                      </span>
                     </>
                   ) : (
                     <span className="text-gray-400">
                       No lists found
                       {searchQuery.trim() && ` for "${searchQuery.trim()}"`}
                       {hasActiveFilters() && ' with current filters'}
+                      {!searchQuery.trim() && !hasActiveFilters() && ' in the system'}
                     </span>
                   )}
                 </div>
@@ -372,7 +372,7 @@ const ListsSearch = () => {
                 <div className="text-6xl mb-4">📋</div>
                 <p className="text-lg mb-2">Ready to search for movie lists?</p>
                 <p className="text-sm text-gray-500">
-                  Enter a search term or use filters, then click Search to find lists
+                  Click Search to see all lists, or enter a search term and use filters to find specific lists
                 </p>
               </div>
             )}

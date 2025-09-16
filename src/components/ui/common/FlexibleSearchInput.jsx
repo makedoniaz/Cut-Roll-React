@@ -34,10 +34,23 @@ const FlexibleSearchInput = ({
 
   // Update local selected items when prop changes
   useEffect(() => {
-    // Only update if selectedItems is provided and different from previous value
-    if (selectedItems && JSON.stringify(selectedItems) !== JSON.stringify(previousSelectedItemsRef.current)) {
-      setLocalSelectedItems(selectedItems);
-      previousSelectedItemsRef.current = selectedItems;
+    // Always update if selectedItems prop changes (including when it becomes null/empty)
+    const currentSelectedItems = selectedItems || [];
+    const previousSelectedItems = previousSelectedItemsRef.current || [];
+    
+    if (JSON.stringify(currentSelectedItems) !== JSON.stringify(previousSelectedItems)) {
+      console.log('🔄 FlexibleSearchInput selectedItems changed:', {
+        from: previousSelectedItems,
+        to: currentSelectedItems
+      });
+      setLocalSelectedItems(currentSelectedItems);
+      previousSelectedItemsRef.current = currentSelectedItems;
+      
+      // Also clear the input value when selectedItems is cleared externally
+      if (currentSelectedItems.length === 0 && previousSelectedItems.length > 0) {
+        console.log('🧹 Clearing input value due to external selectedItems clear');
+        setInputValue('');
+      }
     }
   }, [selectedItems]);
 
