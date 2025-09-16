@@ -27,7 +27,7 @@ const ProfileSecurityTab = ({
           </div>
           <button
             onClick={() => setIsEditingPassword(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
           >
             Change Password
           </button>
@@ -68,7 +68,7 @@ const ProfileSecurityTab = ({
             <button
               onClick={handlePasswordUpdate}
               disabled={isLoading || localLoading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
+              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
             >
               {(isLoading || localLoading) ? 'Updating...' : 'Update Password'}
             </button>

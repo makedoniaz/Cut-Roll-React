@@ -9,7 +9,7 @@ const SmallMovieCard = ({ movie, searchContext }) => {
     if (poster && poster.filePath) {
       // TMDB base URL for images
       const TMDB_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-      return `${TMDB_BASE_URL}${poster.filePath}`;
+      return `${TMDB_BASE_URL}/${poster.filePath}`;
     }
     // Fallback to placeholder
     return '/poster-placeholder.png';

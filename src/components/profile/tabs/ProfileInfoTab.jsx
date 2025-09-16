@@ -45,7 +45,7 @@ const ProfileInfoTab = ({
                 <span className="text-white">{user.username}</span>
                 <button
                   onClick={() => setIsEditingUsername(true)}
-                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                  className="text-green-400 hover:text-green-300 text-sm font-medium"
                 >
                   Edit
                 </button>
@@ -57,14 +57,14 @@ const ProfileInfoTab = ({
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   placeholder="Enter new username"
                 />
                 <div className="flex space-x-3">
                   <button
                     onClick={handleUsernameUpdate}
                     disabled={isLoading || localLoading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
                   >
                     {(isLoading || localLoading) ? 'Updating...' : 'Update Username'}
                   </button>
@@ -113,7 +113,7 @@ const ProfileInfoTab = ({
                 <span className="text-white">{user.email}</span>
                 <button
                   onClick={() => setIsEditingEmail(true)}
-                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                  className="text-green-400 hover:text-green-300 text-sm font-medium"
                 >
                   Edit
                 </button>
@@ -129,7 +129,7 @@ const ProfileInfoTab = ({
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="Enter new email address"
               />
             </div>
@@ -137,7 +137,7 @@ const ProfileInfoTab = ({
               <button
                 onClick={handleEmailUpdate}
                 disabled={isLoading || localLoading}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
+                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
               >
                 {(isLoading || localLoading) ? 'Updating...' : 'Update Email'}
               </button>

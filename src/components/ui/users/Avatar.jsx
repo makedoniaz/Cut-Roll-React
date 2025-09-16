@@ -1,4 +1,6 @@
-const Avatar = ({ src, alt, size = "md" }) => {
+import { getAvatarUrl } from '../../../utils/avatarUtils.js';
+
+const Avatar = ({ src, alt, size = "md", userId = null }) => {
   const sizeClasses = {
     sm: "w-8 h-8",
     md: "w-12 h-12",
@@ -9,7 +11,7 @@ const Avatar = ({ src, alt, size = "md" }) => {
     <div className={`${sizeClasses[size]} rounded-full overflow-hidden flex-shrink-0 bg-gray-700 flex items-center justify-center`}>
       {src ? (
         <img
-          src={src}
+          src={getAvatarUrl(src, userId)}
           alt={alt}
           className="w-full h-full object-cover"
           onError={(e) => {

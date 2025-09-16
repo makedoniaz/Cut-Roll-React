@@ -10,7 +10,7 @@ const ProfileTabNavigation = ({ tabs, activeTab, setActiveTab }) => {
             onClick={() => setActiveTab(tab.id)}
             className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors ${
               activeTab === tab.id
-                ? 'bg-blue-600 text-white'
+                ? 'bg-green-600 text-white'
                 : 'text-gray-300 hover:bg-gray-800 hover:text-white'
             }`}
           >

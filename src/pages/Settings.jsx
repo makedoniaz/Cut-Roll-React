@@ -60,18 +60,25 @@ const Settings = () => {
       };
 
       const result = await AuthService.updateProfile(profileData);
-      console.log("Updating token")
-      await AuthService.refreshToken(refreshToken)
-      console.log("token updated")
       
+      // Automatically refresh token after successful profile update
       if (result.success) {
+        try {
+          console.log("Refreshing token after username update");
+          await AuthService.refreshToken(refreshToken);
+          console.log("Token refreshed successfully");
+        } catch (tokenError) {
+          console.warn("Token refresh failed, but profile update was successful:", tokenError);
+        }
+        
         setIsEditingUsername(false);
         showMessage('Username updated successfully!');
       } else {
         showMessage(result.error || 'Failed to update username', true);
       }
     } catch (error) {
-      showMessage('An error occurred while updating username', true);
+      console.error('Username update error:', error);
+      showMessage(error.message || 'An error occurred while updating username', true);
     } finally {
       setLocalLoading(false);
     }
@@ -100,14 +107,24 @@ const Settings = () => {
 
       const result = await AuthService.updateProfile(profileData);
       
+      // Automatically refresh token after successful profile update
       if (result.success) {
+        try {
+          console.log("Refreshing token after email update");
+          await AuthService.refreshToken(refreshToken);
+          console.log("Token refreshed successfully");
+        } catch (tokenError) {
+          console.warn("Token refresh failed, but profile update was successful:", tokenError);
+        }
+        
         setIsEditingEmail(false);
         showMessage('Email updated successfully!');
       } else {
         showMessage(result.error || 'Failed to update email', true);
       }
     } catch (error) {
-      showMessage('An error occurred while updating email', true);
+      console.error('Email update error:', error);
+      showMessage(error.message || 'An error occurred while updating email', true);
     } finally {
       setLocalLoading(false);
     }
@@ -199,7 +216,7 @@ const Settings = () => {
                 <span className="text-white">{user.username}</span>
                 <button
                   onClick={() => setIsEditingUsername(true)}
-                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                  className="text-green-400 hover:text-green-300 text-sm font-medium"
                 >
                   Edit
                 </button>
@@ -211,14 +228,14 @@ const Settings = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   placeholder="Enter new username"
                 />
                 <div className="flex space-x-3">
                   <button
                     onClick={handleUsernameUpdate}
                     disabled={isLoading || localLoading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
                   >
                     {(isLoading || localLoading) ? 'Updating...' : 'Update Username'}
                   </button>
@@ -247,7 +264,7 @@ const Settings = () => {
                 <span className="text-white">{user.email}</span>
                 <button
                   onClick={() => setIsEditingEmail(true)}
-                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                  className="text-green-400 hover:text-green-300 text-sm font-medium"
                 >
                   Edit
                 </button>
@@ -259,14 +276,14 @@ const Settings = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   placeholder="Enter new email address"
                 />
                 <div className="flex space-x-3">
                   <button
                     onClick={handleEmailUpdate}
                     disabled={isLoading || localLoading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
                   >
                     {(isLoading || localLoading) ? 'Updating...' : 'Update Email'}
                   </button>
@@ -295,7 +312,7 @@ const Settings = () => {
                 <span className="text-gray-400">••••••••</span>
                 <button
                   onClick={() => setIsEditingPassword(true)}
-                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                  className="text-green-400 hover:text-green-300 text-sm font-medium"
                 >
                   Change Password
                 </button>
@@ -309,7 +326,7 @@ const Settings = () => {
                     name="currentPassword"
                     value={formData.currentPassword}
                     onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Enter current password"
                   />
                 </div>
@@ -320,7 +337,7 @@ const Settings = () => {
                     name="newPassword"
                     value={formData.newPassword}
                     onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Enter new password"
                   />
                 </div>
@@ -331,7 +348,7 @@ const Settings = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Confirm new password"
                   />
                 </div>
@@ -339,7 +356,7 @@ const Settings = () => {
                   <button
                     onClick={handlePasswordUpdate}
                     disabled={isLoading || localLoading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium"
                   >
                     {(isLoading || localLoading) ? 'Updating...' : 'Update Password'}
                   </button>

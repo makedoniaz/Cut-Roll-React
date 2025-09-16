@@ -70,6 +70,33 @@ export class RecommendationsService {
         return data;
     }
 
+    static async getUserRecommendations(params = {}) {
+        const {
+            limit = 10,
+            excludeMovieIds = []
+        } = params;
+
+        // Validate limit
+        if (limit < 0 || limit > 100) {
+            throw new Error('limit must be between 0 and 100');
+        }
+
+        const requestData = {
+            limit,
+            excludeMovieIds
+        };
+
+        const response = await api.post(API_ENDPOINTS.USER_RECOMMENDATIONS, requestData);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to get user recommendations');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
     static isValidDate(dateString) {
         const date = new Date(dateString);
         return date instanceof Date && !isNaN(date);

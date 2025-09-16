@@ -7,15 +7,23 @@ import { WatchService } from '../services/watchService';
 import { MovieLikeService } from '../services/movieLikeService';
 import { WatchedService } from '../services/watchedService';
 import { MovieService } from '../services/movieService';
+import { RecommendationsService } from '../services/recommendationsService';
 import { useAuthStore } from '../stores/authStore';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { RefreshCw } from 'lucide-react';
 
 const Movies = () => {
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
   
   // Authenticated user states
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [errorRecommendations, setErrorRecommendations] = useState(null);
+  const [recommendationsCacheTime, setRecommendationsCacheTime] = useState(null);
+  const [lastLikedMovieTime, setLastLikedMovieTime] = useState(null);
+  const [isManualRefresh, setIsManualRefresh] = useState(false);
   const [recentlyLiked, setRecentlyLiked] = useState([]);
   const [wantToWatch, setWantToWatch] = useState([]);
   const [recentlyWatched, setRecentlyWatched] = useState([]);
@@ -39,26 +47,179 @@ const Movies = () => {
   const [newReleasesTotalPages, setNewReleasesTotalPages] = useState(4);
   const [popularMoviesTotalPages, setPopularMoviesTotalPages] = useState(4);
   
-  // Refs for intersection observer
+  // Refs for intersection observer and request tracking
   const newReleasesRef = useRef(null);
   const popularMoviesRef = useRef(null);
+  const isFetchingRecommendations = useRef(false);
+  const recommendationsTimeoutRef = useRef(null);
 
-  const movies = [
-    { id: 1, title: 'The Matrix Reloaded', year: 2003, poster: null, rating: 4 },
-    { id: 2, title: 'Inception Dreams', year: 2010, poster: '🎭', rating: 5 },
-    { id: 3, title: 'Interstellar Journey', year: 2014, poster: '🚀', rating: 5 },
-    { id: 4, title: 'The Dark Knight Rises', year: 2012, poster: '🦇', rating: 4 },
-    { id: 5, title: 'Pulp Fiction Classic', year: 1994, poster: '🔫', rating: 5 },
-        { id: 3, title: 'Interstellar Journey', year: 2014, poster: '🚀', rating: 5 },
-    { id: 4, title: 'The Dark Knight Rises', year: 2012, poster: '🦇', rating: 4 },
-    { id: 5, title: 'Pulp Fiction Classic', year: 1994, poster: '🔫', rating: 5 },
-        { id: 3, title: 'Interstellar Journey', year: 2014, poster: '🚀', rating: 5 },
-    { id: 4, title: 'The Dark Knight Rises', year: 2012, poster: '🦇', rating: 4 },
-    { id: 5, title: 'Pulp Fiction Classic', year: 1994, poster: '🔫', rating: 5 },
-        { id: 3, title: 'Interstellar Journey', year: 2014, poster: '🚀', rating: 5 },
-    { id: 4, title: 'The Dark Knight Rises', year: 2012, poster: '🦇', rating: 4 },
-    { id: 5, title: 'Pulp Fiction Classic', year: 1994, poster: '🔫', rating: 5 },
-  ];
+  // Local storage utility functions
+  const getStorageKey = () => `recommendations_${user?.id}`;
+  
+  const saveRecommendationsToStorage = (data) => {
+    try {
+      const storageData = {
+        recommendations: data,
+        timestamp: Date.now(),
+        userId: user?.id
+      };
+      localStorage.setItem(getStorageKey(), JSON.stringify(storageData));
+    } catch (error) {
+      console.warn('Failed to save recommendations to localStorage:', error);
+    }
+  };
+
+  const loadRecommendationsFromStorage = () => {
+    try {
+      const stored = localStorage.getItem(getStorageKey());
+      if (stored) {
+        const data = JSON.parse(stored);
+        // Check if the data is for the current user and not too old (24 hours)
+        if (data.userId === user?.id && (Date.now() - data.timestamp) < 24 * 60 * 60 * 1000) {
+          return data.recommendations;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load recommendations from localStorage:', error);
+    }
+    return null;
+  };
+
+  const clearRecommendationsFromStorage = () => {
+    try {
+      localStorage.removeItem(getStorageKey());
+    } catch (error) {
+      console.warn('Failed to clear recommendations from localStorage:', error);
+    }
+  };
+
+  // Fetch user recommendations when user is authenticated
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (!isAuthenticated || !user?.id) {
+        setRecommendations([]);
+        setRecommendationsCacheTime(null);
+        setLastLikedMovieTime(null);
+        return;
+      }
+
+      // Try to load from localStorage first (unless manual refresh)
+      if (!isManualRefresh) {
+        const storedRecommendations = loadRecommendationsFromStorage();
+        if (storedRecommendations && storedRecommendations.length > 0) {
+          console.log('Loading recommendations from localStorage');
+          setRecommendations(storedRecommendations);
+          setErrorRecommendations(null);
+          return;
+        }
+      }
+
+      // Check if we should use cached recommendations (in-memory cache)
+      const shouldUseCache = recommendationsCacheTime && 
+        (!lastLikedMovieTime || recommendationsCacheTime > lastLikedMovieTime) &&
+        !isManualRefresh;
+
+      if (shouldUseCache) {
+        console.log('Using cached recommendations');
+        return;
+      }
+
+      // Prevent multiple simultaneous requests
+      if (isFetchingRecommendations.current) {
+        console.log('Recommendations request already in progress, skipping...');
+        return;
+      }
+
+      console.log('Fetching fresh recommendations...');
+      isFetchingRecommendations.current = true;
+      setLoadingRecommendations(true);
+      try {
+        const response = await RecommendationsService.getUserRecommendations({
+          limit: 12, // 2 rows of 6 movies
+          excludeMovieIds: [] // Send empty array instead of null
+        });
+        
+        // Handle the new response format directly as an array
+        let recommendedMovies = [];
+        if (Array.isArray(response)) {
+          recommendedMovies = response;
+        } else if (response && typeof response === 'object') {
+          if (response.movies && Array.isArray(response.movies)) {
+            recommendedMovies = response.movies;
+          } else if (response.data && Array.isArray(response.data)) {
+            recommendedMovies = response.data;
+          }
+        }
+        
+        // Transform the response to match the expected movie format
+        const transformedMovies = recommendedMovies.map(movie => ({
+          id: movie.movieId,
+          title: movie.title,
+          year: 'TBA', // API doesn't provide year in this response
+          poster: movie.posterPath ? {
+            filePath: movie.posterPath
+              .replace(/^\\?"/, '') // Remove leading escaped quote
+              .replace(/\\?"$/, '') // Remove trailing escaped quote
+              .replace(/^\/+/, '') // Remove leading slashes
+          } : null,
+          rating: 0, // API doesn't provide rating in this response
+          similarityScore: movie.similarityScore // Keep similarity score for potential future use
+        }));
+
+        setRecommendations(transformedMovies);
+        setErrorRecommendations(null);
+        setRecommendationsCacheTime(Date.now()); // Cache the recommendations
+        saveRecommendationsToStorage(transformedMovies); // Save to localStorage
+        setIsManualRefresh(false); // Reset manual refresh flag
+      } catch (error) {
+        console.error('Error fetching recommendations:', error);
+        setRecommendations([]);
+        setErrorRecommendations('Failed to fetch recommendations');
+      } finally {
+        setLoadingRecommendations(false);
+        isFetchingRecommendations.current = false;
+      }
+    };
+
+    // Clear any existing timeout
+    if (recommendationsTimeoutRef.current) {
+      clearTimeout(recommendationsTimeoutRef.current);
+    }
+
+    // Add a small delay to prevent rapid successive calls
+    recommendationsTimeoutRef.current = setTimeout(() => {
+      fetchRecommendations();
+    }, 100);
+
+    // Cleanup function
+    return () => {
+      if (recommendationsTimeoutRef.current) {
+        clearTimeout(recommendationsTimeoutRef.current);
+      }
+    };
+  }, [isAuthenticated, user?.id, isManualRefresh]);
+
+  // Function to invalidate recommendations cache when user likes a movie
+  const invalidateRecommendationsCache = () => {
+    setLastLikedMovieTime(Date.now());
+    clearRecommendationsFromStorage(); // Clear localStorage cache
+    console.log('Recommendations cache invalidated due to new movie like');
+  };
+
+  // Function to manually refresh recommendations
+  const handleManualRefresh = () => {
+    setIsManualRefresh(true);
+    clearRecommendationsFromStorage(); // Clear localStorage cache
+    console.log('Manual refresh triggered');
+  };
+
+  // Expose the invalidation function globally so it can be called from other components
+  useEffect(() => {
+    window.invalidateRecommendationsCache = invalidateRecommendationsCache;
+    return () => {
+      delete window.invalidateRecommendationsCache;
+    };
+  }, []);
 
   // Fetch recently liked movies when user is authenticated
   useEffect(() => {
@@ -361,9 +522,14 @@ const Movies = () => {
             heading={"FOR YOU"} 
             rows={2} 
             itemsPerRow={6} 
-            movies={movies} 
+            movies={recommendations} 
             CardComponent={SmallMovieCard}
+            loading={loadingRecommendations}
             showMore={false}
+            emptyStateMessage="No recommendations available yet"
+            onRefreshClick={handleManualRefresh}
+            showRefresh={true}
+            isRefreshing={loadingRecommendations}
           />
           <MovieGrid 
             heading={"WANT TO WATCH"} 

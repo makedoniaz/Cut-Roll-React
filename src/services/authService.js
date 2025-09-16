@@ -76,8 +76,20 @@ export class AuthService {
       throw new Error(errorData.message || 'Profile update failed');
     }
     
-    const updatedUser = await response.json();
-    return updatedUser;
+    // Handle successful responses (200, 204) - some may not have JSON content
+    if (response.status === 204 || response.status === 200) {
+      // For 204 No Content or 200 OK without JSON, return success
+      return { success: true, message: 'Profile updated successfully' };
+    }
+    
+    // Try to parse JSON for other successful responses
+    try {
+      const updatedUser = await response.json();
+      return updatedUser;
+    } catch (error) {
+      // If JSON parsing fails but response was successful, return success
+      return { success: true, message: 'Profile updated successfully' };
+    }
   }
 
   static async updateAvatar(avatarFile) {

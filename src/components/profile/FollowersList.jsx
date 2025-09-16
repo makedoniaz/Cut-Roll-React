@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FollowService } from '../../services/followService.js';
 import { FollowType } from '../../constants/follow.js';
+import { getAvatarUrl } from '../../utils/avatarUtils.js';
 
 const FollowersList = ({ userId, onCountChange, refreshTrigger }) => {
   const [followers, setFollowers] = useState([]);
@@ -107,7 +108,7 @@ const FollowersList = ({ userId, onCountChange, refreshTrigger }) => {
               <Link to={`/profile/${follower.userName}`} className="group">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-600 group-hover:border-green-400 transition-colors">
                   <img
-                    src={follower.avatarPath || '/default-avatar.png'}
+                    src={getAvatarUrl(follower.avatarPath, follower.id)}
                     alt={`${follower.userName}'s avatar`}
                     className="w-full h-full object-cover"
                     onError={(e) => {

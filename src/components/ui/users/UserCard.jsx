@@ -22,7 +22,8 @@ const UserCard = ({ user }) => {
           <Avatar 
             src={user.avatarPath} 
             alt={user.username} 
-            size="lg" 
+            size="lg"
+            userId={user.id}
           />
         </div>
 

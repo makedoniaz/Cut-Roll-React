@@ -12,12 +12,22 @@ const MovieGrid = ({
     onMoreClick,
     showMore = true,
     emptyStateMessage = null,
-    emptyStateIcon = null
+    emptyStateIcon = null,
+    onRefreshClick,
+    showRefresh = false,
+    isRefreshing = false
 }) => {
     return ( 
         <div className="py-2">
             <div className="max-w-7xl mx-auto">
-                <SectionHeading heading={heading} onMoreClick={onMoreClick} showMore={showMore}/>
+                <SectionHeading 
+                    heading={heading} 
+                    onMoreClick={onMoreClick} 
+                    showMore={showMore}
+                    onRefreshClick={onRefreshClick}
+                    showRefresh={showRefresh}
+                    isRefreshing={isRefreshing}
+                />
                 <div>
                     {loading ? (
                         <div className="grid grid-cols-6 gap-6">

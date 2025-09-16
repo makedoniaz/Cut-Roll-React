@@ -10,6 +10,7 @@ import { useAuthStore } from '../stores/authStore';
 import FollowersList from '../components/profile/FollowersList.jsx';
 import FollowingList from '../components/profile/FollowingList.jsx';
 import Modal from '../components/layout/Modal.jsx';
+import { getAvatarUrl, updateAvatarCache } from '../utils/avatarUtils.js';
 
 const Profile = () => {
   const { username } = useParams();
@@ -273,6 +274,9 @@ const Profile = () => {
         avatarPath: updatedUser.avatarPath
       }));
       
+      // Update cache key to force image reload
+      updateAvatarCache(user.id);
+      
       // Also update the auth store if this is the current user's profile
       if (isOwnProfile && currentUser) {
         console.log('Updating auth store with new avatar path');
@@ -383,7 +387,7 @@ const Profile = () => {
                 <div className="flex-shrink-0">
                   <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-600 group">
                     <img
-                      src={user.avatarPath || '/default-avatar.png'}
+                      src={getAvatarUrl(user.avatarPath, user.id)}
                       alt={`${user.username}'s avatar`}
                       className="w-full h-full object-cover"
                       onError={(e) => {

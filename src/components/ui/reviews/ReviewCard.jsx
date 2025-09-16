@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Calendar, MessageCircle, Star } from 'lucide-react';
+import { getAvatarUrl } from '../../../utils/avatarUtils.js';
 
 const ReviewCard = ({ review }) => {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ const ReviewCard = ({ review }) => {
           >
             {review.userSimplified?.avatarPath ? (
               <img 
-                src={review.userSimplified.avatarPath} 
+                src={getAvatarUrl(review.userSimplified.avatarPath, review.userSimplified.userId || review.userSimplified.id)} 
                 alt={review.userSimplified.userName}
                 className="w-full h-full rounded-full object-cover"
               />
