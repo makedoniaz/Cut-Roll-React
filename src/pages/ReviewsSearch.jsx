@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import PaginatedGridContainer from '../components/layout/PaginatedGridContainer';
 import ReviewCard from '../components/ui/reviews/ReviewCard';
@@ -23,6 +23,7 @@ const ReviewsSearch = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [hasSearched, setHasSearched] = useState(false);
   const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
+  const hasAutoSearched = useRef(false);
 
   // Search wrapper functions for FlexibleSearchInput
   const searchMoviesForReviews = useCallback(async (query) => {
@@ -142,22 +143,6 @@ const ReviewsSearch = () => {
 
   const [filterValues, setFilterValues] = useState(getInitialFilterValues());
 
-  // Handle location state for pre-filled filters
-  useEffect(() => {
-    if (location.state?.prefillFilters) {
-      const prefillFilters = location.state.prefillFilters;
-      setFilterValues(prev => ({
-        ...prev,
-        ...prefillFilters
-      }));
-      
-      // Auto-search if requested
-      if (location.state.autoSearch) {
-        setHasSearched(true);
-      }
-    }
-  }, [location.state]);
-
   // Check if there are any active filters
   const hasActiveFilters = useCallback(() => {
     return Object.entries(filterValues).some(([key, value]) => {
@@ -265,6 +250,99 @@ const ReviewsSearch = () => {
     searchReviews(page);
   };
 
+  // Handle location state for pre-filled filters
+  useEffect(() => {
+    if (location.state?.prefillFilters) {
+      const prefillFilters = location.state.prefillFilters;
+      setFilterValues(prev => ({
+        ...prev,
+        ...prefillFilters
+      }));
+      
+      // Auto-search if requested
+      if (location.state.autoSearch) {
+        setHasSearched(true);
+        hasAutoSearched.current = true;
+      }
+    }
+  }, [location.state]);
+
+  // Auto-search when filters are set from navigation
+  useEffect(() => {
+    if (hasSearched && hasAutoSearched.current && location.state?.autoSearch) {
+      hasAutoSearched.current = false; // Prevent multiple searches
+      // Call searchReviews directly without dependency
+      const performSearch = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+          // Prepare search parameters
+          const searchParams = {
+            page: 1,
+            pageSize: 20,
+          };
+
+          // Add filter parameters only if they're selected
+          if (filterValues.user) {
+            searchParams.userId = filterValues.user.id;
+          }
+          
+          if (filterValues.movie) {
+            searchParams.movieId = filterValues.movie.id;
+          }
+          
+          // Handle rating range
+          if (filterValues.rating[0] > 0) {
+            searchParams.minRating = filterValues.rating[0];
+          }
+          if (filterValues.rating[1] < 5) {
+            searchParams.maxRating = filterValues.rating[1];
+          }
+          
+          // Handle date range filter
+          if (filterValues.dateRange?.from) {
+            searchParams.createdAfter = new Date(filterValues.dateRange.from).toISOString();
+          }
+          if (filterValues.dateRange?.to) {
+            searchParams.createdBefore = new Date(filterValues.dateRange.to).toISOString();
+          }
+          
+          // Handle sort parameters
+          if (filterValues.sortBy !== '' && filterValues.sortBy !== null && filterValues.sortBy !== undefined) {
+            searchParams.sortBy = parseInt(filterValues.sortBy);
+          }
+          if (filterValues.sortDescending !== true) {
+            searchParams.sortDescending = filterValues.sortDescending;
+          }
+
+          const response = await ReviewService.searchReview(searchParams);
+          
+          if (response && (response.items || response.data || response.reviews)) {
+            const reviewsData = response.items || response.data || response.reviews || [];
+            setReviews(reviewsData);
+            setTotalResults(response.totalCount || response.total || reviewsData.length);
+            setTotalPages(response.totalPages || Math.ceil((response.totalCount || response.total || reviewsData.length) / 20));
+            setCurrentPage(1);
+          } else {
+            setReviews([]);
+            setTotalResults(0);
+            setTotalPages(1);
+          }
+        } catch (err) {
+          console.error('Review search error:', err);
+          setError(err.message);
+          setReviews([]);
+          setTotalResults(0);
+          setTotalPages(1);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      performSearch();
+    }
+  }, [filterValues, hasSearched, location.state?.autoSearch]);
 
   // Disable body scroll when sidebar is open
   useEffect(() => {

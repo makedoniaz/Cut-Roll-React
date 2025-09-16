@@ -33,7 +33,7 @@ const ReviewGrid = () => {
       const searchParams = {
         ...dateRange,
         page: 1,
-        pageSize: 6,
+        pageSize: 5,
         sortBy: 0, // Sort by CreatedAt
         sortDescending: true // Most recent first
       };
@@ -55,12 +55,15 @@ const ReviewGrid = () => {
 
   // Handle "More" button click
   const handleMoreClick = () => {
+    const dateRange = getDateRange();
     navigate('/search/reviews', {
       state: {
         prefillFilters: {
-          createdAfter: getDateRange().createdAfter,
-          createdBefore: getDateRange().createdBefore,
-          sortBy: 0,
+          dateRange: {
+            from: dateRange.createdAfter,
+            to: dateRange.createdBefore
+          },
+          sortBy: '0',
           sortDescending: true
         },
         autoSearch: true
@@ -71,7 +74,7 @@ const ReviewGrid = () => {
   // Loading skeleton
   const LoadingSkeleton = () => (
     <div className="flex justify-between items-start">
-      {Array.from({ length: 6 }).map((_, index) => (
+      {Array.from({ length: 5 }).map((_, index) => (
         <div key={index} className="h-96 w-48">
           <div className="animate-pulse bg-gray-700 rounded-lg h-full w-full"></div>
         </div>
@@ -112,14 +115,14 @@ const ReviewGrid = () => {
             <div className="animate-fade-in">
               <PaginatedGridContainer
                 items={reviews}
-                itemsPerRow={6}
+                itemsPerRow={5}
                 rows={1}
                 renderItem={(review) => (
                   <ReviewPreviewCard review={review} />
                 )}
                 itemHeight="h-96"
                 itemWidth="w-48"
-                gap="gap-8"
+                gap="gap-12"
               />
             </div>
           ) : (

@@ -235,17 +235,8 @@ const ListsSearch = () => {
   return (
     <div className="relative">
       <h1 className="text-3xl font-bold mb-8">
-        {searchParamsFromState.sortByLikesAscending !== undefined ? 'Popular Lists' : 'Search Movie Lists'}
+        Search Movie Lists
       </h1>
-      
-      {/* Subtitle for popular lists */}
-      {searchParamsFromState.sortByLikesAscending !== undefined && (
-        <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
-          <p className="text-gray-300">
-            Showing popular lists sorted by likes (most liked first)
-          </p>
-        </div>
-      )}
       
       {/* Main Content */}
       <div className={`transition-all duration-300 ${isFiltersSidebarOpen ? 'opacity-70' : 'opacity-100'}`}>
