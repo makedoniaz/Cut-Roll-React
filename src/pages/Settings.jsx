@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useStores';
 import { AuthService } from '../services/authService.js';
+import { useAuthStore } from '../stores/authStore.js';
 
 const Settings = () => {
   const { user, refreshToken, isLoading } = useAuth();
+  const { refreshAccessToken } = useAuthStore();
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
@@ -65,10 +67,18 @@ const Settings = () => {
       if (result.success) {
         try {
           console.log("Refreshing token after username update");
-          await AuthService.refreshToken(refreshToken);
-          console.log("Token refreshed successfully");
+          const refreshSuccess = await refreshAccessToken();
+          if (refreshSuccess) {
+            console.log("Token refreshed successfully, user data updated");
+          } else {
+            console.warn("Token refresh failed, user may need to re-login");
+            showMessage('Username updated, but please re-login to refresh your session', true);
+            return;
+          }
         } catch (tokenError) {
           console.warn("Token refresh failed, but profile update was successful:", tokenError);
+          showMessage('Username updated, but please re-login to refresh your session', true);
+          return;
         }
         
         setIsEditingUsername(false);
@@ -111,10 +121,18 @@ const Settings = () => {
       if (result.success) {
         try {
           console.log("Refreshing token after email update");
-          await AuthService.refreshToken(refreshToken);
-          console.log("Token refreshed successfully");
+          const refreshSuccess = await refreshAccessToken();
+          if (refreshSuccess) {
+            console.log("Token refreshed successfully, user data updated");
+          } else {
+            console.warn("Token refresh failed, user may need to re-login");
+            showMessage('Email updated, but please re-login to refresh your session', true);
+            return;
+          }
         } catch (tokenError) {
           console.warn("Token refresh failed, but profile update was successful:", tokenError);
+          showMessage('Email updated, but please re-login to refresh your session', true);
+          return;
         }
         
         setIsEditingEmail(false);
