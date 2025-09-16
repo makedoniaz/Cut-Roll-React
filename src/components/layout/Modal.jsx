@@ -37,7 +37,7 @@ function Modal({ isOpen, onClose, children }) {
         onClick={onClose}
       />
       
-      <div className="relative bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh]">
+      <div className="relative bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[95vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors z-10"

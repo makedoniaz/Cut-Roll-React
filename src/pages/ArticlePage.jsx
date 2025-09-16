@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { NewsService } from "../services/newsService";
 import { parseContentWithReferences } from "../utils/contentParser";
 import { useAuthStore } from "../stores/authStore";
+import Modal from "../components/layout/Modal";
+import MediaUploader from "../components/ui/forms/MediaUploader";
+import { Edit3 } from "lucide-react";
 
 function ArticlePage() {
     const [copied, setCopied] = useState(false);
@@ -14,6 +17,10 @@ function ArticlePage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isUpdatingImage, setIsUpdatingImage] = useState(false);
+    const [imageUpdateError, setImageUpdateError] = useState('');
     const { id } = useParams();
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
@@ -151,6 +158,52 @@ function ArticlePage() {
         if (article?.author?.userName) {
             navigate(`/profile/${article.author.userName}`);
         }
+    };
+
+    const handleImageUpdateClick = () => {
+        setIsImageModalOpen(true);
+        setSelectedImage(null);
+        setImageUpdateError('');
+    };
+
+    const handleImageChange = (image) => {
+        setSelectedImage(image);
+        setImageUpdateError('');
+    };
+
+    const handleImageUpdate = async () => {
+        if (!selectedImage || !selectedImage.file) {
+            setImageUpdateError('Please select an image to upload');
+            return;
+        }
+
+        setIsUpdatingImage(true);
+        setImageUpdateError('');
+
+        try {
+            const updatedArticle = await NewsService.updateArticlePhoto(article.id, selectedImage.file);
+            
+            // Update the article state with the new photo path
+            setArticle(prev => ({
+                ...prev,
+                photoPath: updatedArticle.photoPath || updatedArticle.photo || prev.photoPath
+            }));
+
+            // Close modal and reset state
+            setIsImageModalOpen(false);
+            setSelectedImage(null);
+        } catch (error) {
+            console.error('Failed to update article image:', error);
+            setImageUpdateError(error.message || 'Failed to update image. Please try again.');
+        } finally {
+            setIsUpdatingImage(false);
+        }
+    };
+
+    const handleImageModalClose = () => {
+        setIsImageModalOpen(false);
+        setSelectedImage(null);
+        setImageUpdateError('');
     };
 
     // Loading state
@@ -420,11 +473,25 @@ function ArticlePage() {
             </div>
 
             {/* Article image */}
-            <img
-                src={article.photoPath || '/poster-placeholder.png'}
-                alt={article.title}
-                className="w-full rounded-lg mb-6 object-cover max-h-96"
-            />
+            <div className="relative group">
+                <img
+                    src={article.photoPath || '/poster-placeholder.png'}
+                    alt={article.title}
+                    className="w-full rounded-lg mb-6 object-cover max-h-96"
+                />
+                {/* Hover overlay with edit button - Only show for authenticated users who are the author */}
+                {isAuthenticated && user?.id === article.authorId && (
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                            onClick={handleImageUpdateClick}
+                            className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+                            title="Update Image"
+                        >
+                            <Edit3 className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+            </div>
 
             {/* Article content */}
             <div className="prose prose-invert max-w-none">
@@ -479,6 +546,57 @@ function ArticlePage() {
                     <span>Article ID: {article.id}</span>
                 </div>
             </div>
+
+            {/* Image Update Modal */}
+            <Modal isOpen={isImageModalOpen} onClose={handleImageModalClose}>
+                <div className="space-y-6">
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold text-white">Update Article Image</h2>
+                    </div>
+                    
+                    {/* Error Message */}
+                    {imageUpdateError && (
+                        <div className="p-3 bg-red-500 text-white rounded-lg text-sm">
+                            {imageUpdateError}
+                        </div>
+                    )}
+                    
+                    {/* MediaUploader Component */}
+                    <div>
+                        <MediaUploader
+                            image={selectedImage}
+                            onImageChange={handleImageChange}
+                            disabled={isUpdatingImage}
+                        />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="border-t border-gray-700 pt-4">
+                        <div className="flex gap-4 justify-center mb-4">
+                            <button
+                                onClick={handleImageModalClose}
+                                disabled={isUpdatingImage}
+                                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleImageUpdate}
+                                disabled={!selectedImage || isUpdatingImage}
+                                className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            >
+                                {isUpdatingImage ? 'Updating...' : 'Update Image'}
+                            </button>
+                        </div>
+
+                        {/* File Requirements */}
+                        <div className="text-sm text-gray-400 text-center">
+                            <p>Supported formats: JPG, PNG</p>
+                            <p>Maximum file size: 5MB</p>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

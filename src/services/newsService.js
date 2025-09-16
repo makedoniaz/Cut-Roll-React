@@ -448,4 +448,43 @@ export class NewsService {
         const data = await response.json();
         return data;
     }
+
+    static async updateArticlePhoto(newsId, photoFile) {
+        if (!newsId) {
+            throw new Error('News ID is required');
+        }
+
+        if (!photoFile || !(photoFile instanceof File)) {
+            throw new Error('Photo file is required');
+        }
+
+        // Validate file type (only JPG and PNG)
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(photoFile.type)) {
+            throw new Error('Please select a JPG or PNG image file');
+        }
+
+        // Validate file size (max 5MB)
+        if (photoFile.size > 5 * 1024 * 1024) {
+            throw new Error('File size must be less than 5MB');
+        }
+
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('photo', photoFile);
+
+        const response = await api.patch(`news/${newsId}/photo`, formData, {
+            headers: {
+                // Don't set Content-Type header - let the browser set it with boundary for FormData
+            }
+        });
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to update article photo');
+        }
+
+        const data = await response.json();
+        return data;
+    }
 }
