@@ -31,6 +31,7 @@ const FlexibleSearchInput = ({
   const inputRef = useRef(null);
   const previousValueRef = useRef(value);
   const previousSelectedItemsRef = useRef(selectedItems);
+  const [dropdownPosition, setDropdownPosition] = useState('below');
 
   // Update local selected items when prop changes
   useEffect(() => {
@@ -275,7 +276,11 @@ const FlexibleSearchInput = ({
       {isDropdownOpen && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-[60] w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+          style={{
+            // Ensure dropdown appears above modal overlays
+            zIndex: 1000
+          }}
         >
           {isLoading ? (
             <div className="px-4 py-3 text-gray-400 text-center">

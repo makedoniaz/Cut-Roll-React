@@ -271,7 +271,7 @@ function NewsForm({ onClose }) {
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} allowOverflow={true}>
         <LinkModal 
           onClose={() => setIsModalOpen(false)}
           onAddReference={handleAddReference}

@@ -148,7 +148,7 @@ function AddToListsModal({ isOpen, onClose, movieId, movieTitle, onMovieAddedToL
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose}>
+    <Modal isOpen={isOpen} onClose={handleClose} allowOverflow={true}>
       <div>
         <h2 className="text-2xl font-bold text-white mb-6">Add "{movieTitle}" to Lists</h2>
         

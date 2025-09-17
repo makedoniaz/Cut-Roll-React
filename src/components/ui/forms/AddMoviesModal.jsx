@@ -126,7 +126,7 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose}>
+    <Modal isOpen={isOpen} onClose={handleClose} allowOverflow={true}>
       <div>
         <h2 className="text-2xl font-bold text-white mb-6">Add Movies to List</h2>
         
@@ -157,7 +157,7 @@ function AddMoviesModal({ isOpen, onClose, listId, onMoviesAdded }) {
             <div className="text-sm text-gray-300 mb-2">
               {selectedMovies.length} movie(s) selected
             </div>
-            <div className="max-h-40 overflow-y-auto bg-gray-700/50 rounded-lg p-3">
+            <div className="max-h-60 overflow-y-auto bg-gray-700/50 rounded-lg p-3">
               {selectedMovies.map((movie, index) => (
                 <div key={movie.id} className="flex items-start gap-3 mb-2 last:mb-0">
                   {movie.image && (
