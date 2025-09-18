@@ -185,6 +185,16 @@ const AppRouter = () => {
                   </AdminRoute>
                 } 
               />
+
+            {/* Movie Mix Route */}
+            <Route 
+                path="movie-mix" 
+                element={
+                  <ProtectedRoute>
+                    <MovieMix />
+                  </ProtectedRoute>
+                } 
+              />
             </Route>
           
           <Route 
@@ -201,15 +211,6 @@ const AppRouter = () => {
               element={<EmailConfirmed />} 
           />
 
-          {/* Movie Mix Route (without main layout) */}
-          <Route 
-              path="movie-mix" 
-              element={
-                <ProtectedRoute>
-                  <MovieMix />
-                </ProtectedRoute>
-              } 
-          />
 
           {/* Auth Routes (without main layout) */}
           <Route 

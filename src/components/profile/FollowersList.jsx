@@ -105,8 +105,8 @@ const FollowersList = ({ userId, onCountChange, refreshTrigger }) => {
         <div className="grid grid-cols-3 gap-3">
           {followers.map((follower) => (
             <div key={follower.id} className="flex flex-col items-center text-center">
-              <Link to={`/profile/${follower.userName}`} className="group">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-600 group-hover:border-green-400 transition-colors">
+              <Link to={`/profile/${follower.userName}`} className="group flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-600 group-hover:border-green-400 transition-colors mb-1">
                   <img
                     src={getAvatarUrl(follower.avatarPath, follower.id)}
                     alt={`${follower.userName}'s avatar`}
@@ -116,7 +116,7 @@ const FollowersList = ({ userId, onCountChange, refreshTrigger }) => {
                     }}
                   />
                 </div>
-                <p className="text-xs text-white group-hover:text-green-400 font-medium mt-1 transition-colors truncate w-full">
+                <p className="text-xs text-white group-hover:text-green-400 font-medium transition-colors truncate max-w-full">
                   {follower.userName}
                 </p>
               </Link>

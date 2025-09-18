@@ -99,8 +99,8 @@ const FollowingList = ({ userId, onCountChange, refreshTrigger }) => {
         <div className="grid grid-cols-3 gap-3">
           {following.map((followedUser) => (
             <div key={followedUser.id} className="flex flex-col items-center text-center">
-              <Link to={`/profile/${followedUser.userName}`} className="group">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-600 group-hover:border-green-400 transition-colors">
+              <Link to={`/profile/${followedUser.userName}`} className="group flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-600 group-hover:border-green-400 transition-colors mb-1">
                   <img
                     src={getAvatarUrl(followedUser.avatarPath, followedUser.id)}
                     alt={`${followedUser.userName}'s avatar`}
@@ -110,7 +110,7 @@ const FollowingList = ({ userId, onCountChange, refreshTrigger }) => {
                     }}
                   />
                 </div>
-                <p className="text-xs text-white group-hover:text-green-400 font-medium mt-1 transition-colors truncate w-full">
+                <p className="text-xs text-white group-hover:text-green-400 font-medium transition-colors truncate max-w-full">
                   {followedUser.userName}
                 </p>
               </Link>

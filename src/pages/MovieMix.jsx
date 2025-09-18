@@ -67,7 +67,7 @@ const MovieMix = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900">
+            <div className="flex items-center justify-center py-20">
                 <div className="text-center">
                     <div className="text-red-400 text-xl mb-4">{error}</div>
                     <button
@@ -83,15 +83,15 @@ const MovieMix = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900">
+            <div className="flex items-center justify-center py-20">
                 <div className="text-white text-xl">Loading mix...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
-            <div className="max-w-7xl mx-auto px-4 py-8">
+        <div>
+            <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-4">

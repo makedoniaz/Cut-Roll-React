@@ -416,7 +416,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-3">
               <Users className="w-8 h-8 text-green-400" />
               <div>
-                <div className="text-2xl font-bold text-white">{totalUsers}</div>
+                <div className="text-2xl font-bold text-green-400">{totalUsers}</div>
                 <div className="text-gray-400 text-sm">Total Users</div>
               </div>
             </div>
