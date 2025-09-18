@@ -129,6 +129,44 @@ export class AuthService {
     return updatedUser;
   }
 
+  static async changePassword(passwordData) {
+    const changePasswordData = {
+      currentPassword: passwordData.currentPassword,
+      newPassword: passwordData.newPassword,
+      confirmPassword: passwordData.confirmPassword
+    };
+
+    const response = await api.post(API_ENDPOINTS.CHANGE_PASSWORD, changePasswordData);
+    
+    if (!response.ok) {
+      let errorMessage = await response.text();
+      
+      // Try to parse as JSON first, if it fails, use as plain text
+      try {
+        const errorJson = JSON.parse(errorMessage);
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        // If parsing fails, errorMessage remains as plain text
+      }
+      
+      throw new Error(errorMessage || 'Password change failed');
+    }
+
+    // Handle successful responses (200, 204) - some may not have JSON content
+    if (response.status === 204 || response.status === 200) {
+      return { success: true, message: 'Password changed successfully' };
+    }
+    
+    // Try to parse JSON for other successful responses
+    try {
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      // If JSON parsing fails but response was successful, return success
+      return { success: true, message: 'Password changed successfully' };
+    }
+  }
+
   static isTokenExpired(token) {
     return isTokenExpired(token);
   }

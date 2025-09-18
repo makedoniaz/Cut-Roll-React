@@ -190,12 +190,6 @@ function NewsForm({ onClose }) {
               disabled={!isAuthenticated}
             />
 
-            {/* Note about image support */}
-            {image && (
-              <div className="text-sm text-yellow-400 bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3">
-                <p>⚠️ <strong>Note:</strong> Image uploads are now supported by the API and will be saved with your article.</p>
-              </div>
-            )}
 
             <RichTextBox
               label="Article Content"

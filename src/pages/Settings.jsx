@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useStores';
 import { AuthService } from '../services/authService.js';
 import { useAuthStore } from '../stores/authStore.js';
@@ -19,6 +20,9 @@ const Settings = () => {
   const [localLoading, setLocalLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const showMessage = (message, isError = false) => {
     if (isError) {
@@ -149,31 +153,52 @@ const Settings = () => {
   };
 
   const handlePasswordUpdate = async () => {
+    // Validation
+    if (!formData.currentPassword.trim()) {
+      showMessage('Current password is required', true);
+      return;
+    }
+    
     if (formData.newPassword !== formData.confirmPassword) {
       showMessage('New passwords do not match', true);
       return;
     }
+    
     if (formData.newPassword.length < 6) {
       showMessage('Password must be at least 6 characters long', true);
       return;
     }
     
+    if (formData.currentPassword === formData.newPassword) {
+      showMessage('New password must be different from current password', true);
+      return;
+    }
+    
     setLocalLoading(true);
     try {
-      // Note: Password change might need a different endpoint
-      // For now, this is a placeholder - you may need to create a separate password change method
-      console.log('Password change would be implemented here');
-      showMessage('Password functionality needs to be implemented in your backend', true);
+      const passwordData = {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
+      };
+
+      const result = await AuthService.changePassword(passwordData);
       
-      setFormData({
-        ...formData,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      setIsEditingPassword(false);
+      if (result.success) {
+        setFormData({
+          ...formData,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setIsEditingPassword(false);
+        showMessage('Password changed successfully!');
+      } else {
+        showMessage(result.error || 'Failed to change password', true);
+      }
     } catch (error) {
-      showMessage('An error occurred while updating password', true);
+      console.error('Password change error:', error);
+      showMessage(error.message || 'An error occurred while changing password', true);
     } finally {
       setLocalLoading(false);
     }
@@ -192,6 +217,10 @@ const Settings = () => {
     });
     setSuccessMessage('');
     setErrorMessage('');
+    // Reset password visibility states
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
   };
 
   if (isLoading) {
@@ -336,41 +365,80 @@ const Settings = () => {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Current Password</label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={formData.currentPassword}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Enter current password"
-                  />
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 pr-10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Enter current password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showCurrentPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">New Password</label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Enter new password"
-                  />
+                  <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 pr-10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Enter new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Confirm New Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Confirm new password"
-                  />
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 pr-10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex space-x-3 pt-4">
                   <button
                     onClick={handlePasswordUpdate}
                     disabled={isLoading || localLoading}

@@ -303,7 +303,7 @@ function ArticlePage() {
     return (
         <div className="max-w-4xl mx-auto px-4 py-8 text-gray-100">
             {/* Header with Edit/Delete buttons on left and Like/Share buttons on right */}
-            <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <h1 className="text-3xl font-bold">{article.title}</h1>
                     {/* Edit and Delete buttons - Only show for users who can edit articles */}

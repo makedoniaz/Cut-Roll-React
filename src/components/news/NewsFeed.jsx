@@ -276,9 +276,9 @@ const NewsFeed = ({ type = 'all', userId = null, loading, setLoading }) => {
       {/* News Grid - Dynamic rows based on actual content */}
       <div className="space-y-6">
         {rows.map((rowItems, rowIndex) => (
-          <div key={rowIndex} className="flex flex-wrap gap-6">
+          <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {rowItems.map((article, itemIndex) => (
-              <div key={article.id} className="w-full md:w-1/2 lg:w-1/3">
+              <div key={article.id} className="min-w-0">
                 <NewsCard
                   article={article}
                   showAuthor={type === 'all'}

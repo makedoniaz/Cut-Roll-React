@@ -100,7 +100,7 @@ const NewsCard = ({ article, showAuthor = true, showActions = false, onDelete })
       className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden transition-transform transition-colors duration-300 hover:scale-105 h-full flex flex-col"
     >
       {/* Image Container */}
-      <div className="relative aspect-video overflow-hidden bg-gray-800 cursor-pointer" onClick={handleViewArticle}>
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-800 cursor-pointer" onClick={handleViewArticle}>
         <img 
           src={article.imageUrl || '/news-placeholder.jpg'} 
           alt={article.title}
@@ -109,9 +109,9 @@ const NewsCard = ({ article, showAuthor = true, showActions = false, onDelete })
       </div>
       
       {/* Content Container */}
-      <div className="p-5 flex-1 flex flex-col">
+      <div className="p-3 flex-1 flex flex-col">
         {/* Author and Date */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-1">
           {showAuthor && (
             <div 
               className="flex items-center gap-2 cursor-pointer group/author"
@@ -134,14 +134,14 @@ const NewsCard = ({ article, showAuthor = true, showActions = false, onDelete })
         
         {/* Title */}
         <h3 
-          className="text-xl font-bold text-white mb-3 leading-tight cursor-pointer hover:text-green-400 transition-colors"
+          className="text-base font-bold text-white mb-1 leading-tight cursor-pointer hover:text-green-400 transition-colors"
           onClick={handleViewArticle}
         >
           {article.title}
         </h3>
         
         {/* Excerpt */}
-        <p className="text-gray-400 text-sm leading-relaxed mb-4 flex-1">
+        <p className="text-gray-400 text-xs leading-relaxed mb-2 flex-1 line-clamp-2">
           {article.excerpt}
         </p>
         

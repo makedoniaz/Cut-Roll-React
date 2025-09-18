@@ -10,5 +10,6 @@ export const API_ENDPOINTS = {
   REGISTER: 'identity/Authentication/Registration',
   REFRESH_TOKEN: 'identity/Authentication/UpdateToken',
   UPDATE_PROFILE: 'identity/api/User',
-  LOGIN_GOOGLE: 'identity/Authentication/ExternalLogin'
+  LOGIN_GOOGLE: 'identity/Authentication/ExternalLogin',
+  CHANGE_PASSWORD: 'identity/Authentication/ChangePassword'
 };

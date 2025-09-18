@@ -339,12 +339,22 @@ const Lists = () => {
             <div className="text-center p-8">
               <div className="text-white text-xl">Loading popular lists...</div>
             </div>
-          ) : (
+          ) : popularLists.length > 0 ? (
             <MovieListsGrid 
               rows={Math.ceil(popularLists.length / 4)} 
               itemsPerRow={4} 
               movieLists={popularLists}
             />
+          ) : (
+            <div className="text-center p-8 bg-gray-900 border border-gray-700 rounded-lg">
+              <div className="text-6xl mb-4">🎬</div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Popular Lists
+              </h3>
+              <p className="text-gray-400 mb-4">
+                No popular lists available at the moment. Check back later or create your own list to get started!
+              </p>
+            </div>
           )
         )}
         

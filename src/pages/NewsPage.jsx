@@ -326,12 +326,12 @@ const LikedNewsFeed = ({ userId, loading, setLoading }) => {
   return (
     <div className="space-y-6">
       {rows.map((rowItems, rowIndex) => (
-        <div key={rowIndex} className="flex flex-wrap gap-6">
+        <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rowItems.map((article, itemIndex) => (
-            <div key={article.id} className="w-full md:w-1/2 lg:w-1/3 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-colors duration-200">
+            <div key={article.id} className="min-w-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-colors duration-200">
               {/* Article Image */}
               {article.photo && (
-                <div className="aspect-video bg-gray-800">
+                <div className="aspect-[4/3] bg-gray-800">
                   <img
                     src={article.photo}
                     alt={article.title}
@@ -344,12 +344,12 @@ const LikedNewsFeed = ({ userId, loading, setLoading }) => {
               )}
               
               {/* Article Content */}
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
+              <div className="p-3">
+                <h3 className="text-base font-semibold text-white mb-1 line-clamp-2">
                   {article.title}
                 </h3>
                 
-                <p className="text-gray-400 text-sm mb-4 line-clamp-3">
+                <p className="text-gray-400 text-xs mb-2 line-clamp-2">
                   {article.content}
                 </p>
                 
