@@ -6,6 +6,7 @@ import SmallMovieCard from '../components/ui/movies/SmallMovieCard';
 import RemovableMovieCard from '../components/ui/movies/RemovableMovieCard';
 import CommentSection from "../components/ui/comments/CommentSection";
 import AddMoviesModal from "../components/ui/forms/AddMoviesModal";
+import Pagination from '../components/ui/common/Pagination';
 import { ListsService } from '../services/listsService';
 import { ListsLikeService } from '../services/listsLikeService';
 import { useAuthStore } from '../stores/authStore';
@@ -203,22 +204,10 @@ const ListDetails = () => {
         setIsAddMoviesModalOpen(false);
     };
 
-    // Pagination handlers
+    // Pagination handler
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
-        }
-    };
-
-    const handleNextPage = () => {
-        if (hasNextPage) {
-            setCurrentPage(prev => prev + 1);
-        }
-    };
-
-    const handlePreviousPage = () => {
-        if (hasPreviousPage) {
-            setCurrentPage(prev => prev - 1);
         }
     };
 
@@ -894,46 +883,12 @@ const ListDetails = () => {
                 
                 {/* Pagination Controls */}
                 {!moviesLoading && !moviesError && totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-4 mt-8">
-                        <button
-                            onClick={handlePreviousPage}
-                            disabled={!hasPreviousPage}
-                            className={`px-4 py-2 rounded-lg transition-colors ${
-                                hasPreviousPage
-                                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                                    : 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                            }`}
-                        >
-                            Previous
-                        </button>
-                        
-                        <div className="flex items-center gap-2">
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                <button
-                                    key={page}
-                                    onClick={() => handlePageChange(page)}
-                                    className={`px-3 py-2 rounded-lg transition-colors ${
-                                        page === currentPage
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                    }`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-                        </div>
-                        
-                        <button
-                            onClick={handleNextPage}
-                            disabled={!hasNextPage}
-                            className={`px-4 py-2 rounded-lg transition-colors ${
-                                hasNextPage
-                                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                                    : 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                            }`}
-                        >
-                            Next
-                        </button>
+                    <div className="flex justify-center mt-8">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
                     </div>
                 )}
             </div>
