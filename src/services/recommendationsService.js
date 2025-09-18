@@ -97,6 +97,45 @@ export class RecommendationsService {
         return data;
     }
 
+    static async getSimilarMovies(params = {}) {
+        const {
+            movieId,
+            limit = 0,
+            excludeMovieIds = []
+        } = params;
+
+        // Validate required parameters
+        if (!movieId) {
+            throw new Error('movieId is required');
+        }
+
+        // Validate limit
+        if (limit < 0 || limit > 100) {
+            throw new Error('limit must be between 0 and 100');
+        }
+
+        // Validate excludeMovieIds is an array
+        if (!Array.isArray(excludeMovieIds)) {
+            throw new Error('excludeMovieIds must be an array');
+        }
+
+        const requestData = {
+            movieId,
+            limit,
+            excludeMovieIds
+        };
+
+        const response = await api.post(API_ENDPOINTS.SIMILAR_MOVIES, requestData);
+        
+        if (!response.ok) {
+            let errorMessage = await response.text();
+            throw new Error(errorMessage || 'Failed to get similar movies');
+        }
+
+        const data = await response.json();
+        return data;
+    }
+
     static isValidDate(dateString) {
         const date = new Date(dateString);
         return date instanceof Date && !isNaN(date);

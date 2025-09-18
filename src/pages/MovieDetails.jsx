@@ -5,6 +5,7 @@ import TabNav from '../components/ui/common/TabNav';
 import MovieDetailsPoster from '../components/ui/movies/MovieDetailsPoster';
 import AddToListsModal from '../components/ui/forms/AddToListsModal';
 import ConfirmationDialog from '../components/ui/common/ConfirmationDialog';
+import SimilarMoviesSection from '../components/ui/movies/SimilarMoviesSection';
 import { MovieService } from '../services/movieService';
 
 import { useState, useEffect } from 'react'
@@ -1686,6 +1687,23 @@ const MovieDetails = () => {
                 <div className="text-xs text-gray-500 mt-1">Rate this movie to join!</div>
               )}
             </div>
+            
+          </div>
+        </div>
+        
+        {/* Similar Movies Section - Matches Center Column Width */}
+        <div className="mt-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Spacer for left column */}
+            <div className="lg:col-span-3"></div>
+            
+            {/* Center column - Same width as movie info */}
+            <div className="lg:col-span-6">
+              <SimilarMoviesSection movieId={movie?.id} />
+            </div>
+            
+            {/* Spacer for right column */}
+            <div className="lg:col-span-3"></div>
           </div>
         </div>
       </div>
