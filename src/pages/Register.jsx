@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, AlertCircle, CheckCircle } from 'lucide-react';
+import { Film, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useStores';
 import GoogleAuthButton from '../components/auth/GoogleAuthButton';
 
@@ -13,6 +13,8 @@ const Register = () => {
   });
   const [localError, setLocalError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const navigate = useNavigate();
   const { register, isLoading } = useAuth();
@@ -153,29 +155,55 @@ const Register = () => {
             <label htmlFor="password" className="block text-sm font-medium text-gray-300">
               Password
             </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:border-green-500"
-              minLength={8}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                className="mt-1 block w-full px-3 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:border-green-500"
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 mt-1"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                ) : (
+                  <Eye className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                )}
+              </button>
+            </div>
           </div>
           
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300">
               Confirm Password
             </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              required
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-              className="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:border-green-500"
-            />
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                className="mt-1 block w-full px-3 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:border-green-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 mt-1"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                ) : (
+                  <Eye className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+                )}
+              </button>
+            </div>
           </div>
           
           <button

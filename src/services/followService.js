@@ -154,7 +154,15 @@ export class FollowService {
      * Get follow status between users
      * @param {string} userId - Current user ID
      * @param {string} targetUserId - Target user ID
-     * @returns {Promise<Object>} Follow status
+     * @returns {Promise<Object>} Follow status with mutual follow information
+     * Response format:
+     * {
+     *   "userId": "string",
+     *   "targetUserId": "string", 
+     *   "isFollowing": false,
+     *   "isFollowedBy": false,
+     *   "isMutualFollow": false
+     * }
      */
     static async getFollowStatus(userId, targetUserId) {
         if (!userId || !targetUserId) {

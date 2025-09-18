@@ -24,6 +24,11 @@ const Profile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshFollowers, setRefreshFollowers] = useState(0);
+  const [followStatus, setFollowStatus] = useState({
+    isFollowing: false,
+    isFollowedBy: false,
+    isMutualFollow: false
+  });
   const [stats, setStats] = useState({
     reviewCount: 0,
     watchedCount: 0,
@@ -79,23 +84,32 @@ const Profile = () => {
     };
 
     fetchUser();
-  }, [username]); // Only depend on username to prevent duplicate calls
+  }, [username, currentUser]); // Depend on both username and currentUser to fetch follow status when user changes
+
+  // Separate useEffect to refresh follow status when needed
+  useEffect(() => {
+    if (user && currentUser && !isOwnProfile && refreshFollowers > 0) {
+      console.log('🔄 Refreshing follow status after follow/unfollow action');
+      fetchFollowData(user.id);
+    }
+  }, [refreshFollowers, user, currentUser, isOwnProfile]);
 
   const fetchFollowData = async (userId) => {
     try {
       console.log('📤 Fetching follow data for userId:', userId, 'currentUser:', currentUser.id);
-      // Fetch counts
-      const [followers, following, followStatus] = await Promise.all([
+      // Fetch counts and follow status
+      const [followers, following, followStatusData] = await Promise.all([
         FollowService.getFollowersCount(userId),
         FollowService.getFollowingCount(userId),
-        FollowService.isFollowing(currentUser.id, userId)
+        FollowService.getFollowStatus(currentUser.id, userId)
       ]);
       
-      console.log('📥 Follow data received:', { followers, following, followStatus });
+      console.log('📥 Follow data received:', { followers, following, followStatusData });
       
       setFollowersCount(followers);
       setFollowingCount(following);
-      setIsFollowing(followStatus);
+      setIsFollowing(followStatusData.isFollowing);
+      setFollowStatus(followStatusData);
     } catch (err) {
       console.error('❌ Failed to fetch follow data:', err);
     }
@@ -152,12 +166,24 @@ const Profile = () => {
         await FollowService.unfollow(currentUser.id, user.id);
         setIsFollowing(false);
         setFollowersCount(prev => Math.max(0, prev - 1));
+        // Update follow status
+        setFollowStatus(prev => ({
+          ...prev,
+          isFollowing: false,
+          isMutualFollow: false // If we unfollow, it can't be mutual
+        }));
         console.log('✅ Unfollow successful');
       } else {
         console.log('📤 Following user...');
         await FollowService.follow(currentUser.id, user.id);
         setIsFollowing(true);
         setFollowersCount(prev => prev + 1);
+        // Update follow status
+        setFollowStatus(prev => ({
+          ...prev,
+          isFollowing: true,
+          isMutualFollow: prev.isFollowedBy ? true : false // Only mutual if they also follow us
+        }));
         console.log('✅ Follow successful');
       }
       
@@ -462,16 +488,26 @@ const Profile = () => {
                           {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
                         </button>
                         
-                        {/* Create Mix Button */}
-                        <button
-                          onClick={handleCreateMix}
-                          disabled={createMixLoading}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                          title="Create Mix"
-                        >
-                          <Shuffle className="w-4 h-4" />
-                          {createMixLoading ? 'Creating...' : 'Create Mix'}
-                        </button>
+                        {/* Create Mix Button - Only show if mutual follow */}
+                        {(() => {
+                          console.log('🔍 Create Mix Button visibility check:', {
+                            isMutualFollow: followStatus.isMutualFollow,
+                            isFollowing: followStatus.isFollowing,
+                            isFollowedBy: followStatus.isFollowedBy,
+                            followStatus: followStatus
+                          });
+                          return followStatus.isMutualFollow;
+                        })() && (
+                          <button
+                            onClick={handleCreateMix}
+                            disabled={createMixLoading}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            title="Create Mix"
+                          >
+                            <Shuffle className="w-4 h-4" />
+                            {createMixLoading ? 'Creating...' : 'Create Mix'}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
