@@ -57,7 +57,6 @@ function AddToListsModal({ isOpen, onClose, movieId, movieTitle, onMovieAddedToL
 
   const handleAddToLists = async () => {
     if (selectedLists.length === 0) {
-      alert('Please select at least one list to add the movie to.');
       return;
     }
 
@@ -115,12 +114,6 @@ function AddToListsModal({ isOpen, onClose, movieId, movieTitle, onMovieAddedToL
         }
 
         console.log('✅ Successfully added movie to lists');
-        
-        if (failed.length === 0) {
-          alert(`Successfully added "${movieTitle}" to ${successful.length} list(s)!`);
-        } else {
-          alert(`Added "${movieTitle}" to ${successful.length} list(s). ${failed.length} failed.`);
-        }
 
         // Reset state and close modal
         setSelectedLists([]);
@@ -128,11 +121,9 @@ function AddToListsModal({ isOpen, onClose, movieId, movieTitle, onMovieAddedToL
       } else {
         // All failed
         console.error('❌ All list additions failed');
-        alert('Failed to add movie to any lists. Please try again.');
       }
     } catch (error) {
       console.error('💥 Error adding movie to lists:', error);
-      alert('Failed to add movie to lists. Please try again.');
     } finally {
       setIsAddingToLists(false);
     }

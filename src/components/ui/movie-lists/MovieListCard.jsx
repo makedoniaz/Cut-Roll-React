@@ -26,7 +26,7 @@ const MovieListCard = ({ list }) => {
           <MovieListPoster images={list.coverImages} title={list.title} />
         </div>
 
-        <h3 className="text-white font-semibold text-lg leading-tight group-hover/list-section:text-green-400 transition-colors w-60 mb-3">
+        <h3 className="text-white font-semibold text-lg leading-tight group-hover/list-section:text-green-400 transition-colors w-60 mb-2">
           {list.title}
         </h3>
       </div>
