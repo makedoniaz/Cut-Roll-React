@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Heart } from 'lucide-react';
 import NewsFeed from '../components/news/NewsFeed';
+import NewsCard from '../components/news/NewsCard';
 import TabNav from '../components/ui/common/TabNav';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useNavigation } from '../hooks/useNavigation';
 import { USER_ROLES } from '../constants/adminDashboard';
+import { getPlainText } from '../utils/contentParser';
 
 const NewsPage = () => {
   const { isAuthenticated, user } = useAuthStore();
@@ -259,17 +261,52 @@ const LikedNewsFeed = ({ userId, loading, setLoading }) => {
   }, [userId, setLoading]);
 
   const transformNewsData = (rawArticles) => {
-    return rawArticles.map(article => ({
-      id: article.id,
-      title: article.title,
-      content: article.content,
-      author: article.author || article.authorName || 'Unknown Author',
-      authorId: article.authorId,
-      publishedAt: article.publishedAt || article.createdAt || article.date,
-      likes: article.likes || 0,
-      photo: article.photo || article.imageUrl,
-      references: article.references || []
-    }));
+    if (!Array.isArray(rawArticles)) {
+      console.warn('transformNewsData: Expected array, got:', typeof rawArticles);
+      return [];
+    }
+
+    return rawArticles.map(article => {
+      if (!article) {
+        console.warn('transformNewsData: Null or undefined article found');
+        return null;
+      }
+
+      // Calculate estimated read time based on content length
+      const wordCount = article.content ? article.content.split(' ').length : 0;
+      const readTimeMinutes = Math.max(1, Math.ceil(wordCount / 200)); // Assume 200 words per minute
+      
+      return {
+        id: article.id || `temp-${Date.now()}-${Math.random()}`,
+        title: article.title || 'Untitled Article',
+        content: article.content || '',
+        excerpt: article.content 
+          ? (() => {
+              const plainText = getPlainText(article.content);
+              return plainText.length > 200 
+                ? plainText.substring(0, 200).trim() + '...' 
+                : plainText.trim();
+            })()
+          : 'No content available',
+        likes: article.likesCount || 0,
+        likesCount: article.likesCount || 0,
+        comments: 0, // Not provided by API yet
+        category: 'News', // Default category since not provided by API
+        imageUrl: article.photoPath || article.photo || article.imageUrl || '/news-placeholder.jpg',
+        readTime: `${readTimeMinutes} min read`,
+        publishedAt: article.createdAt || article.publishedAt || article.date || new Date().toISOString(),
+        createdAt: article.createdAt || article.publishedAt || article.date || new Date().toISOString(),
+        updatedAt: article.updatedAt,
+        authorId: article.authorId || 'unknown',
+        author: {
+          id: article.author?.id || article.authorId || 'unknown',
+          name: article.author?.userName || article.author?.name || article.authorName || 'Unknown Author',
+          avatar: article.author?.avatarPath || article.author?.avatar || null
+        },
+        // Add references data from the new API format
+        references: article.newsReferences || article.references || []
+      };
+    }).filter(Boolean); // Remove any null entries
   };
 
   if (loading) {
@@ -314,61 +351,44 @@ const LikedNewsFeed = ({ userId, loading, setLoading }) => {
     );
   }
 
+  // Handle article deletion (not needed for liked news, but required by NewsCard)
+  const handleArticleDelete = (deletedArticleId) => {
+    setNews(prevNews => prevNews.filter(article => article.id !== deletedArticleId));
+  };
+
   // Create rows dynamically based on actual news count
   const itemsPerRow = 3; // 3 items per row on large screens
   const rows = [];
   
+  console.log('LikedNewsFeed: Total news articles:', news.length);
+  
   for (let i = 0; i < news.length; i += itemsPerRow) {
     const rowItems = news.slice(i, i + itemsPerRow);
+    console.log(`Row ${Math.floor(i/itemsPerRow)}:`, rowItems.length, 'items');
     rows.push(rowItems);
   }
+  
+  console.log('LikedNewsFeed: Total rows created:', rows.length);
 
   return (
-    <div className="space-y-6">
-      {rows.map((rowItems, rowIndex) => (
-        <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rowItems.map((article, itemIndex) => (
-            <div key={article.id} className="min-w-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-colors duration-200">
-              {/* Article Image */}
-              {article.photo && (
-                <div className="aspect-[4/3] bg-gray-800">
-                  <img
-                    src={article.photo}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-              
-              {/* Article Content */}
-              <div className="p-3">
-                <h3 className="text-base font-semibold text-white mb-1 line-clamp-2">
-                  {article.title}
-                </h3>
-                
-                <p className="text-gray-400 text-xs mb-2 line-clamp-2">
-                  {article.content}
-                </p>
-                
-                {/* Article Meta */}
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <span>{article.author}</span>
-                  <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
-                </div>
-                
-                {/* Likes */}
-                <div className="flex items-center gap-2 mt-3 text-red-500">
-                  <Heart className="w-4 h-4 fill-current" />
-                  <span className="text-sm">{article.likes} likes</span>
-                </div>
+    <div className="text-white">
+      {/* News Grid - Dynamic rows based on actual content */}
+      <div className="space-y-6">
+        {rows.map((rowItems, rowIndex) => (
+          <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {rowItems.map((article, itemIndex) => (
+              <div key={article.id} className="min-w-0">
+                <NewsCard
+                  article={article}
+                  showAuthor={true}
+                  showActions={false}
+                  onDelete={handleArticleDelete}
+                />
               </div>
-            </div>
-          ))}
-        </div>
-      ))}
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
