@@ -123,8 +123,8 @@ const AppRouter = () => {
                 <MyLists />
               </ProtectedRoute>
             } />
+            <Route path="lists/user/:username" element={<UserLists />} />
             <Route path="lists/:id" element={<ListDetails />} />
-            <Route path="lists/:username" element={<UserLists />} />
             <Route path="action-lists/:type" element={
               <ProtectedRoute>
                 <ActionLists />

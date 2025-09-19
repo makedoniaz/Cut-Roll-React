@@ -250,7 +250,7 @@ const Profile = () => {
     if (isOwnProfile) {
       navigate('/lists/my');
     } else {
-      navigate(`/lists/${username}`);
+      navigate(`/lists/user/${username}`);
     }
   };
 
